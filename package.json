@@ -3,17 +3,21 @@
   "description": "The most awesome langauge that nobody uses!",
   "version": "0.0.1",
   "author": "Jae Kwon <jkwon.work@gmail.com>",
-  "repository": {"type": "git", "url": "git://github.com/jaekwon/JoeScript.git"},
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jaekwon/JoeScript.git"
+  },
   "dependencies": {
-      "async": "0.1.22",
-      "sugar": "1.2.5",
-      "cardamom": "0.0.9c",
-      "nogg": "0.0.8",
-      "uglify-js": "git://github.com/jaekwon/UglifyJS.git",
-      "findit": ""
-    },
+    "async": "0.1.22",
+    "cardamom": "0.0.9",
+    "findit": "",
+    "nogg": "0.0.8",
+    "sugar": "^1.2.5",
+    "uglify-js": "git://github.com/jaekwon/UglifyJS.git"
+  },
   "keywords": [],
-  "engines": {"node": ">= 0.8.2"},
-  "contributors": [
-  ]
+  "engines": {
+    "node": ">= 0.8.2"
+  },
+  "contributors": []
 }

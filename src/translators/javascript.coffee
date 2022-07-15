@@ -502,7 +502,7 @@ j.Case::extend
     @block = @block.toJSNode({inject})
     return @
   toJavascript: ->
-    """#{("case #{js(match)}:\n" for match in @matches).join('')
+    """#{("case #{js(match)}:\n" for match in @matches).join('') \
       }#{js(@block)}; break;\n"""
 
 TO_JS_OPS = {'is':'===', '==':'===', 'isnt':'!==', '!=':'!==', 'or':'||', 'and':'&&', 'not':'!'}
@@ -526,8 +526,8 @@ j.Operation::extend
           return val(j.Assign(target:@right, op:'+', value:1)) if @op is '++'
           return val(j.Assign(target:@right, op:'-', value:1))
       else return (inject ? identity) @childrenToJSNode()
-  toJavascript: -> "(#{ if @left?  then jsv(@left)+' '  else ''
-                    }#{ TO_JS_OPS[@op] ? @op
+  toJavascript: -> "(#{ if @left?  then jsv(@left)+' '  else '' \
+                    }#{ TO_JS_OPS[@op] ? @op \
                     }#{ if @right? then ' '+jsv(@right) else '' })"
 
 j.Statement::extend

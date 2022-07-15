@@ -101,8 +101,8 @@ Case = clazz 'Case', Node, ->
 
 Operation = clazz 'Operation', Node, ->
   init: ({@left, @op, @right}) ->
-  toString: -> "(#{ if @left?  then @left+' '  else ''
-                }#{ @op
+  toString: -> "(#{ if @left?  then @left+' '  else '' \
+                }#{ @op \
                 }#{ if @right? then ' '+@right else '' })"
 
 Not = (it) -> Operation op:'not', right:it
@@ -186,9 +186,9 @@ Arr = clazz 'Arr', Obj, ->
 Item = clazz 'Item', Node, ->
   init: ({@key, @value, @splat}) ->
   toString: ->
-    "#{ if @key?              then @key         else ''
-    }#{ if @key? and @value?  then ':'          else ''
-    }#{ if @value?            then @value       else ''
+    "#{ if @key?              then @key         else '' \
+    }#{ if @key? and @value?  then ':'          else '' \
+    }#{ if @value?            then @value       else '' \
     }#{ if @splat             then '...'        else '' }"
 
 Singleton = clazz 'Singleton', Node, ->
@@ -256,8 +256,8 @@ Func = clazz 'Func', Node, ->
   init: ({@params, @type, @block}) ->
     @block ?= new Block([]) # trans
   toString: ->
-    "#{ if @params? then '('+@params.toString(no)+')' else '()'
-    }#{ @type
+    "#{ if @params? then '('+@params.toString(no)+')' else '()' \
+    }#{ @type \
     }#{ @block }"
 
 AssignObj = clazz 'AssignObj', Node, ->
@@ -280,8 +280,8 @@ AssignObj = clazz 'AssignObj', Node, ->
 AssignList = clazz 'AssignList', AssignObj, ->
   init: (@items) ->
   toString: (braces=yes) ->
-    "#{ if braces  then '['             else ''
-    }#{ if @items? then @items.join ',' else ''
+    "#{ if braces  then '['             else '' \
+    }#{ if @items? then @items.join ',' else '' \
     }#{ if braces  then ']'             else '' }"
 
 # For AssignLists and function parameters the key is left undefined.
@@ -289,10 +289,10 @@ AssignList = clazz 'AssignList', AssignObj, ->
 AssignItem = clazz 'AssignItem', Node, ->
   init: ({@key, @target, @default, @splat}) ->
   toString: ->
-    "#{ if @key?              then @key         else ''
-    }#{ if @key? and @target? then ':'          else ''
-    }#{ if @target?           then @target      else ''
-    }#{ if @splat             then '...'        else ''
+    "#{ if @key?              then @key         else '' \
+    }#{ if @key? and @target? then ':'          else '' \
+    }#{ if @target?           then @target      else '' \
+    }#{ if @splat             then '...'        else '' \
     }#{ if @default?          then '='+@default else '' }"
 
 Range = clazz 'Range', Node, ->

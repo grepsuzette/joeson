@@ -87,9 +87,9 @@ cacheSet = (frame, result, endPos) ->
     unless @skipLog
       line = @code.line
       return if trace.filterLine? and line isnt trace.filterLine
-      codeSgmnt = "#{ white ''+line+','+@code.col
-                }\t#{ black pad right:5, (p=escape(@code.peek beforeChars:5))[p.length-5...]
-                  }#{ green pad left:20, (p=escape(@code.peek afterChars:20))[0...20]
+      codeSgmnt = "#{ white ''+line+','+@code.col \
+                }\t#{ black pad right:5, (p=escape(@code.peek beforeChars:5))[p.length-5...] \
+                  }#{ green pad left:20, (p=escape(@code.peek afterChars:20))[0...20] \
                   }#{ if @code.pos+20 < @code.text.length
                         black '>'
                       else
@@ -204,10 +204,10 @@ cacheSet = (frame, result, endPos) ->
                                     when 2 then white
                                     when 3 then yellow
                                     when 4 then red
-                                    when 5 then magenta)('@'+line)
-                           }\t#{ red (frame.id for frame in $.stack[...$.stackLength])
-                          } - #{ _loopStack
-                          } - #{ yellow escape ''+result
+                                    when 5 then magenta)('@'+line) \
+                           }\t#{ red (frame.id for frame in $.stack[...$.stackLength]) \
+                          } - #{ _loopStack \
+                          } - #{ yellow escape ''+result \
                            }: #{ blue escape $.code.peek beforeChars:10, afterChars:10 }"
               timeStart? 'loopiteration'
               while result isnt null
