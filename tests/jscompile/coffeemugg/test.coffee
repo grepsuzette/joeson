@@ -103,7 +103,7 @@ tests =
   'Attribute values':
     template: ->
       @br vrai: yes, faux: no, undef: @foo, nil: null, str: 'str', num: 42, arr: [1, 2, 3], obj: {foo: 'bar'}, func: ->,
-    expected: '<br vrai="vrai" str="str" num="42" arr="1,2,3" obj="[object Object]" func="(function () {}).call(this);" />'
+    expected: '<br vrai="vrai" str="str" num="42" arr="1,2,3" obj="[object Object]" func="(function() {}).call(this);" />'
     
   'IE conditionals':
     template: ->
