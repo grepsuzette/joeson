@@ -10,7 +10,7 @@
   "dependencies": {
     "async": "0.1.22",
     "cardamom": "0.0.9",
-    "findit": "",
+    "findit": "^0.1.2",
     "nogg": "0.0.8",
     "sugar": "^1.2.5",
     "uglify-js": "git://github.com/jaekwon/UglifyJS.git"
