@@ -34,7 +34,7 @@ func ToAscii(str string) string {
 	// %q	a double-quoted string safely escaped with Go syntax
 	// %x	base 16, lower-case, two characters per byte
 	// %X	base 16, upper-case, two characters per byte
-	return fmt.Sprintf("%x", str) // TODO likely not right
+	return fmt.Sprintf("%s", str) // TODO likely not right
 }
 
 /*

@@ -1,0 +1,16 @@
+"Native*" types
+===============
+
+Short of finding a better name, these types wrap int, string, map, array to 
+satisfy interface core.Astnode. 
+
+There is also NativeUndefined (to represent javascript `undefined`, as nil
+can't be used).
+
+These types are absent from the original coffeescript implementation, as js is 
+a much more dynamic language.
+
+They are put here in a core/native package for 2 reasons:
+
+1. core.ParseContext depends upon it,
+2. it better separates the ast types from the original implementation in ast/

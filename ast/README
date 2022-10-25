@@ -1,0 +1,31 @@
+This is the `astnode` interface implementers, 
+the building blocks to parse an arbitrary joeson 
+grammar.
+
+How to `withChildren()` an Astnode tree
+=======================================
+
+withChildren() is like a functional map applied to 
+a tree of Astnodes. 
+
+What is the node type of the tree?
+It's very loose and blurred, they are 
+parents for rules. The various Astnodes
+have various structures for children. 
+
+Nothing formal like children: in coffee.
+Our GNode could have that (children). 
+Or it may just be a requirement for interface Astnode.
+
+Once we would have that, we could imagine using 
+reflect... Yes it sucks.
+
+-a:Choice
+ |-b:Sequence
+   |-c:Astnode
+
+withChildren ch:Choice, 
+    if ch.sequence.length == 1
+        return ch.sequence[0] 
+                  ^-- i.e. Astnode
+
