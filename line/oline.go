@@ -91,7 +91,7 @@ func (ol OLine) StringIndent(nIndent int) string {
 // We disallow objects and thus `str` is more ambiguous.
 // Thus, interpretation of str left to the caller (see ToRule() below):
 // - O("CHOICE _"),            <- since no subrules, a nameless definition (nameOrDef is a def)
-// - O("CHOICE", rules(...))   <- since rules, `str` must be considered a name (nameOrDef is a name)
+// - O("CHOICE", rules(...))   <- since rules, "CHOICE" must be considered a name (nameOrDef is a name)
 // - O("value:PRIMARY '*' join:(!__ PRIMARY)? @:RANGE?", func(it Astnode) Astnode { return ast.NewPattern(it) }),
 //          <- ?
 //
@@ -136,8 +136,9 @@ func (ol OLine) getArgs() (str string, rules []Line, attrs ParseOptions) {
 }
 
 // Called only from NewRankFromLines
-func (ol OLine) ToRuleWithIndex(rankname string, index int, grammar *ast.Grammar) Astnode {
+func (ol OLine) ToRuleWithIndex(parentRule Astnode, rankname string, index int, grammar *ast.Grammar) Astnode {
 	if astnode, ok := ol.args[0].(Astnode); ok {
+		astnode.GetGNode().Name = rankname
 		return astnode // nothing to do when OLine is a handcompiled rule
 	}
 	nameOrDef, rules, attrs := ol.getArgs()
@@ -150,7 +151,7 @@ func (ol OLine) ToRuleWithIndex(rankname string, index int, grammar *ast.Grammar
 		def := nameOrDef
 		defer func() {
 			if e := recover(); e != nil {
-				fmt.Printf("Error in ILine named \"%s\" with def \"%s\":\n%v\n", name, def, e)
+				fmt.Printf("Error in OLine named \"%s\" with def \"%s\":\n%v\n", name, def, e)
 				// make it fail again for real this time
 				grammar.ParseString(def, attrs)
 			}

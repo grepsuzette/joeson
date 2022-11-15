@@ -1,9 +1,12 @@
 package ast
 
-import "strings"
-import "grepsuzette/joeson/lambda"
-import . "grepsuzette/joeson/core"
-import . "grepsuzette/joeson/colors"
+import (
+	. "grepsuzette/joeson/core"
+	"grepsuzette/joeson/lambda"
+	"strings"
+
+	. "grepsuzette/joeson/colors"
+)
 
 type Rank struct {
 	*GNode
@@ -18,7 +21,17 @@ func NewEmptyRank(rankname string) *Rank {
 	return &rank
 }
 
-func (rank *Rank) Append(node Astnode) { rank.Choice.Append(node) }
+func (rank *Rank) Append(node Astnode) {
+	if subrank, ok := node.(*Rank); ok {
+		for _, v := range subrank.Choice.choices {
+			rank.Choice.Append(v)
+		}
+	} else {
+		//rank.Choice.Append(node)
+		rank.Choice.Append(node.(*Sequence).sequence[0])
+		rank.Choice.Append(node.(*Sequence).sequence[1])
+	}
+}
 
 func (rank *Rank) GetGNode() *GNode                { return rank.GNode }
 func (rank *Rank) Prepare()                        {}
@@ -30,7 +43,7 @@ func (rank *Rank) ContentString() string {
 	var b strings.Builder
 	b.WriteString(ShowLabelOrNameIfAny(rank))
 	b.WriteString(Blue("Rank("))
-	a := lambda.Map(rank.Choice.a, func(x Astnode) string {
+	a := lambda.Map(rank.Choice.choices, func(x Astnode) string {
 		return Red(x.GetGNode().Name)
 	})
 	b.WriteString(strings.Join(a, Blue(",")))
