@@ -9,7 +9,7 @@ import (
 
 type Choice struct {
 	*GNode
-	a []Astnode
+	choices []Astnode
 }
 
 func NewEmptyChoice() *Choice { return &Choice{NewGNode(), []Astnode{}} }
@@ -22,20 +22,20 @@ func NewChoice(it Astnode) *Choice {
 }
 
 func (ch *Choice) IsThereOnlyOneChoice() (bool, Astnode) {
-	if len(ch.a) == 1 {
-		return true, ch.a[0]
+	if len(ch.choices) == 1 {
+		return true, ch.choices[0]
 	} else {
 		return false, nil
 	}
 }
 
-func (ch *Choice) Append(node Astnode)     { ch.a = append(ch.a, node) }
+func (ch *Choice) Append(node Astnode)     { ch.choices = append(ch.choices, node) }
 func (ch *Choice) GetGNode() *GNode        { return ch.GNode }
 func (ch *Choice) HandlesChildLabel() bool { return false }
 func (ch *Choice) Labels() []string        { return ch.GNode.Labels() }
 func (ch *Choice) Captures() []Astnode     { return ch.GNode.Captures() }
 func (ch *Choice) Prepare() {
-	for _, choice := range ch.a {
+	for _, choice := range ch.choices {
 		if !choice.GetGNode().Capture {
 			ch.GNode.Capture = false
 			return
@@ -46,7 +46,7 @@ func (ch *Choice) Prepare() {
 
 func (ch *Choice) Parse(ctx *ParseContext) Astnode {
 	return Wrap(func(_ *ParseContext) Astnode {
-		for _, choice := range ch.a {
+		for _, choice := range ch.choices {
 			pos := ctx.Code.Pos
 			result := choice.Parse(ctx)
 			if result == nil {
@@ -63,7 +63,7 @@ func (ch *Choice) ContentString() string {
 	var b strings.Builder
 	b.WriteString(ShowLabelOrNameIfAny(ch))
 	b.WriteString(Blue("("))
-	a := lambda.Map(ch.a, func(nn Astnode) string {
+	a := lambda.Map(ch.choices, func(nn Astnode) string {
 		return nn.ContentString()
 	})
 	b.WriteString(strings.Join(a, Blue(" | ")))
@@ -75,7 +75,7 @@ func (ch *Choice) ForEachChild(f func(Astnode) Astnode) Astnode {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}
-	ch.a = ForEachChild_Array(ch.a, f)
+	ch.choices = ForEachChild_Array(ch.choices, f)
 	ch.GetGNode().Rules = ForEachChild_MapString(ch.GetGNode().Rules, f)
 	return ch
 }

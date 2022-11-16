@@ -96,7 +96,7 @@ func (gm *Grammar) Postinit() {
 
 	// Connect all the nodes and collect dereferences into @rules
 	Walk(gm, nil, WalkPrepost{
-		Pre: func(node Astnode, parent Astnode) Astnode {
+		Pre: func(node Astnode, parent Astnode) string {
 			fmt.Println("grammar PRE: typeof node= " + reflect.TypeOf(node).String())
 			gnode := node.GetGNode()
 			// sanity check: it must have no parent yet if it's not a rule
@@ -109,10 +109,8 @@ func (gm *Grammar) Postinit() {
 				// TODO "inline rules are special" in original
 			} else {
 				// set node.rule, the root node for this rule
-				if gnode.Rule != nil {
-					return gnode.Rule
-				} else {
-					fmt.Println("PRE it has not GNode.Rule!=nil, looking if parent has rule")
+				if gnode.Rule == nil {
+					fmt.Println("PRE looking if parent has rule")
 					var r Astnode
 					if parent != nil {
 						r = parent.GetGNode().Rule
@@ -124,16 +122,15 @@ func (gm *Grammar) Postinit() {
 						//r = nil // solution 2
 					}
 					gnode.Rule = r
-					return gnode.Rule
 				}
 			}
+			return ""
 		},
-		Post: func(node Astnode, parent Astnode) Astnode {
+		Post: func(node Astnode, parent Astnode) string {
 			fmt.Println("grammar POST: typeof node= " + reflect.TypeOf(node).String() + " cs:" + node.ContentString())
 			gnode := node.GetGNode()
 			if gnode == nil {
 				fmt.Println("ignoring gnode==nil type " + reflect.TypeOf(node).String())
-				return node
 			}
 			if gnode.IsRule() {
 				fmt.Println(Green("is rule!!!!!!!!!!!!!!!!!!!!!!"))
@@ -147,14 +144,14 @@ func (gm *Grammar) Postinit() {
 			} else {
 				fmt.Println("notta rul")
 			}
-			return node
+			return ""
 		},
 	})
 	// Prepare all the nodes, child first.
 	Walk(gm, nil, WalkPrepost{
-		Post: func(node Astnode, parent Astnode) Astnode {
+		Post: func(node Astnode, parent Astnode) string {
 			node.Prepare()
-			return node
+			return ""
 		},
 	})
 	gm.wasInitialized = true
@@ -239,7 +236,10 @@ func (gm *Grammar) ContentString() string {
 // satisfy GrammarRuleCounter
 func (gm *Grammar) CountRules() int { return gm.NumRules }
 func (gm *Grammar) IsReady() bool   { return gm.rank != nil && gm.wasInitialized }
-func (gm *Grammar) SetRank(rank *Rank) {
+func (gm *Grammar) SetRankIfEmpty(rank *Rank) {
+	if gm.rank != nil {
+		return
+	}
 	if gm.IsReady() {
 		panic("Grammar is already defined and can not be changed on the fly at the moment")
 	}

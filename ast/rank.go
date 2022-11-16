@@ -21,6 +21,10 @@ func NewEmptyRank(rankname string) *Rank {
 	return &rank
 }
 
+func (rank *Rank) Length() int {
+	return len(rank.Choice.choices)
+}
+
 func (rank *Rank) Append(node Astnode) {
 	if subrank, ok := node.(*Rank); ok {
 		for _, v := range subrank.Choice.choices {

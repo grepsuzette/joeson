@@ -31,8 +31,9 @@ I() is a variadic function which allows a variety of declarations, for example:
 - I("LABEL", C(St('&'), St('@'), R("WORD"))),
   That one is a handcompiled rule that doesn't use an O rule.
 */
-func I(a ...any) ILine { return ILine{a} }
+func I(a ...any) ILine { return ILine{lineInit(a)} }
 
+func (il ILine) Args() []any      { return il.args }
 func (il ILine) IsO() bool        { return false }
 func (il ILine) LineType() string { return "i" }
 func (il ILine) String() string   { return il.StringIndent(0) }
@@ -65,108 +66,22 @@ func (il ILine) StringIndent(nIndent int) string {
 		), BoldGreen(", "))
 }
 
-// Since ILine is constructed with variadic ...any, `getArgs()` helps get those
-// args in a structured way.
-//
-// The 4th return `Astnode` is only non-nil whenever the ILine second argument
-// (called `def`) was an Astnode. In that case, the 2nd return `def` is "".
-//
-// Return:
-// - `name` the name of the rule
-// - `def` is a definition for the rule called `name` (e.g. name: "OPER" and def: "[+-]")
-//     Can be a string,
-//     Can be an OLine call, e.g. `I("RANGE", O(S(St("{"), R("_"), L("min",E(R("INT"))), R("_"), St(","), R("_"), L("max",E(R("INT"))), R("_"), St("}"))))`
-// - `attrs`:
-//    - `CbBuilder` is either nil or the inline callback in a grammar
-//       definition to build nodes
-//    - `SkipLog`
-//    - `SkipCache`
-// - `astnode`: normally nil. Only set when `il.args[1]` is Astnode or OLine.
-//       in which case it is a handcompiled rule and can be returned directly (meaning
-//       other returns can be ignored)
-// parentRule only use is when the 2nd arg (def) is given as an OLine
-func (il ILine) getArgs(parentRule Astnode) (name string, def string, attrs ParseOptions, astnode Astnode) {
-	// reminder how an ILine can be declared (i.e. args to iterate through):
-	// I(
-	//   "INT",
-	//   "/[0-9]+/",
-	//   func(it Astnode, ctx ...*ParseContext) Astnode { return nil },
-	//   ParseOptions{SkipLog: false, SkipCache: true}
-	// )
-	if len(il.args) < 2 {
-		panic("Not enough args for Iline: " + fmt.Sprintf("%v", il.args))
-	}
-	for i, arg := range il.args {
-		if i == 0 {
-			name = arg.(string)
-		} else if i == 1 {
-			switch v := arg.(type) {
-			case string:
-				def = v
-			case OLine:
-				// for example,
-				// v can be result of `o` line below, and `name` can be "RANGE":
-				// i "RANGE":
-				//   o S(St('{'), R("_"), L("min",E(R("INT"))), R("_"), St(','), R("_"), L("max",E(R("INT"))), R("_"), St('}'))
-				def = ""
-				astnode = v.ToRuleWithName(parentRule, name)
-				return
-			case Astnode:
-				astnode = v
-				def = ""
-				return
-			default:
-				panic("ILine unexpected type for arg 2 (def)")
-			}
-		} else {
-			if f, ok := arg.(func(Astnode) Astnode); ok {
-				attrs.CbBuilder = func(z Astnode, _ *ParseContext) Astnode { return f(z) }
-				// TODO forgot OLine, see i "RANGE": o S(St('{'), R("_"), L("min",E(R("INT"))), R("_"), St(','), R("_"), L("max",E(R("INT"))), R("_"), St('}'))
-			} else if f, ok := arg.(func(Astnode, *ParseContext) Astnode); ok {
-				attrs.CbBuilder = f
-			} else if passedAttrs, ok := arg.(ParseOptions); ok {
-				if passedAttrs.CbBuilder != nil {
-					attrs.CbBuilder = passedAttrs.CbBuilder
-				}
-				attrs.SkipCache = passedAttrs.SkipCache
-				attrs.SkipLog = passedAttrs.SkipLog
-			} else {
-				fmt.Println("Ignoring arg " + strconv.Itoa(i) + ": " + fmt.Sprintf("%v", arg) + " in ILine " + fmt.Sprintf("%v", il.args))
-			}
+// note TODO think parentRule could almost simply be GNode. but anyway
+func (il ILine) ToRules(grammar *ast.Grammar, parentRule Astnode) NativeMap {
+	rule, attrs := getArgs(il)
+	rules := NewEmptyNativeMap()
+	// (in coffee) for an ILine, rule is an object of {"NAME":rule}
+	// (in golang) we just use NativeNamed, which is a {Name string, Value Astnode}
+	switch v := rule.(type) {
+	case NativeNamed:
+		rules.Set(v.Name, getRule(grammar, v.Name, v.Value, parentRule, attrs))
+	case NativeMap:
+		panic("Assume unrreachable for now")
+		for _, k := range v.Keys() {
+			rules.Set(k, getRule(grammar, k, v.Get(k), parentRule, attrs))
 		}
+	default:
+		panic("wjiefwe")
 	}
-	return
-}
-
-// called by line.funcs.go (NewRankFromLines)
-// parentRule only usage is when the 2nd arg (def) is given as an OLine
-func (il ILine) ToRule(grammar *ast.Grammar, parentRule Astnode) (name string, rule Astnode) {
-	// note: current impl. warrants one rule, in contrast to the
-	// orig inal joeson.coffee impl. which returned an {key:val}
-	name, def, attrs, astnode := il.getArgs(parentRule)
-	if astnode != nil {
-		if def != "" {
-			panic("logic")
-		}
-		return name, astnode
-	}
-	defer func() {
-		if e := recover(); e != nil {
-			fmt.Printf("Error in ILine named \"%s\" with def \"%s\":\n%v\n", name, def, e)
-			grammar.ParseString(def, attrs) // make it fail for real this time
-		}
-	}()
-	// temporarily halt trace
-	oldTrace := Trace
-	ctx := NewParseContext(NewCodeStream(def), grammar, attrs)
-	// ------------------------
-	rule = grammar.Parse(ctx)
-	// ------------------------
-	Trace = oldTrace
-	rule.GetGNode().Name = name
-	rule.GetGNode().CbBuilder = attrs.CbBuilder
-	rule.GetGNode().SkipCache = attrs.SkipCache
-	rule.GetGNode().SkipLog = attrs.SkipLog
-	rule.GetGNode().Debug = attrs.Debug
-	return
+	return rules
 }

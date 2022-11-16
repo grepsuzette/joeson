@@ -59,18 +59,18 @@ func attemptToJoinANativeArrayOrPanic(it Astnode) string {
 	return b.String()
 }
 
-var JOESON_GRAMMAR_RULES Lines = Rules(
-	o("EXPR", Rules(
+var JOESON_GRAMMAR_RULES Lines = []Line{
+	o(Named("EXPR", Rules(
 		o(S(R("CHOICE"), R("_"))),
-		o("CHOICE", Rules(
+		o(Named("CHOICE", Rules(
 			o(S(P(R("_PIPE"), nil), P(R("SEQUENCE"), R("_PIPE"), 2), P(R("_PIPE"), nil)), func(it Astnode) Astnode { return NewChoice(it) }),
-			o("SEQUENCE", Rules(
+			o(Named("SEQUENCE", Rules(
 				o(P(R("UNIT"), nil, 2), func(it Astnode) Astnode { return NewSequence(it) }),
-				o("UNIT", Rules(
+				o(Named("UNIT", Rules(
 					o(S(R("_"), R("LABELED"))),
-					o("LABELED", Rules(
+					o(Named("LABELED", Rules(
 						o(S(E(S(L("label", R("LABEL")), St(":"))), L("&", C(R("DECORATED"), R("PRIMARY"))))),
-						o("DECORATED", Rules(
+						o(Named("DECORATED", Rules(
 							o(S(R("PRIMARY"), St("?")), func(it Astnode) Astnode { return NewExistential(it) }),
 							o(S(L("value", R("PRIMARY")), St("*"), L("join", E(S(N(R("__")), R("PRIMARY")))), L("@", E(R("RANGE")))), func(it Astnode) Astnode { return NewPattern(it) }),
 							o(S(L("value", R("PRIMARY")), St("+"), L("join", E(S(N(R("__")), R("PRIMARY"))))), func(it Astnode) Astnode {
@@ -82,9 +82,9 @@ var JOESON_GRAMMAR_RULES Lines = Rules(
 							o(S(L("value", R("PRIMARY")), L("@", R("RANGE"))), func(it Astnode) Astnode { return NewPattern(it) }), // note: the @ label will "source" and "import" the labels from RANGE node into `it`
 							o(S(St("!"), R("PRIMARY")), func(it Astnode) Astnode { return NewNot(it) }),
 							o(C(S(St("(?"), L("expr", R("EXPR")), St(")")), S(St("?"), L("expr", R("EXPR")))), func(it Astnode) Astnode { return NewLookahead(it) }),
-							i("RANGE", o(S(St("{"), R("_"), L("min", E(R("INT"))), R("_"), St(","), R("_"), L("max", E(R("INT"))), R("_"), St("}")))),
-						)),
-						o("PRIMARY", Rules(
+							i(Named("RANGE", o(S(St("{"), R("_"), L("min", E(R("INT"))), R("_"), St(","), R("_"), L("max", E(R("INT"))), R("_"), St("}"))))),
+						))),
+						o(Named("PRIMARY", Rules(
 							o(S(R("WORD"), St("("), R("EXPR"), St(")")), func(it Astnode) Astnode {
 								na := it.(*NativeArray)
 								if na.Length() != 4 {
@@ -108,26 +108,26 @@ var JOESON_GRAMMAR_RULES Lines = Rules(
 							}),
 							o(S(St("/"), P(S(N(St("/")), C(R("ESC2"), R("."))), nil), St("/")), func(it Astnode) Astnode { return NewRegexFromString(attemptToJoinANativeArrayOrPanic(it)) }),
 							o(S(St("["), P(S(N(St("]")), C(R("ESC2"), R("."))), nil), St("]")), func(it Astnode) Astnode { return NewRegexFromString("[" + attemptToJoinANativeArrayOrPanic(it) + "]") }),
-						)),
-					)),
-				)),
-			)),
-		)),
-	)),
-	i("LABEL", C(St("&"), St("@"), R("WORD"))),
-	i("WORD", Re("[a-zA-Z\\._][a-zA-Z\\._0-9]*")),
-	i("INT", Re("[0-9]+"), func(it Astnode) Astnode { return NewNativeIntFromNativeString(it.(NativeString)) }),
-	i("_PIPE", S(R("_"), St("|"))),
-	i("_", P(C(St(" "), St("\n")), nil)),
-	i("__", P(C(St(" "), St("\n")), nil, 1)),
-	i(".", Re("[\\s\\S]")),
-	i("ESC1", S(St("\\"), R("."))),
-	i("ESC2", S(St("\\"), R(".")), func(chr Astnode) Astnode { return NewNativeString("\\" + chr.(NativeString).Str) }),
-	// i("EXAMPLE", "/regex/", ParseOptions{SkipLog: false, SkipCache: true},
+						))),
+					))),
+				))),
+			))),
+		))),
+	))),
+	i(Named("LABEL", C(St("&"), St("@"), R("WORD")))),
+	i(Named("WORD", Re("[a-zA-Z\\._][a-zA-Z\\._0-9]*"))),
+	i(Named("INT", Re("[0-9]+")), func(it Astnode) Astnode { return NewNativeIntFromNativeString(it.(NativeString)) }),
+	i(Named("_PIPE", S(R("_"), St("|")))),
+	i(Named("_", P(C(St(" "), St("\n")), nil))),
+	i(Named("__", P(C(St(" "), St("\n")), nil, 1))),
+	i(Named(".", Re("[\\s\\S]"))),
+	i(Named("ESC1", S(St("\\"), R(".")))),
+	i(Named("ESC2", S(St("\\"), R("."))), func(chr Astnode) Astnode { return NewNativeString("\\" + chr.(NativeString).Str) }),
+	// i(Named("EXAMPLE", "/regex/", ParseOptions{SkipLog: false, SkipCache: true},
 	// 	func(it Astnode, ctx *ParseContext) Astnode {
 	// 		// ctx.SkipLog is false
 	// 		// ctx.SkipCache is true
 	// 		// ctx.Debug is false
 	// 		return nil
-	// }),
-)
+	// })),
+}

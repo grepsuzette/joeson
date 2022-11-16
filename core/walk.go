@@ -1,8 +1,8 @@
 package core
 
 type WalkPrepost struct {
-	Pre  func(Astnode, parent Astnode) Astnode // called during 🡖  .
-	Post func(Astnode, parent Astnode) Astnode // called during 🡕 .
+	Pre  func(Astnode, parent Astnode) string // called during 🡖  .  "__stop__" to interrupt
+	Post func(Astnode, parent Astnode) string // called during 🡕 .
 }
 
 // depth first walk
@@ -12,7 +12,10 @@ type WalkPrepost struct {
 func Walk(ast Astnode, parent Astnode, prepost WalkPrepost) Astnode {
 	if prepost.Pre != nil {
 		// note: joeson.coffee can return "__stop__" here, meaning to end here (Not implemented yet)
-		prepost.Pre(ast, parent) // don't implement coffee version "__stop__" just yet
+		var stop = prepost.Pre(ast, parent) // don't implement coffee version "__stop__" just yet
+		if stop == "__stop__" {
+			return ast
+		}
 	}
 	ast.ForEachChild(func(child Astnode) Astnode {
 		return Walk(child, ast, prepost)

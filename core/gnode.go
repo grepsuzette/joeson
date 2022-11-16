@@ -16,15 +16,19 @@ package core
 */
 type GNode struct {
 	// Node                              // Node solely containing .id int at this point, and so not being really necessary
-	Name    string             // "" normally but rule name if IsRule()
-	Label   string             // "" if no label <- i have a doubt that maybe should be *string.  Because of joeson.go:832...
-	Rules   map[string]Astnode // all levels have rules (like a tree). Grammar will collect all rules in its post walk, increasing the NumRules each time, and affecting gnode Id = current NumRules
-	Id      int                // joeson.coffee:604: `node.id = @numRules++`, in Grammar.
-	Rule    Astnode            // set by Grammar.Postinit's walk into grammar nodes.
-	Parent  Astnode            // set by Grammar.Postinit's walk into grammar nodes. Grammar tree should be a DAG implies 1 Parent.
-	Grammar Astnode            // set by Grammar.Postinit's walk into grammar nodes. joeson.coffee:592, joeson.coffee:532. Type is Grammar.
-	Capture bool               // true by default, it's false for instance for Str
-	_origin Origin             // automatically set by prepareResult when a node is being parsed (prepareResult is called by wrap)
+	Name  string             // "" normally but rule name if IsRule()
+	Label string             // "" if no label <- i have a doubt that maybe should be *string.  Because of joeson.go:832...
+	Rules map[string]Astnode // all levels have rules (like a tree). Grammar will collect all rules in its post walk, increasing the NumRules each time, and affecting gnode Id = current NumRules
+	Id    int                // joeson.coffee:604: `node.id = @numRules++`, in Grammar.
+	Index int                // joeson.coffee:1303
+	// wonder if Rule, in current impl,
+	// isn't already simply implied by the * toowards a GNoode.
+	// Isn't the GNode the rule?
+	Rule    Astnode // set by Grammar.Postinit's walk into grammar nodes.
+	Parent  Astnode // set by Grammar.Postinit's walk into grammar nodes. Grammar tree should be a DAG implies 1 Parent.
+	Grammar Astnode // set by Grammar.Postinit's walk into grammar nodes. joeson.coffee:592, joeson.coffee:532. Type is Grammar.
+	Capture bool    // true by default, it's false for instance for Str
+	_origin Origin  // automatically set by prepareResult when a node is being parsed (prepareResult is called by wrap)
 
 	/*
 	 `cbBuilder` represents optional callbacks declared within inlined rules.
@@ -82,6 +86,8 @@ func (gn *GNode) Include(name string, rule Astnode) {
 }
 
 func (gn *GNode) IsRule() bool {
+	// TODO check this
+	// suspect gn.Rule does not make sense in current impl
 	return gn.Rule != nil && gn == gn.Rule.GetGNode()
 }
 
