@@ -11,11 +11,12 @@ package ast
 // to follow original coffee impl. as much
 // as possible
 
-import . "grepsuzette/joeson/core"
-import . "grepsuzette/joeson/ast"
-import . "grepsuzette/joeson/line"
-
-import "strings"
+import (
+	. "grepsuzette/joeson/ast"
+	. "grepsuzette/joeson/core"
+	. "grepsuzette/joeson/line"
+	"strings"
+)
 
 func C(a ...Astnode) Astnode { return NewChoice(NewNativeArray(a)) }
 func E(it Astnode) Astnode   { return NewExistential(it) }
@@ -46,11 +47,7 @@ func Re(s string) *Regex       { return NewRegexFromString(s) }
 func S(a ...Astnode) *Sequence { return NewSequence(NewNativeArray(a)) }
 func St(s string) Str          { return NewStr(s) }
 
-func Rules(lines ...Line) []Line { return lines }
-func o(a ...any) OLine           { return O(a...) }
-func i(a ...any) ILine           { return I(a...) }
-
-func attemptToJoinANativeArrayOrPanic(it Astnode) string {
+func AttemptToJoinANativeArrayOrPanic(it Astnode) string {
 	var b strings.Builder
 	na := it.(*NativeArray)
 	for _, ns := range na.Array {
@@ -59,18 +56,23 @@ func attemptToJoinANativeArrayOrPanic(it Astnode) string {
 	return b.String()
 }
 
+func o(a ...any) OLine          { return O(a...) }
+func i(a ...any) ILine          { return I(a...) }
+func rules(lines ...Line) ALine { return NewALine(lines) }
+
+var QUOTE string = "'\\''"
 var JOESON_GRAMMAR_RULES Lines = []Line{
-	o(Named("EXPR", Rules(
+	o(Named("EXPR", rules(
 		o(S(R("CHOICE"), R("_"))),
-		o(Named("CHOICE", Rules(
+		o(Named("CHOICE", rules(
 			o(S(P(R("_PIPE"), nil), P(R("SEQUENCE"), R("_PIPE"), 2), P(R("_PIPE"), nil)), func(it Astnode) Astnode { return NewChoice(it) }),
-			o(Named("SEQUENCE", Rules(
+			o(Named("SEQUENCE", rules(
 				o(P(R("UNIT"), nil, 2), func(it Astnode) Astnode { return NewSequence(it) }),
-				o(Named("UNIT", Rules(
+				o(Named("UNIT", rules(
 					o(S(R("_"), R("LABELED"))),
-					o(Named("LABELED", Rules(
+					o(Named("LABELED", rules(
 						o(S(E(S(L("label", R("LABEL")), St(":"))), L("&", C(R("DECORATED"), R("PRIMARY"))))),
-						o(Named("DECORATED", Rules(
+						o(Named("DECORATED", rules(
 							o(S(R("PRIMARY"), St("?")), func(it Astnode) Astnode { return NewExistential(it) }),
 							o(S(L("value", R("PRIMARY")), St("*"), L("join", E(S(N(R("__")), R("PRIMARY")))), L("@", E(R("RANGE")))), func(it Astnode) Astnode { return NewPattern(it) }),
 							o(S(L("value", R("PRIMARY")), St("+"), L("join", E(S(N(R("__")), R("PRIMARY"))))), func(it Astnode) Astnode {
@@ -84,7 +86,7 @@ var JOESON_GRAMMAR_RULES Lines = []Line{
 							o(C(S(St("(?"), L("expr", R("EXPR")), St(")")), S(St("?"), L("expr", R("EXPR")))), func(it Astnode) Astnode { return NewLookahead(it) }),
 							i(Named("RANGE", o(S(St("{"), R("_"), L("min", E(R("INT"))), R("_"), St(","), R("_"), L("max", E(R("INT"))), R("_"), St("}"))))),
 						))),
-						o(Named("PRIMARY", Rules(
+						o(Named("PRIMARY", rules(
 							o(S(R("WORD"), St("("), R("EXPR"), St(")")), func(it Astnode) Astnode {
 								na := it.(*NativeArray)
 								if na.Length() != 4 {
@@ -104,10 +106,10 @@ var JOESON_GRAMMAR_RULES Lines = []Line{
 								// of NativeString, there are very few chances
 								// we get it right at first though; better get
 								// prepared.
-								return NewStr(attemptToJoinANativeArrayOrPanic(it))
+								return NewStr(AttemptToJoinANativeArrayOrPanic(it))
 							}),
-							o(S(St("/"), P(S(N(St("/")), C(R("ESC2"), R("."))), nil), St("/")), func(it Astnode) Astnode { return NewRegexFromString(attemptToJoinANativeArrayOrPanic(it)) }),
-							o(S(St("["), P(S(N(St("]")), C(R("ESC2"), R("."))), nil), St("]")), func(it Astnode) Astnode { return NewRegexFromString("[" + attemptToJoinANativeArrayOrPanic(it) + "]") }),
+							o(S(St("/"), P(S(N(St("/")), C(R("ESC2"), R("."))), nil), St("/")), func(it Astnode) Astnode { return NewRegexFromString(AttemptToJoinANativeArrayOrPanic(it)) }),
+							o(S(St("["), P(S(N(St("]")), C(R("ESC2"), R("."))), nil), St("]")), func(it Astnode) Astnode { return NewRegexFromString("[" + AttemptToJoinANativeArrayOrPanic(it) + "]") }),
 						))),
 					))),
 				))),

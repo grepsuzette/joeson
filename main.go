@@ -3,24 +3,15 @@ package main
 import (
 	"fmt"
 	. "grepsuzette/joeson/ast/handcompiled"
-	fake "grepsuzette/joeson/fake"
 	line "grepsuzette/joeson/line"
 	"strconv"
 	// . "grepsuzette/joeson/core"
 	. "grepsuzette/joeson/colors"
 )
 
-var QUOTE string = "'\\''"
-
-// function aliases: fake/ package
-func rules(lines ...fake.Line) []fake.Line { return lines }
-func i(_ ...any) []fake.Line               { return []fake.Line{} }
-func o(_ ...any) []fake.Line               { return []fake.Line{} }
-
-// function aliases: line/ package
-
-func I(a ...any) line.ILine { return line.I(a...) }
-func O(a ...any) line.OLine { return line.O(a...) }
+func o(a ...any) line.OLine               { return line.O(a...) }
+func i(a ...any) line.ILine               { return line.I(a...) }
+func Rules(lines ...line.Line) line.ALine { return line.NewALine(lines) }
 
 func main() {
 	fmt.Println(JOESON_GRAMMAR_RULES)

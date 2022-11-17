@@ -4,9 +4,8 @@ import (
 //import . "grepsuzette/joeson/colors"
 )
 
-// NativeNamed is simply a unique key:value pair that
-// also satisfies Astnode. It's sole purpose is to
-// replace the 1-key Object in ooriginal coffee implementation,
+// NativeNamed is simply a key:value pair that
+// also satisfies Astnode.
 type NativeNamed struct {
 	Name  string
 	Value Astnode
