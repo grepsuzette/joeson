@@ -14,6 +14,7 @@ func i(a ...any) line.ILine               { return line.I(a...) }
 func Rules(lines ...line.Line) line.ALine { return line.NewALine(lines) }
 
 func main() {
+	fmt.Println("readying hand compiled grammar")
 	fmt.Println(JOESON_GRAMMAR_RULES)
 	fmt.Println("--- new grammar from above rules... ---")
 	gm := line.NewGrammarFromLines("joeson from handcompiled", JOESON_GRAMMAR_RULES)

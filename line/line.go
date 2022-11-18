@@ -61,13 +61,15 @@ func rule2line(x any) Line {
 		return v
 	case Astnode:
 		return NewCLine(v)
+	case SLine:
+		panic(v.Str)
 	case ILine:
 		panic("impossible")
 	case []Line:
 		panic("unused me thinks it would be ALine instead")
 		return NewALine(v)
 	default:
-		panic("impossible2")
+		panic("impossible type in rule2line: " + reflect.TypeOf(x).String())
 	}
 }
 

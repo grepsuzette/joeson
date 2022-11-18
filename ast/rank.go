@@ -31,9 +31,7 @@ func (rank *Rank) Append(node Astnode) {
 			rank.Choice.Append(v)
 		}
 	} else {
-		//rank.Choice.Append(node)
-		rank.Choice.Append(node.(*Sequence).sequence[0])
-		rank.Choice.Append(node.(*Sequence).sequence[1])
+		rank.Choice.Append(node)
 	}
 }
 

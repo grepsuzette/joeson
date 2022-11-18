@@ -6,7 +6,6 @@ import (
 	"grepsuzette/joeson/core"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
-	"reflect"
 )
 
 type ILine struct {
@@ -41,7 +40,7 @@ func (il ILine) Content() Line    { return il.content }
 func (il ILine) String() string   { return il.StringIndent(0) }
 func (il ILine) StringIndent(nIndent int) string {
 	s := helpers.Indent(nIndent) + il.LineType() + " "
-	s += (reflect.TypeOf(il.content).String() + "=")
+	// s += (reflect.TypeOf(il.content).String() + "=")
 	switch v := il.content.(type) {
 	case SLine:
 		s += BoldRed("SLine=\"") + BoldRed(v.Str) + BoldRed("\"")
