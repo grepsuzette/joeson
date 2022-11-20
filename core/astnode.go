@@ -1,7 +1,5 @@
 package core
 
-import . "grepsuzette/joeson/colors"
-
 type Astnode interface {
 
 	/* Parse() reads from ParseContext and
@@ -25,14 +23,4 @@ type Astnode interface {
 	Captures() []Astnode     // In current joeson impl, all Captures() return GetGNode().Captures() except Existential, GNode and Sequence.
 
 	ForEachChild(f func(Astnode) Astnode) Astnode
-}
-
-// return label or rule name if any, otherwise ""
-func ShowLabelOrNameIfAny(n Astnode) string {
-	if n.GetGNode().IsRule() {
-		return Red(n.GetGNode().Name + ": ")
-	} else if n.GetGNode().Label != "" {
-		return Cyan(n.GetGNode().Label + ":")
-	}
-	return ""
 }

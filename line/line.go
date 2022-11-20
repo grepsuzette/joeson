@@ -83,11 +83,15 @@ func rule2line(x any) Line {
 // opts:       Parse time options
 func getRule(grammar *ast.Grammar, name string, line Line, parentRule Astnode, attrs ParseOptions) Astnode {
 	var ast Astnode
+	// fmt.Println("getRule name=" + name + reflect.TypeOf(line).String())
 	switch v := line.(type) {
 	case ALine:
+		// fmt.Println("getRule ALine name=" + name)
 		ast = NewRankFromLines(name, v.Array, grammar)
 	case CLine:
+		// fmt.Println("getRule CLine name=" + name)
 		ast = v.Astnode
+		ast.GetGNode().Name = name
 	case ILine:
 		panic("ILine is impossible here")
 	case OLine:

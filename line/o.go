@@ -22,8 +22,6 @@ type OLineByIndexOrByName struct {
 	index helpers.NullInt
 }
 
-// func OEmpty() OLine { return OLine{[]any{}} }
-
 /*
 O() is a variadic function which allows a variety of declarations, for example:
 - O("EXPR", Rules(....))       // "EXPR" is a rule name
@@ -65,16 +63,22 @@ func (ol OLine) StringIndent(nIndent int) string {
 // note TODO think parentRule could almost simply be GNode. but anyway
 func (ol OLine) ToRule(grammar *ast.Grammar, parentRule core.Astnode, by OLineByIndexOrByName) core.Astnode {
 	// figure out the name for this rule
+	// fmt.Println("OLine.ToRule, parentRule=" + parentRule.GetGNode().Name)
 	if ol.name != "" {
+		// fmt.Println(" ol.name != '' ")
 		by.name = ol.name
 	} else if by.name == "" && by.index.IsSet && parentRule != nil {
+		// fmt.Printf(" by.name == '' && by.index.IsSet:%n && parentRule != nil \n", by.index.Int)
 		by.name = parentRule.GetGNode().Name + "[" + strconv.Itoa(by.index.Int) + "]"
+		// fmt.Println("ToRule by.name=" + by.name)
 	} else if by.name == "" {
 		panic("Name undefined for 'o' line")
+	} else {
+		// fmt.Printf("by=%v parentRule!=nil?%v by.index.IsSet?%v", by, parentRule != nil, by.index.IsSet)
 	}
 	rule := getRule(grammar, by.name, ol.content, parentRule, ol.attrs)
 	rule.GetGNode().Parent = parentRule
 	// TODO is the following commented line really useful? I am not sure yet
-	// rule.GetGNode().Index = by.index
+	rule.GetGNode().Index = by.index.Int
 	return rule
 }

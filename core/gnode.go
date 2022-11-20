@@ -88,6 +88,7 @@ func (gn *GNode) Include(name string, rule Astnode) {
 func (gn *GNode) IsRule() bool {
 	// TODO check this
 	// suspect gn.Rule does not make sense in current impl
+	// fmt.Printf("%s IsRule: %v %v\n", gn.Name, gn.Rule != nil, gn.Rule != nil && gn == gn.Rule.GetGNode())
 	return gn.Rule != nil && gn == gn.Rule.GetGNode()
 }
 

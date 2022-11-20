@@ -6,7 +6,6 @@ import (
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
-	"reflect"
 	"strconv"
 )
 
@@ -97,7 +96,7 @@ func (gm *Grammar) Postinit() {
 	// Connect all the nodes and collect dereferences into @rules
 	Walk(gm, nil, WalkPrepost{
 		Pre: func(node Astnode, parent Astnode) string {
-			fmt.Println("grammar PRE: typeof node= " + reflect.TypeOf(node).String())
+			// fmt.Println("grammar PRE: typeof node= " + reflect.TypeOf(node).String())
 			gnode := node.GetGNode()
 			// sanity check: it must have no parent yet if it's not a rule
 			if !gnode.IsRule() && gnode.Parent != nil {
@@ -110,14 +109,14 @@ func (gm *Grammar) Postinit() {
 			} else {
 				// set node.rule, the root node for this rule
 				if gnode.Rule == nil {
-					fmt.Println("PRE looking if parent has rule")
+					// fmt.Println("PRE looking if parent has rule")
 					var r Astnode
 					if parent != nil {
 						r = parent.GetGNode().Rule
-						fmt.Println("PRE  yes, parent has rule, returning it")
+						// fmt.Println("PRE  yes, parent has rule, returning it")
 					} else {
 						// must we return nil or undefined?
-						fmt.Println("PRE  no, parent has no rule, returning NewNativeUndefined")
+						// fmt.Println("PRE  no, parent has no rule, returning NewNativeUndefined")
 						r = NewNativeUndefined() // solution 1
 						//r = nil // solution 2
 					}
@@ -127,13 +126,13 @@ func (gm *Grammar) Postinit() {
 			return ""
 		},
 		Post: func(node Astnode, parent Astnode) string {
-			fmt.Println("grammar POST: typeof node= " + reflect.TypeOf(node).String() + " cs:" + node.ContentString())
+			// fmt.Println("grammar POST: typeof node= " + reflect.TypeOf(node).String() + " cs:" + node.ContentString())
 			gnode := node.GetGNode()
 			if gnode == nil {
-				fmt.Println("ignoring gnode==nil type " + reflect.TypeOf(node).String())
+				// fmt.Println("ignoring gnode==nil type " + reflect.TypeOf(node).String())
 			}
 			if gnode.IsRule() {
-				fmt.Println(Green("is rule!!!!!!!!!!!!!!!!!!!!!!"))
+				// fmt.Println(Green("is rule!!!!!!!!!!!!!!!!!!!!!!"))
 				gm.GetGNode().Rules[gnode.Name] = node
 				gm.NumRules++
 				gnode.Id = gm.NumRules
@@ -142,7 +141,7 @@ func (gm *Grammar) Postinit() {
 					fmt.Println(Red(strconv.Itoa(gnode.Id)) + ":\t" + node.ContentString())
 				}
 			} else {
-				fmt.Println("notta rul")
+				// fmt.Println("notta rul")
 			}
 			return ""
 		},

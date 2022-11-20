@@ -17,6 +17,7 @@ func NewRankFromLines(rankname string, lines []Line, grammar *ast.Grammar) *ast.
 			name, rule := il.ToRule(grammar, rank)
 			rank.GetGNode().Include(name, rule)
 		} else if ol, ok := line.(OLine); ok {
+			// fmt.Println("NewRankFromLines name=" + rankname)
 			choice := ol.ToRule(grammar, rank, OLineByIndexOrByName{index: helpers.NewNullInt(rank.Length())})
 			rank.Append(choice)
 			// } else if someAttr. But it won't be useful now

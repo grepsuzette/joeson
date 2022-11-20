@@ -1,11 +1,11 @@
 package ast
 
 import (
+	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/lambda"
+	// "strconv"
 	"strings"
-
-	. "grepsuzette/joeson/colors"
 )
 
 type Rank struct {
@@ -26,13 +26,10 @@ func (rank *Rank) Length() int {
 }
 
 func (rank *Rank) Append(node Astnode) {
-	// if subrank, ok := node.(*Rank); ok {
-	// 	for _, v := range subrank.Choice.choices {
-	// 		rank.Choice.Append(v)
-	// 	}
-	// } else {
-	rank.Choice.Append(node)
+	// if node.GetGNode().Name == "" {
+	// 	node.GetGNode().Name = rank.GetGNode().Name + "[" + strconv.Itoa(rank.Length()) + "]"
 	// }
+	rank.Choice.Append(node)
 }
 
 func (rank *Rank) GetGNode() *GNode                { return rank.GNode }
@@ -43,6 +40,9 @@ func (rank *Rank) Captures() []Astnode             { return rank.GNode.Captures(
 func (rank *Rank) Parse(ctx *ParseContext) Astnode { return rank.Choice.Parse(ctx) }
 func (rank *Rank) ContentString() string {
 	var b strings.Builder
+	if !rank.GetGNode().IsRule() {
+		panic("oops")
+	}
 	b.WriteString(ShowLabelOrNameIfAny(rank))
 	b.WriteString(Blue("Rank("))
 	a := lambda.Map(rank.Choice.choices, func(x Astnode) string {

@@ -18,6 +18,16 @@ func _loopStackPop() {
 	_loopStack = _loopStack[:len(_loopStack)-1]
 }
 
+// TODO rename to LabelOrName
+func ShowLabelOrNameIfAny(n Astnode) string {
+	if n.GetGNode().IsRule() {
+		return Red(n.GetGNode().Name + ": ")
+	} else if n.GetGNode().Label != "" {
+		return Cyan(n.GetGNode().Label + ":")
+	}
+	return ""
+}
+
 // in joeson.coffee those functions were originally declared as
 // class method to GNode and had a $ prefix:
 // @GNode
