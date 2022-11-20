@@ -26,13 +26,13 @@ func (rank *Rank) Length() int {
 }
 
 func (rank *Rank) Append(node Astnode) {
-	if subrank, ok := node.(*Rank); ok {
-		for _, v := range subrank.Choice.choices {
-			rank.Choice.Append(v)
-		}
-	} else {
-		rank.Choice.Append(node)
-	}
+	// if subrank, ok := node.(*Rank); ok {
+	// 	for _, v := range subrank.Choice.choices {
+	// 		rank.Choice.Append(v)
+	// 	}
+	// } else {
+	rank.Choice.Append(node)
+	// }
 }
 
 func (rank *Rank) GetGNode() *GNode                { return rank.GNode }

@@ -1,5 +1,13 @@
 package ast
 
+import (
+	. "grepsuzette/joeson/ast"
+	. "grepsuzette/joeson/core"
+	. "grepsuzette/joeson/line"
+	"strings"
+)
+
+// {{{1 imports and funcs
 // this is the hand-compiled joeson grammar
 // it comes from the original joeson.coffee
 
@@ -10,13 +18,6 @@ package ast
 // this is where. We will use line package
 // to follow original coffee impl. as much
 // as possible
-
-import (
-	. "grepsuzette/joeson/ast"
-	. "grepsuzette/joeson/core"
-	. "grepsuzette/joeson/line"
-	"strings"
-)
 
 func C(a ...Astnode) Astnode { return NewChoice(NewNativeArray(a)) }
 func E(it Astnode) Astnode   { return NewExistential(it) }
@@ -59,6 +60,8 @@ func AttemptToJoinANativeArrayOrPanic(it Astnode) string {
 func o(a ...any) OLine          { return O(a...) }
 func i(a ...any) ILine          { return I(a...) }
 func rules(lines ...Line) ALine { return NewALine(lines) }
+
+// }}}1
 
 var QUOTE string = "'\\''"
 var JOESON_GRAMMAR_RULES Lines = []Line{
@@ -133,3 +136,5 @@ var JOESON_GRAMMAR_RULES Lines = []Line{
 	// 		return nil
 	// })),
 }
+
+// vim: fdm=marker fdl=0

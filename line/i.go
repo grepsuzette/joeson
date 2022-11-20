@@ -14,8 +14,6 @@ type ILine struct {
 	attrs   core.ParseOptions
 }
 
-// func IEmpty() ILine { return ILine{"", nil} }
-
 /*
 I() is a variadic function which allows a variety of declarations, for example:
 - I("INT", "/[0-9]+/")

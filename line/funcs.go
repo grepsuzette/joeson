@@ -1,7 +1,5 @@
 package line
 
-// import . "grepsuzette/joeson/core"
-// import "fmt"
 import (
 	"grepsuzette/joeson/ast"
 	"grepsuzette/joeson/helpers"
