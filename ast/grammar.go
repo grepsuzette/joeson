@@ -29,7 +29,7 @@ type Grammar struct {
 	NumRules int
 
 	// id2Rule: slow lookup for debugging...
-	id2Rule map[int]Astnode // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
+	Id2Rule map[int]Astnode // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
 
 	wasInitialized bool
 }
@@ -137,7 +137,7 @@ func (gm *Grammar) Postinit() {
 				gm.GetGNode().Rules[gnode.Name] = node
 				gm.NumRules++
 				gnode.Id = gm.NumRules
-				gm.id2Rule[gnode.Id] = node
+				gm.Id2Rule[gnode.Id] = node
 				if Trace.Loop { // print out id->rulename for convenience
 					fmt.Println(Red(strconv.Itoa(gnode.Id)) + ":\t" + node.ContentString())
 				}

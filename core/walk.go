@@ -1,5 +1,9 @@
 package core
 
+import (
+	"sort"
+)
+
 type WalkPrepost struct {
 	Pre  func(Astnode, parent Astnode) string // called during 🡖  .  "__stop__" to interrupt
 	Post func(Astnode, parent Astnode) string // called during 🡕 .
@@ -42,8 +46,13 @@ func ForEachChild_Array(a []Astnode, f func(Astnode) Astnode) []Astnode {
 // shortcut calling ForEachChild for members being map[string]Astnode
 func ForEachChild_MapString(h map[string]Astnode, f func(Astnode) Astnode) map[string]Astnode {
 	hnew := map[string]Astnode{}
-	for k, child := range h {
-		if r := f(child); r != nil {
+	sortedKeys := []string{}
+	for k, _ := range h {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+	for _, k := range sortedKeys {
+		if r := f(h[k]); r != nil {
 			hnew[k] = r
 		} // else, removed
 	}

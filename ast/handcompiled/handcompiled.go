@@ -118,7 +118,7 @@ var JOESON_GRAMMAR_RULES Lines = []Line{
 	))),
 	i(Named("LABEL", C(St("&"), St("@"), R("WORD")))),
 	i(Named("WORD", Re("[a-zA-Z\\._][a-zA-Z\\._0-9]*"))),
-	i(Named("INT", Re("[0-9]+")), func(it Astnode) Astnode { return NewNativeIntFromNativeString(it.(NativeString)) }),
+	i(Named("INT", Re("[0-9]+"))), //, func(it Astnode) Astnode { return NewNativeIntFromNativeString(it.(NativeString)) }),
 	i(Named("_PIPE", S(R("_"), St("|")))),
 	i(Named("_", P(C(St(" "), St("\n")), nil))),
 	i(Named("__", P(C(St(" "), St("\n")), nil, 1))),
