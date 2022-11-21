@@ -21,13 +21,13 @@ func NewStr(s string) Str {
 func (str Str) GetGNode() *GNode        { return str.GNode }
 func (str Str) Prepare()                {}
 func (str Str) HandlesChildLabel() bool { return false }
-func (str Str) Labels() []string        { return str.GNode.Labels() }
-func (str Str) Captures() []Astnode     { return str.GNode.Captures() }
+func (str Str) Labels() []string        { return MyLabelIfDefinedOrEmpty(str) }
+func (str Str) Captures() []Astnode     { return MeIfCaptureOrEmpty(str) }
 func (str Str) ContentString() string {
-	return ShowLabelOrNameIfAny(str) + Green("'"+helpers.Escape(str.str)+"'")
+	return LabelOrName(str) + Green("'"+helpers.Escape(str.str)+"'")
 }
 func (str Str) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext) Astnode {
+	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
 		if didMatch, sMatch := ctx.Code.MatchString(str.str); didMatch {
 			// a string is not a terminal element
 			// so return NativeString.

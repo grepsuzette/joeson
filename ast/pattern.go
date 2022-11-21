@@ -1,8 +1,11 @@
 package ast
 
-import . "grepsuzette/joeson/core"
-import . "grepsuzette/joeson/colors"
-import "strings"
+import (
+	"fmt"
+	. "grepsuzette/joeson/colors"
+	. "grepsuzette/joeson/core"
+	"strings"
+)
 
 type Pattern struct {
 	*GNode
@@ -34,7 +37,7 @@ func NewPattern(it Astnode) *Pattern {
 }
 func (patt *Pattern) GetGNode() *GNode { return patt.GNode }
 func (patt *Pattern) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext) Astnode {
+	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
 		pos := ctx.Code.Pos
 		resValue := patt.Value.Parse(ctx)
 		if resValue == nil {
@@ -44,8 +47,7 @@ func (patt *Pattern) Parse(ctx *ParseContext) Astnode {
 			}
 			return NewNativeArray([]Astnode{})
 		}
-		ns := resValue.(NativeString)
-		var matches []Astnode = []Astnode{ns}
+		var matches []Astnode = []Astnode{resValue}
 		for true {
 			pos2 := ctx.Code.Pos
 			if patt.Join != nil {
@@ -62,7 +64,8 @@ func (patt *Pattern) Parse(ctx *ParseContext) Astnode {
 				ctx.Code.Pos = pos2
 				break
 			}
-			matches = append(matches, resValue.(NativeString))
+			fmt.Printf("Pattern matches = append(matches, resValue='%s')\n", resValue.ContentString())
+			matches = append(matches, resValue)
 			if patt.Max > -1 && len(matches) >= int(patt.Max) {
 				break
 			}
@@ -78,12 +81,12 @@ func (patt *Pattern) Parse(ctx *ParseContext) Astnode {
 }
 
 func (patt *Pattern) HandlesChildLabel() bool { return false }
-func (patt *Pattern) Labels() []string        { return patt.GNode.Labels() }
-func (patt *Pattern) Captures() []Astnode     { return patt.GNode.Captures() }
+func (patt *Pattern) Labels() []string        { return MyLabelIfDefinedOrEmpty(patt) }
+func (patt *Pattern) Captures() []Astnode     { return MeIfCaptureOrEmpty(patt) }
 func (patt *Pattern) Prepare()                {}
 func (patt *Pattern) ContentString() string {
 	var b strings.Builder
-	b.WriteString(ShowLabelOrNameIfAny(patt))
+	b.WriteString(LabelOrName(patt))
 	b.WriteString(patt.Value.ContentString() + Cyan("*"))
 	if patt.Join != nil {
 		b.WriteString(patt.Join.ContentString())
@@ -112,12 +115,12 @@ func (patt *Pattern) ForEachChild(f func(Astnode) Astnode) Astnode {
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   value:      {type:GNode}
 	//   join:       {type:GNode}
+	patt.GetGNode().Rules = ForEachChild_MapString(patt.GetGNode().Rules, f)
 	if patt.Value != nil {
 		patt.Value = f(patt.Value)
 	}
 	if patt.Join != nil {
 		patt.Join = f(patt.Join)
 	}
-	patt.GetGNode().Rules = ForEachChild_MapString(patt.GetGNode().Rules, f)
 	return patt
 }

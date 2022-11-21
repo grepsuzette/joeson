@@ -1,11 +1,13 @@
 package core
 
-import "errors"
-import "fmt"
-import "strconv"
-import "strings"
-import . "grepsuzette/joeson/colors"
-import "grepsuzette/joeson/helpers"
+import (
+	"errors"
+	"fmt"
+	. "grepsuzette/joeson/colors"
+	"grepsuzette/joeson/helpers"
+	"strconv"
+	"strings"
+)
 
 type stash struct {
 	frames []*frame
@@ -57,22 +59,17 @@ func (ctx *ParseContext) log(message string) {
 		line := ctx.Code.Line()
 		if Trace.FilterLine == -1 || line == Trace.FilterLine {
 			codeSgmnt := White(strconv.Itoa(line)) + "," + strconv.Itoa(ctx.Code.Col())
-			p := helpers.Escape(ctx.Code.Peek(Peek{BeforeChars: helpers.NewNullInt(5)}))
-			codeSgmnt += "\t" + Black(helpers.PadLeft(p[len(p)-5:], 5))
-			p = helpers.Escape(ctx.Code.Peek(Peek{AfterChars: helpers.NewNullInt(20)}))
-			codeSgmnt += "\t" + Green(helpers.PadRight(p[0:20], 20))
+			p := helpers.Escape(ctx.Code.Peek(NewPeek().BeforeChars(5)))
+			codeSgmnt += "\t" + Black(helpers.PadRight(helpers.SliceString(p, len(p)-5, len(p)), 5))
+			p = helpers.Escape(ctx.Code.Peek(NewPeek().AfterChars(20)))
+			codeSgmnt += Green(helpers.PadLeft(helpers.SliceString(p, 0, 20), 20))
 			if ctx.Code.Pos+20 < len(ctx.Code.text) {
 				codeSgmnt += Black(">")
 			} else {
 				codeSgmnt += Black("]")
 			}
-			fmt.Printf("%s %s %s", codeSgmnt, Cyan(strings.Join(make([]string, ctx.stackLength), "| ")), message)
+			fmt.Printf("%s %s%s\n", codeSgmnt, Cyan(strings.Join(make([]string, ctx.stackLength), "| ")), message)
 		}
-	}
-}
-func (ctx *ParseContext) logIf(cond bool, message string) {
-	if cond {
-		ctx.log(message)
 	}
 }
 
@@ -80,20 +77,20 @@ func (ctx *ParseContext) StackPeek(skip int) *frame {
 	return ctx.stack[ctx.stackLength-1-skip]
 }
 func (ctx *ParseContext) StackPush(x Astnode) {
-	ctx.stackLength++
 	ctx.stack[ctx.stackLength] = ctx.getFrame(x)
+	ctx.stackLength++
 }
 func (ctx *ParseContext) StackPop() { ctx.stackLength-- }
 func (ctx *ParseContext) getFrame(x Astnode) *frame {
-	id := x.GetGNode().Id // id is an int, it is incremented in Grammar: node.id = @numRules++
+	id := x.GetGNode().Id
 	pos := ctx.Code.Pos
 	posFrames := ctx.Frames[pos]
 	frame := posFrames[id]
 	if frame != nil {
+		return frame
+	} else {
 		posFrames[id] = newFrame(pos, id)
 		return posFrames[id]
-	} else {
-		return frame
 	}
 }
 
@@ -104,7 +101,7 @@ func (ctx *ParseContext) wipeWith(frame_ *frame, makeStash bool) *stash {
 		TimeStart("wipewith")
 	}
 	if frame_.wipemask == nil {
-		panic(errors.New("Need frame.wipemask to know what to wipe"))
+		panic(errors.New("need frame.wipemask to know what to wipe"))
 	}
 	var stash_ []*frame
 	if makeStash {

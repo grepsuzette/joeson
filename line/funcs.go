@@ -1,6 +1,7 @@
 package line
 
 import (
+	// "fmt"
 	"grepsuzette/joeson/ast"
 	"grepsuzette/joeson/helpers"
 	"reflect"
@@ -11,14 +12,14 @@ type Lines []Line
 
 func NewRankFromLines(rankname string, lines []Line, grammar *ast.Grammar) *ast.Rank {
 	rank := ast.NewEmptyRank(rankname)
-	grammar.SetRankIfEmpty(rank)
+	// TODO i think this is completely wrong and to delete grammar.SetRankIfEmpty(rank)
 	for _, line := range lines {
 		if il, ok := line.(ILine); ok {
 			name, rule := il.ToRule(grammar, rank)
 			rank.GetGNode().Include(name, rule)
 		} else if ol, ok := line.(OLine); ok {
-			// fmt.Println("NewRankFromLines name=" + rankname)
-			choice := ol.ToRule(grammar, rank, OLineByIndexOrByName{index: helpers.NewNullInt(rank.Length())})
+			// fmt.Printf("funcs.go NewRankFromLines name=%s rank.len:%d\n", rankname, rank.Length())
+			choice := ol.ToRule(grammar, rank, OLineByIndexOrName{index: helpers.NewNullInt(rank.Length())})
 			rank.Append(choice)
 			// } else if someAttr. But it won't be useful now
 		} else {
@@ -28,11 +29,15 @@ func NewRankFromLines(rankname string, lines []Line, grammar *ast.Grammar) *ast.
 	return rank
 }
 
-func NewGrammarFromLines(name string, lines []Line) *ast.Grammar {
-	gm := ast.NewEmptyGrammarNamed(name)
-	NewRankFromLines(name, lines, gm)
-	gm.Postinit()
-	return gm
+// The returned grammar is a new one, while arg `grammar` is the
+//  grammar used to parse this new grammar (usually this would be
+//  the one in ast/handcompiled)
+func NewGrammarFromLines(name string, lines []Line, grammar *ast.Grammar) *ast.Grammar {
+	rank := NewRankFromLines(name, lines, grammar)
+	newgm := ast.NewEmptyGrammarNamed(name)
+	newgm.SetRankIfEmpty(rank)
+	newgm.Postinit()
+	return newgm
 }
 
 func (a Lines) String() string {

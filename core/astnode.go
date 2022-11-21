@@ -1,5 +1,12 @@
 package core
 
+import . "grepsuzette/joeson/colors"
+
+// Astnode are parsed node (with an Origin in the original CodeStream)
+// GNode are the grammar node rule. An Astnode always originates from
+// an Origin and a GNode. Some Astnode (Native{Map,Array,String,Undefined})
+// come without a grammar, however they still have an origin and therefore
+// an almost empty GNode.
 type Astnode interface {
 
 	/* Parse() reads from ParseContext and
@@ -23,4 +30,27 @@ type Astnode interface {
 	Captures() []Astnode     // In current joeson impl, all Captures() return GetGNode().Captures() except Existential, GNode and Sequence.
 
 	ForEachChild(f func(Astnode) Astnode) Astnode
+}
+
+func IsRule(x Astnode) bool {
+	// more contorsion needed than in orig. impl. because might be a CLine
+	// return x.GetGNode().Rule.GetGNode(). != nil && x.GetGNode().Rule.Id == x.GetGNode().Id
+	return x.GetGNode().Rule == x
+}
+
+// this is the port of GNode.toString().
+// It calls x.ContentString() but adds a prefix with the label or name.
+func ContentStringWithPrefix(x Astnode) string {
+	return Prefix(x) + x.ContentString()
+}
+
+func Prefix(x Astnode) string {
+	if IsRule(x) {
+		return Red(x.GetGNode().Name + ": ")
+	} else if x.GetGNode().Label != "" {
+		return Cyan(x.GetGNode().Label + ":")
+	} else {
+		return ""
+	}
+
 }

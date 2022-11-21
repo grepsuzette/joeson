@@ -1,9 +1,9 @@
 package core
 
 // An element of a walk-able tree is a Node.
-type Node struct {
-	id int
-}
+// type Node struct {
+// 	id int
+// }
 
 // ignore @defineChildren
 // ignore? withChildren:  HUM walk uses it

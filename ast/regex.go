@@ -31,13 +31,14 @@ func NewRegexCharClass(it Astnode) *Regex {
 
 func (re *Regex) GetGNode() *GNode { return re.GNode }
 func (re *Regex) ContentString() string {
-	return ShowLabelOrNameIfAny(re) + BoldRed("/") + Magenta(re.re.String()) + BoldRed("/")
+	return LabelOrName(re) + BoldRed("/") + Magenta(re.re.String()) + BoldRed("/")
 }
 func (re *Regex) HandlesChildLabel() bool { return false }
-func (re *Regex) Labels() []string        { return re.GNode.Labels() }
-func (re *Regex) Captures() []Astnode     { return re.GNode.Captures() }
+func (re *Regex) Prepare()                {}
+func (re *Regex) Labels() []string        { return MyLabelIfDefinedOrEmpty(re) }
+func (re *Regex) Captures() []Astnode     { return MeIfCaptureOrEmpty(re) }
 func (re *Regex) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext) Astnode {
+	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
 		if didMatch, sMatch := ctx.Code.MatchRegexp(re.re); !didMatch {
 			return nil
 		} else {

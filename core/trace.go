@@ -7,7 +7,13 @@ package core
 // trace.filterLine<0 means disabled.
 var TimeStart func(name string) = nil
 var TimeEnd func(name string) = nil
-var Trace = TraceSettings{Stack: false, Loop: false, SkipSetup: true, FilterLine: -1}
+
+var Trace = TraceSettings{
+	Stack:      true,
+	Loop:       false,
+	SkipSetup:  true,
+	FilterLine: -1,
+}
 
 type TraceSettings struct {
 	Stack      bool

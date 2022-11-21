@@ -14,10 +14,17 @@ func NewNativeMap(h map[string]Astnode) NativeMap {
 
 func (nm NativeMap) Keys() []string {
 	a := []string{}
-	for k, _ := range nm {
+	for k := range nm {
 		a = append(a, k)
 	}
 	return a
+}
+
+func (nm NativeMap) IsEmpty() bool {
+	for range nm {
+		return true
+	}
+	return false
 }
 
 func (nm NativeMap) GetExist(k string) (Astnode, bool) {
@@ -40,7 +47,7 @@ func (nm NativeMap) Has(k string) bool {
 
 func (nm NativeMap) ContentString() string {
 	var b strings.Builder
-	b.WriteString("NativeMap TODO {")
+	b.WriteString("NativeMap{")
 	for k, v := range nm {
 		b.WriteString("  " + k + ": " + v.ContentString())
 	}

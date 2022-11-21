@@ -63,6 +63,8 @@ func rules(lines ...Line) ALine { return NewALine(lines) }
 
 // }}}1
 
+const JoesonNbRules int = 33
+
 var QUOTE string = "'\\''"
 var JOESON_GRAMMAR_RULES Lines = []Line{
 	o(Named("EXPR", rules(

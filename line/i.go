@@ -45,7 +45,7 @@ func (il ILine) StringIndent(nIndent int) string {
 	case OLine:
 		s += v.String()
 	case CLine:
-		s += v.Astnode.ContentString()
+		s += v.ast.ContentString()
 	default:
 		s += "??"
 		//Magenta("<unhandled>reflect.TypeOf=") + reflect.TypeOf(arg).String()

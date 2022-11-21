@@ -8,7 +8,13 @@ type NativeArray struct {
 	Array []Astnode
 }
 
-func NewNativeArray(a []Astnode) *NativeArray { return &NativeArray{a} }
+func NewNativeArray(a []Astnode) *NativeArray {
+	if a == nil {
+		return &NativeArray{[]Astnode{}}
+	} else {
+		return &NativeArray{a}
+	}
+}
 
 func (na *NativeArray) Get(i int) Astnode       { return na.Array[i] }
 func (na *NativeArray) Length() int             { return len(na.Array) }

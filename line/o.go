@@ -1,6 +1,7 @@
 package line
 
 import (
+	// "fmt"
 	"grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/colors"
 	"grepsuzette/joeson/core"
@@ -17,19 +18,19 @@ type OLine struct {
 	attrs   core.ParseOptions
 }
 
-type OLineByIndexOrByName struct {
+type OLineByIndexOrName struct {
 	name  string
 	index helpers.NullInt
 }
 
 /*
-O() is a variadic function which allows a variety of declarations, for example:
-- O("EXPR", Rules(....))       // "EXPR" is a rule name
-- O("CHOICE _")                // "CHOICE _" is a rule desc because there is no rules() array
-- O("_PIPE* SEQUENCE*_PIPE{2,} _PIPE*", func(it Astnode) Astnode { return new Choice it})
-- O("<name>", func(it Astnode, ctx *ParseContext) Astnode { return <...> }, ParseOptions{ SkipLog: true, SkipCache: false }
+O() is a variadic function, for example:
+- O(Named("EXPR", Rules(....)))  // First argument is string (a rule name) and goes to `name`, second is []Line (subrules)
+- O("CHOICE _")  // "CHOICE _" here is considered a rule desc because there is no rules() array. `name` will be ""
+- O("_PIPE* SEQUENCE*_PIPE{2,} _PIPE*", func(it Astnode) Astnode { return new Choice it}) // same as above, with a cb
+- ..... func(it Astnode, ctx *ParseContext) Astnode { return <...> }, ParseOptions{ SkipLog: true, SkipCache: false } // callbacks long form
 - O(S(St("{"), R("_"), L("min",E(R("INT"))), R("_"), St(","), R("_"), L("max",E(R("INT"))), R("_"), St("}")))
-The last one is a handcompiled rule with which the joeson grammar is initially defined as in ast/handcompiled
+   // A handcompiled rule with which the joeson grammar is initially defined (see ast/handcompiled.go)
 */
 func O(a ...any) OLine {
 	name, content, attrs := lineInit(a)
@@ -45,7 +46,7 @@ func (ol OLine) StringIndent(nIndent int) string {
 	case SLine:
 		s += v.Str
 	case CLine:
-		s += v.Astnode.ContentString()
+		s += v.ast.ContentString()
 	case ALine:
 		s += BoldBlue("[\n") + strings.Join(
 			lambda.Map(v.Array, func(line Line) string { return line.StringIndent(nIndent + 1) }),
@@ -60,25 +61,26 @@ func (ol OLine) StringIndent(nIndent int) string {
 	return s
 }
 
-// note TODO think parentRule could almost simply be GNode. but anyway
-func (ol OLine) ToRule(grammar *ast.Grammar, parentRule core.Astnode, by OLineByIndexOrByName) core.Astnode {
+func (ol OLine) ToRule(grammar *ast.Grammar, parentRule core.Astnode, by OLineByIndexOrName) core.Astnode {
+	//fmt.Println("o.go OLine.ToRule, parentRule=" + parentRule.GetGNode().Name)
 	// figure out the name for this rule
-	// fmt.Println("OLine.ToRule, parentRule=" + parentRule.GetGNode().Name)
+	var name string = ol.name
+	var content Line = ol.content
 	if ol.name != "" {
-		// fmt.Println(" ol.name != '' ")
-		by.name = ol.name
-	} else if by.name == "" && by.index.IsSet && parentRule != nil {
-		// fmt.Printf(" by.name == '' && by.index.IsSet:%n && parentRule != nil \n", by.index.Int)
-		by.name = parentRule.GetGNode().Name + "[" + strconv.Itoa(by.index.Int) + "]"
-		// fmt.Println("ToRule by.name=" + by.name)
-	} else if by.name == "" {
-		panic("Name undefined for 'o' line")
+		// A named rule
+		// fmt.Println("o.go Named rule: ol.name=" + ol.name)
+		name = ol.name
+	} else if by.name != "" {
+		name = by.name
+		// fmt.Printf("o.go by=%v parentRule!=nil?%v by.index.IsSet?%v", by, parentRule != nil, by.index.IsSet)
+	} else if by.index.IsSet && parentRule != nil {
+		name = parentRule.GetGNode().Name + "[" + strconv.Itoa(by.index.Int) + "]"
+		// fmt.Printf("o.go by.name == '' && by.index.Int:%d && parentRule != nil --> %s\n", by.index.Int, name)
 	} else {
-		// fmt.Printf("by=%v parentRule!=nil?%v by.index.IsSet?%v", by, parentRule != nil, by.index.IsSet)
+		panic("assert")
 	}
-	rule := getRule(grammar, by.name, ol.content, parentRule, ol.attrs)
+	rule := getRule(grammar, name, content, parentRule, ol.attrs)
 	rule.GetGNode().Parent = parentRule
-	// TODO is the following commented line really useful? I am not sure yet
-	rule.GetGNode().Index = by.index.Int
+	rule.GetGNode().Index = by.index.Int // 0 by default is fine
 	return rule
 }

@@ -1,11 +1,10 @@
 package ast
 
 import (
-	"errors"
 	"fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
-	"grepsuzette/joeson/helpers"
+	"os"
 	"strconv"
 )
 
@@ -38,6 +37,8 @@ func NewEmptyGrammarNamed(name string) *Grammar {
 	gm.GNode.Name = name
 	return &gm
 }
+
+func (gm *Grammar) GetGNode() *GNode { return gm.GNode }
 
 // after Rank has already been set,
 // collect and collect rules, simplify the rule tree etc.
@@ -96,10 +97,16 @@ func (gm *Grammar) Postinit() {
 	// Connect all the nodes and collect dereferences into @rules
 	Walk(gm, nil, WalkPrepost{
 		Pre: func(node Astnode, parent Astnode) string {
-			// fmt.Println("grammar PRE: typeof node= " + reflect.TypeOf(node).String())
+			// sparent := "nil"
+			// if parent != nil {
+			// 	sparent = parent.ContentString()
+			// }
+			// if Trace.Stack {
+			// 	fmt.Println("grammar PRE: " + node.ContentString() + " typeof= " + reflect.TypeOf(node).String() + " Parent=" + sparent)
+			// }
 			gnode := node.GetGNode()
 			// sanity check: it must have no parent yet if it's not a rule
-			if !gnode.IsRule() && gnode.Parent != nil {
+			if !IsRule(node) && gnode.Parent != nil {
 				panic("Grammar tree should be a DAG, nodes should not be referenced more than once.")
 			}
 			gnode.Grammar = gm
@@ -109,14 +116,11 @@ func (gm *Grammar) Postinit() {
 			} else {
 				// set node.rule, the root node for this rule
 				if gnode.Rule == nil {
-					// fmt.Println("PRE looking if parent has rule")
 					var r Astnode
 					if parent != nil {
 						r = parent.GetGNode().Rule
-						// fmt.Println("PRE  yes, parent has rule, returning it")
 					} else {
 						// must we return nil or undefined?
-						// fmt.Println("PRE  no, parent has no rule, returning NewNativeUndefined")
 						r = NewNativeUndefined() // solution 1
 						//r = nil // solution 2
 					}
@@ -128,14 +132,15 @@ func (gm *Grammar) Postinit() {
 		Post: func(node Astnode, parent Astnode) string {
 			// fmt.Println("grammar POST: typeof node= " + reflect.TypeOf(node).String() + " cs:" + node.ContentString())
 			gnode := node.GetGNode()
-			if gnode == nil {
+			if gnode == nil { // TODO remove this if
+				panic("fa88j")
 				// fmt.Println("ignoring gnode==nil type " + reflect.TypeOf(node).String())
 			}
-			if gnode.IsRule() {
+			if IsRule(node) {
 				// fmt.Println(Green("is rule!!!!!!!!!!!!!!!!!!!!!!"))
 				gm.GetGNode().Rules[gnode.Name] = node
-				gm.NumRules++
 				gnode.Id = gm.NumRules
+				gm.NumRules++
 				gm.Id2Rule[gnode.Id] = node
 				if Trace.Loop { // print out id->rulename for convenience
 					fmt.Println(Red(strconv.Itoa(gnode.Id)) + ":\t" + node.ContentString())
@@ -149,6 +154,9 @@ func (gm *Grammar) Postinit() {
 	// Prepare all the nodes, child first.
 	Walk(gm, nil, WalkPrepost{
 		Post: func(node Astnode, parent Astnode) string {
+			// if Trace.Stack {
+			// 	fmt.Println("grammar POST: " + node.ContentString() + " , now calling prepare()")
+			// }
 			node.Prepare()
 			return ""
 		},
@@ -210,13 +218,15 @@ func (gm *Grammar) Parse(ctx *ParseContext) Astnode {
 		sErr += Yellow("Parsing") + "/"
 		sErr += Red("Suspect") + "/"
 		sErr += White("Unknown") + "\n\n"
-		sErr += Green(ctx.Code.Peek(Peek{BeforeLines: helpers.NewNullInt(2)}))
-		sErr += Yellow(ctx.Code.Peek(Peek{AfterChars: helpers.NewNullInt(maxSuccess - ctx.Code.Pos)}))
+		sErr += Green(ctx.Code.Peek(NewPeek().BeforeLines(2)))
+		sErr += Yellow(ctx.Code.Peek(NewPeek().AfterChars(maxSuccess - ctx.Code.Pos)))
 		ctx.Code.Pos = maxSuccess
-		sErr += Red(ctx.Code.Peek(Peek{AfterChars: helpers.NewNullInt(maxAttempt - ctx.Code.Pos)})) + "/"
+		sErr += Red(ctx.Code.Peek(NewPeek().AfterChars(maxAttempt-ctx.Code.Pos))) + "/"
 		ctx.Code.Pos = maxAttempt
-		sErr += White(ctx.Code.Peek(Peek{AfterLines: helpers.NewNullInt(2)})) + "\n"
-		panic(errors.New(sErr))
+		sErr += White(ctx.Code.Peek(NewPeek().AfterLines(2))) + "\n"
+		// panic(errors.New(sErr))
+		fmt.Printf(sErr)
+		os.Exit(1)
 	}
 	// joeson.coffee has a opts.returnContext but won't implement it
 	return result
@@ -224,11 +234,11 @@ func (gm *Grammar) Parse(ctx *ParseContext) Astnode {
 
 func (gm *Grammar) Prepare()                {}
 func (gm *Grammar) HandlesChildLabel() bool { return false }
-func (gm *Grammar) Labels() []string        { return gm.GNode.Labels() }
-func (gm *Grammar) Captures() []Astnode     { return gm.GNode.Captures() }
+func (gm *Grammar) Labels() []string        { return MyLabelIfDefinedOrEmpty(gm) }
+func (gm *Grammar) Captures() []Astnode     { return MeIfCaptureOrEmpty(gm) }
 func (gm *Grammar) ContentString() string {
 	return Magenta("GRAMMAR{") +
-		ShowLabelOrNameIfAny(gm) +
+		LabelOrName(gm) +
 		gm.rank.ContentString() + Magenta("}")
 }
 

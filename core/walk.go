@@ -9,11 +9,12 @@ type WalkPrepost struct {
 	Post func(Astnode, parent Astnode) string // called during 🡕 .
 }
 
-// depth first walk
+// Depth first walk of entire tree.
 // `ast` is the node on which to start descending recursively.
 // `parent` is available for algorithms needing it (just provide the
 // father of `ast` or nil).
 func Walk(ast Astnode, parent Astnode, prepost WalkPrepost) Astnode {
+	// TODO there can be a big difference. checki
 	if prepost.Pre != nil {
 		// note: joeson.coffee can return "__stop__" here, meaning to end here (Not implemented yet)
 		var stop = prepost.Pre(ast, parent) // don't implement coffee version "__stop__" just yet
@@ -47,7 +48,7 @@ func ForEachChild_Array(a []Astnode, f func(Astnode) Astnode) []Astnode {
 func ForEachChild_MapString(h map[string]Astnode, f func(Astnode) Astnode) map[string]Astnode {
 	hnew := map[string]Astnode{}
 	sortedKeys := []string{}
-	for k, _ := range h {
+	for k := range h {
 		sortedKeys = append(sortedKeys, k)
 	}
 	sort.Strings(sortedKeys)

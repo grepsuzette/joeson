@@ -1,11 +1,15 @@
 package core
 
-import . "grepsuzette/joeson/colors"
-import "grepsuzette/joeson/helpers"
-import "strconv"
-import "strings"
+import (
+	. "grepsuzette/joeson/colors"
+	"grepsuzette/joeson/helpers"
+	"strconv"
+	"strings"
+)
 
-// type ParseFunction func(*ParseContext, Astnode) Astnode
+// in coffeescript/js, the 2nd argument (`Astnode`) doesn't exist,
+// instead .bind(this) is used
+type ParseFunction2 func(*ParseContext, Astnode) Astnode
 type ParseFunction func(*ParseContext) Astnode
 
 // This file is the dirtiest part of this implementation.
@@ -18,9 +22,8 @@ func _loopStackPop() {
 	_loopStack = _loopStack[:len(_loopStack)-1]
 }
 
-// TODO rename to LabelOrName
-func ShowLabelOrNameIfAny(n Astnode) string {
-	if n.GetGNode().IsRule() {
+func LabelOrName(n Astnode) string {
+	if IsRule(n) {
 		return Red(n.GetGNode().Name + ": ")
 	} else if n.GetGNode().Label != "" {
 		return Cyan(n.GetGNode().Label + ":")
@@ -38,13 +41,12 @@ func ShowLabelOrNameIfAny(n Astnode) string {
 //
 // Here they are called _stack, _loopify, _prepareResult and _wrap
 
-func Stack(fparse ParseFunction, x Astnode) ParseFunction {
+func stack(fparse ParseFunction, x Astnode) ParseFunction {
 	return func(ctx *ParseContext) Astnode {
 		ctx.StackPush(x)
 		if TimeStart != nil {
 			TimeStart(x.GetGNode().Name)
 		}
-		// pos := ctx.Code.pos  // TODO original is `pos = $.code.pos` but seems effectless
 		result := fparse(ctx)
 		if TimeEnd != nil {
 			TimeEnd(x.GetGNode().Name)
@@ -54,13 +56,16 @@ func Stack(fparse ParseFunction, x Astnode) ParseFunction {
 	}
 }
 
-// Loopify requires the 2nd arg `Astnode`
-func Loopify(fparse ParseFunction, x Astnode) ParseFunction {
+func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 	return func(ctx *ParseContext) Astnode {
-		ctx.logIf(Trace.Stack, Blue("*")+" "+x.ContentString()+" "+Black(strconv.Itoa(ctx.counter)))
+		log := func(s string) {}
+		if Trace.Stack {
+			log = func(s string) { ctx.log(s) }
+		}
+		log(Blue("*") + " " + x.ContentString() + " " + Black(strconv.Itoa(ctx.counter)))
 		if x.GetGNode().SkipCache {
 			result := fparse(ctx)
-			ctx.logIf(Trace.Stack, Cyan("`->:")+" "+helpers.Escape(result.ContentString())+" "+Black(helpers.TypeOfToString(result)))
+			log(Cyan("`->:") + " " + helpers.Escape(result.ContentString()) + " " + Black(helpers.TypeOfToString(result)))
 			return result
 		}
 		frame := ctx.getFrame(x)
@@ -72,22 +77,35 @@ func Loopify(fparse ParseFunction, x Astnode) ParseFunction {
 		case 0: // non-recursive (so far)
 			// The only time a cache hit will simply return is when loopStage is 0
 			if frame.endPos.IsSet {
-				ctx.logIf(Trace.Stack, Cyan("`-hit:")+" "+helpers.Escape(frame.Result.ContentString())+" "+Black(helpers.TypeOfToString(frame.Result)))
+				if frame.Result != nil {
+					log(Cyan("`-hit:") + " " + helpers.Escape(frame.Result.ContentString()) + " " + Black(helpers.TypeOfToString(frame.Result)))
+				} else {
+					log(Cyan("`-hit: nil"))
+				}
 				ctx.Code.Pos = frame.endPos.Int
 				return frame.Result
 			}
 			frame.loopStage.Set(1)
 			frame.cacheSet(nil, -1)
 			result := fparse(ctx)
+
 			switch frame.loopStage.Int {
 			case 1: // non-recursive (i.e. done)
 				frame.loopStage.Set(0)
 				frame.cacheSet(result, ctx.Code.Pos)
-				ctx.logIf(Trace.Stack, Cyan("`-set:")+" "+helpers.Escape(result.ContentString())+" "+Black(helpers.TypeOfToString(result)))
+				s := Cyan("`-set: ")
+				if result == nil {
+					s += "nil"
+				} else {
+					s += helpers.Escape(result.ContentString())
+					s += " "
+					s += Black(helpers.TypeOfToString(result))
+				}
+				log(s)
 				return result
 			case 2: // recursion detected by subroutine above
 				if result == nil {
-					ctx.logIf(Trace.Stack, Yellow("`--- loop nil --- "))
+					log(Yellow("`--- loop nil --- "))
 					frame.loopStage.Set(0)
 					// cacheSet(frame, nil) // unneeded (already nil)
 					return result
@@ -119,7 +137,7 @@ func Loopify(fparse ParseFunction, x Astnode) ParseFunction {
 						}
 						s += " - " + strings.Join(_loopStack, ", ")
 						s += " - " + Yellow(helpers.Escape(result.ContentString()))
-						s += ": " + Blue(helpers.Escape(ctx.Code.Peek(Peek{BeforeChars: helpers.NewNullInt(10), AfterChars: helpers.NewNullInt(10)})))
+						s += ": " + Blue(helpers.Escape(ctx.Code.Peek(NewPeek().BeforeChars(10).AfterChars(10))))
 					}
 					if TimeStart != nil {
 						TimeStart("loopiteration")
@@ -135,7 +153,7 @@ func Loopify(fparse ParseFunction, x Astnode) ParseFunction {
 						bestResult = result
 						bestEndPos = ctx.Code.Pos
 						frame.cacheSet(bestResult, bestEndPos)
-						ctx.logIf(Trace.Stack, Yellow("|`--- loop iteration ---")+frame.toString())
+						log(Yellow("|`--- loop iteration ---") + frame.toString())
 						ctx.Code.Pos = startPos
 						result = fparse(ctx)
 						if ctx.Code.Pos <= bestEndPos {
@@ -151,7 +169,7 @@ func Loopify(fparse ParseFunction, x Astnode) ParseFunction {
 					ctx.wipeWith(frame, false)
 					ctx.restoreWith(bestStash)
 					ctx.Code.Pos = bestEndPos
-					ctx.logIf(Trace.Stack, Yellow("`--- loop done! --- ")+"best result: "+helpers.Escape(bestResult.ContentString()))
+					log(Yellow("`--- loop done! --- ") + "best result: " + helpers.Escape(bestResult.ContentString()))
 					// Step 4: return best result, which will get cached
 					frame.loopStage.Set(0)
 					return bestResult
@@ -167,7 +185,7 @@ func Loopify(fparse ParseFunction, x Astnode) ParseFunction {
 				TimeStart("wipemask")
 			}
 			// Step 1: Collect wipemask so we can wipe the frames later.
-			ctx.logIf(Trace.Stack, Yellow("`-base: ")+helpers.Escape(frame.Result.ContentString())+" "+Black(helpers.TypeOfToString(frame.Result)))
+			log(Yellow("`-base: ") + helpers.Escape(frame.Result.ContentString()) + " " + Black(helpers.TypeOfToString(frame.Result)))
 			if frame.wipemask == nil {
 				frame.wipemask = make([]bool, ctx.grammar.CountRules())
 				for i := ctx.stackLength - 2; i >= 0; i-- {
@@ -196,18 +214,18 @@ func Loopify(fparse ParseFunction, x Astnode) ParseFunction {
 	}
 }
 
-func PrepareResult(fparse ParseFunction, node Astnode) ParseFunction {
-	// this attaches _origin to the provided `node`
-	//      is called by wrap which is called by Parse
+// prepares the following postparsing operations:
+// - increment ctx.counter (used for debugging and to prevent infinite recursion)
+// - handle labels for standalone nodes
+// - set GNode._origin
+// - call GNode.CbBuilder(result, ctx, caller), if CbBuilder != nil
+func prepareResult(fparse2 ParseFunction2, caller Astnode) ParseFunction {
 	return func(ctx *ParseContext) Astnode {
-		gn := node.GetGNode()
 		ctx.counter++
-		result := fparse(ctx) // TODO one problem here is
-		// in js there is the fn.call this, $
-		// which binds the gnode where it was called
-		// to fparse.
+		result := fparse2(ctx, caller) // .call() is used in js
 		if result != nil {
 			// handle labels for standalone nodes
+			gn := caller.GetGNode()
 			if gn.Label != "" && gn.Parent != nil && !gn.Parent.HandlesChildLabel() {
 				result = NewNativeMap(map[string]Astnode{gn.Label: result})
 			}
@@ -217,46 +235,48 @@ func PrepareResult(fparse ParseFunction, node Astnode) ParseFunction {
 				code: ctx.Code.text,
 				start: Cursor{
 					line: ctx.Code.PosToLine(start),
-					col:  ctx.Code.PosToCol(start),
+					col:  ctx.Code.PosToLine(start), // TODO there's likely a bug in original here, how about PosToCol, but never mind
 					pos:  start,
 				},
 				end: Cursor{
 					line: ctx.Code.PosToLine(end),
-					col:  ctx.Code.PosToCol(end),
+					col:  ctx.Code.PosToLine(end), // TODO there's likely a bug in original here, but never mind
 					pos:  end,
 				},
 			}
 			if gn.CbBuilder != nil {
-				result.GetGNode()._origin = origin
-				// TODO please check this, `@cb.call this, result, $`
-				// TODO if there are labels, result
-				// must be a NativeMap.
-				// If there are none, i suppose probably
-				// it must be a NativeArray?
-				result = gn.CbBuilder(result, ctx)
+				// Native* don't have a GNode.
+				// It also doesn't make sense to store an origin
+				// for them anyway
+				if result.GetGNode() != nil {
+					result.GetGNode()._origin = origin
+				}
+				// in js, it is bounded to this (`caller`)
+				result = gn.CbBuilder(result, ctx, caller)
 			}
-			result.GetGNode()._origin = origin // set it again
+			// TODO remove this next line after proven it works without
+			if result.GetGNode() != nil {
+				result.GetGNode()._origin = origin // set it again. though original impl. has this, it is most definitely not required here
+			}
 		}
 		return result
 	}
 }
 
-func Wrap(fparse ParseFunction, node Astnode) ParseFunction {
-	wrapped1 := Stack(Loopify(PrepareResult(fparse, node), node), node)
-	wrapped2 := PrepareResult(fparse, node)
+func Wrap(fparse2 ParseFunction2, node Astnode) ParseFunction {
+	wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
+	wrapped2 := prepareResult(fparse2, node)
 	gn := node.GetGNode()
-	// TODO see if it was not oversimplified....
 	return func(ctx *ParseContext) Astnode {
-		// TODO because it is interface cmp, triple check it,
-		// I suspect it will be wrong
-		if node == gn.Rule {
+		if IsRule(node) {
 			return wrapped1(ctx)
 		} else if gn.Label != "" &&
 			(gn.Parent != nil && !gn.Parent.HandlesChildLabel()) ||
 			gn.CbBuilder != nil {
 			return wrapped2(ctx)
 		} else {
-			return fparse(ctx)
+			return fparse2(ctx, node)
 		}
 	}
+
 }

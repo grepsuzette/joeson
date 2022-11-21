@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"fmt"
+	"golang.org/x/exp/constraints"
 	"strings"
 )
 
@@ -83,4 +84,32 @@ func PadRight(s string, n int) string {
 	} else {
 		return s
 	}
+}
+
+func Min[T constraints.Ordered](a, b T) T {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func Max[T constraints.Ordered](a, b T) T {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// SliceString must act similar to javascript "string".slice(start, end)
+func SliceString(s string, start int, end int) string {
+	if start < 0 || start > len(s) || end < start {
+		return ""
+	}
+	if end > len(s) {
+		end = len(s)
+	}
+	return s[start:end]
+}
+func SliceStringFrom(s string, start int) string {
+	return SliceString(s, start, len(s))
 }

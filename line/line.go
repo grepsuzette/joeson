@@ -1,9 +1,12 @@
 package line
 
-import "fmt"
-import "grepsuzette/joeson/ast"
-import . "grepsuzette/joeson/core"
-import "reflect"
+import (
+	"grepsuzette/joeson/ast"
+	. "grepsuzette/joeson/core"
+
+	//. "grepsuzette/joeson/colors"
+	"reflect"
+)
 
 // ALine are simply []Line
 // SLine are transitory, and when parsed become OLine
@@ -36,10 +39,14 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 		} else {
 			switch v := arg.(type) {
 			case func(it Astnode) Astnode:
-				attrs.CbBuilder = func(x Astnode, _ *ParseContext) Astnode {
+				attrs.CbBuilder = func(x Astnode, _ *ParseContext, _ Astnode) Astnode {
 					return v(x)
 				}
-			case func(it Astnode, ctx *ParseContext) Astnode:
+			case func(_ Astnode, _ *ParseContext) Astnode:
+				attrs.CbBuilder = func(x Astnode, ctx *ParseContext, _ Astnode) Astnode {
+					return v(x, ctx)
+				}
+			case func(_ Astnode, _ *ParseContext, _ Astnode) Astnode:
 				attrs.CbBuilder = v
 			case ParseOptions:
 				attrs = v
@@ -61,8 +68,12 @@ func rule2line(x any) Line {
 		return v
 	case Astnode:
 		return NewCLine(v)
+	case CLine:
+		return v
 	case SLine:
-		panic(v.Str)
+		// TODO let's try directly to wrap it in O?
+		return O(v.Str)
+		// panic("Cannot accept a string directly here for now, please wrap it in an OLine: " + v.Str)
 	case ILine:
 		panic("impossible")
 	case []Line:
@@ -90,21 +101,19 @@ func getRule(grammar *ast.Grammar, name string, line Line, parentRule Astnode, a
 		ast = NewRankFromLines(name, v.Array, grammar)
 	case CLine:
 		// fmt.Println("getRule CLine name=" + name)
-		ast = v.Astnode
+		ast = v.ast
 		ast.GetGNode().Name = name
 	case ILine:
 		panic("ILine is impossible here")
 	case OLine:
-		ast = v.ToRule(grammar, parentRule, OLineByIndexOrByName{name: name})
+		ast = v.ToRule(grammar, parentRule, OLineByIndexOrName{name: name})
 	case SLine:
 		var ctx *ParseContext
-		defer func() {
-			if e := recover(); e != nil {
-				fmt.Printf("Error in rule %s: %s:\n%v\n", name, v.Str, e)
-				// make it fail again for real this time
-				grammar.Parse(ctx)
-			}
-		}()
+		// defer func() {
+		// 	if e := recover(); e != nil {
+		// 		fmt.Printf("Error in rule %s, that is %s:\n%v\n", Cyan(name), Magenta(v.Str), e)
+		// 	}
+		// }()
 		// TODO, can surround with halt trace instructions as in coffee impl
 		ctx = NewParseContext(NewCodeStream(v.Str), grammar, attrs)
 		ast = grammar.Parse(ctx)
@@ -112,13 +121,12 @@ func getRule(grammar *ast.Grammar, name string, line Line, parentRule Astnode, a
 		panic("unrecog type " + reflect.TypeOf(line).String())
 	}
 	rule := ast.GetGNode()
-	// shouldn't rule be directly a GNode?
-	if rule.Rule != nil && !rule.IsRule() {
-		panic("fjai3289")
+	if rule.Rule != nil && !IsRule(ast) {
+		panic("assert")
 	}
-	rule.Rule = rule
+	rule.Rule = ast
 	if rule.Name != "" && rule.Name != name {
-		panic("fa8332")
+		panic("assert")
 	}
 	// if attrs != nil {
 	rule.SkipCache = attrs.SkipCache

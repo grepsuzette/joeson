@@ -1,8 +1,11 @@
 package ast
 
-import . "grepsuzette/joeson/colors"
-import "grepsuzette/joeson/helpers"
-import . "grepsuzette/joeson/core"
+import (
+	. "grepsuzette/joeson/colors"
+	"grepsuzette/joeson/helpers"
+
+	. "grepsuzette/joeson/core"
+)
 
 type Ref struct {
 	*GNode
@@ -21,6 +24,9 @@ func NewRef(it Astnode) *Ref {
 		name = ns.Str
 	case *NativeArray:
 		var na *NativeArray = v
+		if na.Length() == 0 {
+			panic("assert")
+		}
 		name = na.Get(0).(*NativeString).Str
 		if na.Length() > 1 {
 			param = na.Get(1)
@@ -41,7 +47,7 @@ func (ref *Ref) GetGNode() *GNode        { return ref.GNode }
 func (ref *Ref) HandlesChildLabel() bool { return false }
 func (ref *Ref) Prepare()                {}
 func (ref *Ref) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext) Astnode {
+	return Wrap(func(ctx *ParseContext, _ Astnode) Astnode {
 		var x Astnode = ref.GNode.Grammar.(*Grammar).Rules[ref.ref]
 		if x == nil {
 			panic("Unknown reference " + ref.ref)
@@ -51,7 +57,7 @@ func (ref *Ref) Parse(ctx *ParseContext) Astnode {
 	}, ref)(ctx)
 }
 
-func (ref *Ref) Captures() []Astnode { return ref.GNode.Captures() }
+func (ref *Ref) Captures() []Astnode { return MeIfCaptureOrEmpty(ref) }
 func (ref *Ref) Labels() []string {
 	return ref._labels.GetCacheOrSet(func() []string {
 		if ref.GNode.Label == "@" {
@@ -65,7 +71,7 @@ func (ref *Ref) Labels() []string {
 }
 
 func (ref *Ref) ContentString() string {
-	return ShowLabelOrNameIfAny(ref) + Red(ref.ref)
+	return LabelOrName(ref) + Yellow(ref.ref)
 }
 func (ref *Ref) ForEachChild(f func(Astnode) Astnode) Astnode {
 	// no children defined in coffee

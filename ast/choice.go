@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/lambda"
@@ -32,8 +33,8 @@ func (ch *Choice) IsThereOnlyOneChoice() (bool, Astnode) {
 func (ch *Choice) Append(node Astnode)     { ch.choices = append(ch.choices, node) }
 func (ch *Choice) GetGNode() *GNode        { return ch.GNode }
 func (ch *Choice) HandlesChildLabel() bool { return false }
-func (ch *Choice) Labels() []string        { return ch.GNode.Labels() }
-func (ch *Choice) Captures() []Astnode     { return ch.GNode.Captures() }
+func (ch *Choice) Labels() []string        { return MyLabelIfDefinedOrEmpty(ch) }
+func (ch *Choice) Captures() []Astnode     { return MeIfCaptureOrEmpty(ch) }
 func (ch *Choice) Prepare() {
 	for _, choice := range ch.choices {
 		if !choice.GetGNode().Capture {
@@ -45,8 +46,9 @@ func (ch *Choice) Prepare() {
 }
 
 func (ch *Choice) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext) Astnode {
-		for _, choice := range ch.choices {
+	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
+		for i, choice := range ch.choices {
+			fmt.Printf("Choice n=%d %s\n", i, choice.ContentString())
 			pos := ctx.Code.Pos
 			result := choice.Parse(ctx)
 			if result == nil {
@@ -61,7 +63,7 @@ func (ch *Choice) Parse(ctx *ParseContext) Astnode {
 
 func (ch *Choice) ContentString() string {
 	var b strings.Builder
-	b.WriteString(ShowLabelOrNameIfAny(ch))
+	b.WriteString(LabelOrName(ch))
 	b.WriteString(Blue("("))
 	a := lambda.Map(ch.choices, func(nn Astnode) string {
 		return nn.ContentString()
@@ -75,8 +77,9 @@ func (ch *Choice) ForEachChild(f func(Astnode) Astnode) Astnode {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}
-	ch.choices = ForEachChild_Array(ch.choices, f)
+	// we must first wall through rules, and then only through choices
 	ch.GetGNode().Rules = ForEachChild_MapString(ch.GetGNode().Rules, f)
+	ch.choices = ForEachChild_Array(ch.choices, f)
 	return ch
 }
 func (ch *Choice) String() string { return "AFAKFAKg" }

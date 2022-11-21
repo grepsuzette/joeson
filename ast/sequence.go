@@ -25,6 +25,9 @@ type Sequence struct {
 
 func NewSequence(it Astnode) *Sequence {
 	if a, ok := it.(*NativeArray); ok {
+		if a == nil {
+			panic("expecting non nil array")
+		}
 		return &Sequence{GNode: NewGNode(), sequence: a.Array}
 	} else {
 		panic("Sequence expected a NativeArray")
@@ -78,7 +81,7 @@ func (seq *Sequence) internalType() sequenceRepr {
 
 func (seq *Sequence) ContentString() string {
 	var b strings.Builder
-	b.WriteString(ShowLabelOrNameIfAny(seq))
+	b.WriteString(LabelOrName(seq))
 	for _, x := range seq.sequence {
 		b.WriteString(x.ContentString() + " ")
 	}
@@ -86,7 +89,7 @@ func (seq *Sequence) ContentString() string {
 }
 
 func (seq *Sequence) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext) Astnode {
+	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
 		switch seq.internalType() {
 		case Array:
 			return seq.parseAsArray(ctx)
@@ -119,7 +122,7 @@ func (seq *Sequence) parseAsSingle(ctx *ParseContext) Astnode {
 	return result
 }
 
-func (seq *Sequence) parseAsArray(ctx *ParseContext) *NativeArray {
+func (seq *Sequence) parseAsArray(ctx *ParseContext) Astnode {
 	results := make([]Astnode, 0)
 	for _, child := range seq.sequence {
 		res := child.Parse(ctx)
@@ -135,27 +138,41 @@ func (seq *Sequence) parseAsArray(ctx *ParseContext) *NativeArray {
 
 func (seq *Sequence) parseAsObject(ctx *ParseContext) Astnode {
 	results := NewEmptyNativeMap()
-	for _, child := range seq.sequence {
+	for k, child := range seq.sequence {
 		res := child.Parse(ctx)
-		if res == nil {
+		if res == nil { // note: NativeUndefined must not return here
 			return nil
 		}
-		// because it has labels, child res is basically guaranteed to be
-		// a NativeMap both for "&" and "@"
+		// if there is a label, child res is normally a NativeMap
+		// otherwise, child res is a Ref
 		if child.GetGNode().Label == "&" {
-			if results == nil {
-				results = res.(NativeMap)
-			} else {
-				resMap := res.(NativeMap)
+			switch v := res.(type) {
+			case NativeMap:
+				// TODO seems this case never happens after all,
+				// it seems to be a Ref instead
+				panic("AGAGAGA")
+				resMap := v
 				for _, k := range results.Keys() {
 					resMap.Set(k, results.Get(k))
 				}
 				results = resMap
+			case *Ref:
+				if k == len(seq.sequence)-1 {
+					return v
+				} else {
+					panic("unhandled case, where Ref in & is not the final element in a sequence, study how to merge")
+				}
+			case Str:
+				if k == len(seq.sequence)-1 {
+					return v
+				} else {
+					panic("unhandled case, where Str in & is not the final element in a sequence, study how to merge")
+				}
+			default:
+				panic("unhandled type in parseAsObject")
 			}
 		} else if child.GetGNode().Label == "@" {
-			if results == nil {
-				results = res.(NativeMap)
-			} else {
+			if _, isUndefined := res.(NativeUndefined); !isUndefined {
 				h := res.(NativeMap)
 				for _, k := range h.Keys() {
 					results.Set(k, h.Get(k))
@@ -174,9 +191,9 @@ func (seq *Sequence) ForEachChild(f func(Astnode) Astnode) Astnode {
 	//   sequence:   {type:[type:GNode]}
 	// this one seems tricky,
 	//  but think can recursively work with Native*.ForEachChild
+	seq.GetGNode().Rules = ForEachChild_MapString(seq.GetGNode().Rules, f)
 	if seq.sequence != nil {
 		seq.sequence = ForEachChild_Array(seq.sequence, f)
 	}
-	seq.GetGNode().Rules = ForEachChild_MapString(seq.GetGNode().Rules, f)
 	return seq
 }

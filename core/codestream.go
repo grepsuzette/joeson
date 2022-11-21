@@ -8,15 +8,21 @@ import (
 	"strings"
 )
 
-// surely NullInt is more usable than *int...
-// https://stackoverflow.com/questions/68800319/how-to-differentiate-int-null-and-defaulted-to-zero-from-int-actually-equal-to-z
-// let's see for now
-type Peek struct {
-	BeforeChars helpers.NullInt
-	BeforeLines helpers.NullInt
-	AfterChars  helpers.NullInt
-	AfterLines  helpers.NullInt
+// don't instanciate directly, instead use e.g. NewPeek().BeforeLines(2).AfterLines(4) etc
+type peekOper struct {
+	beforeChars int // they all use -1 for unspecified
+	beforeLines int
+	afterChars  int
+	afterLines  int
 }
+
+func NewPeek() *peekOper {
+	return &peekOper{beforeChars: -1, beforeLines: -1, afterChars: -1, afterLines: -1}
+}
+func (ps *peekOper) BeforeChars(n int) *peekOper { ps.beforeChars = n; return ps }
+func (ps *peekOper) AfterChars(n int) *peekOper  { ps.afterChars = n; return ps }
+func (ps *peekOper) BeforeLines(n int) *peekOper { ps.beforeLines = n; return ps }
+func (ps *peekOper) AfterLines(n int) *peekOper  { ps.afterLines = n; return ps }
 
 // Pos acts as a cursor
 type CodeStream struct {
@@ -31,9 +37,6 @@ func NewCodeStream(text string) *CodeStream {
 		if rune == '\n' {
 			lineStarts = append(lineStarts, pos+1)
 		}
-	}
-	for _, v := range lineStarts {
-		fmt.Println(v)
 	}
 	return &CodeStream{text, 0, lineStarts}
 }
@@ -66,51 +69,40 @@ func (code *CodeStream) GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string
 	}
 	oldpos := code.Pos
 	code.Pos = index
-	fmt.Printf("index=%d return=%s∎\n", index, code.text[oldpos:code.Pos])
-	return code.text[oldpos:code.Pos]
+	s := helpers.SliceString(code.text, oldpos, code.Pos)
+	fmt.Printf("index=%d return=%s∎\n", index, s)
+	return s
 }
 
-func (code *CodeStream) Peek(o Peek) string {
-	min := func(a, b int) int {
-		if a < b {
-			return a
-		}
-		return b
+func (code *CodeStream) Peek(oper *peekOper) string {
+	if oper.beforeLines < 0 && oper.beforeChars < 0 {
+		oper.beforeChars = 0
 	}
-	max := func(a, b int) int {
-		if a > b {
-			return a
-		}
-		return b
+	if oper.afterLines < 0 && oper.afterChars < 0 {
+		oper.afterChars = 0
 	}
-	if !o.BeforeLines.IsSet && !o.BeforeChars.IsSet {
-		o.BeforeChars = helpers.NewNullInt(0)
-	}
-	if !o.AfterLines.IsSet && !o.AfterChars.IsSet {
-		o.AfterChars = helpers.NewNullInt(0)
-	}
-	if o.BeforeChars.IsSet && o.BeforeChars.Int == 0 && o.AfterChars.IsSet && o.AfterChars.Int == 0 {
+	if oper.beforeChars == 0 && oper.afterChars == 0 {
 		return ""
 	}
 	start := 0
 	end := 0
-	if o.BeforeLines.IsSet {
-		startLine := max(0, code.Line()-o.BeforeLines.Int)
+	if oper.beforeLines > -1 {
+		startLine := helpers.Max(0, code.Line()-oper.beforeLines)
 		start = code.lineStarts[startLine]
 	} else {
-		start = code.Pos - o.BeforeChars.Int
+		start = code.Pos - oper.beforeChars
 	}
-	if o.AfterLines.IsSet {
-		endLine := min(len(code.lineStarts)-1, code.Line()+o.AfterLines.Int)
+	if oper.afterLines > -1 {
+		endLine := helpers.Min(len(code.lineStarts)-1, code.Line()+oper.afterLines)
 		if endLine < len(code.lineStarts)-1 {
 			end = code.lineStarts[endLine+1] - 1
 		} else {
 			end = len(code.text)
 		}
 	} else {
-		end = code.Pos + o.AfterChars.Int
+		end = code.Pos + oper.afterChars
 	}
-	return code.text[start:end]
+	return helpers.SliceString(code.text, start, end)
 }
 
 // Get next byte(s). Default value for len is 1,
@@ -125,7 +117,7 @@ func (code *CodeStream) Next(pLen *int) string {
 	}
 	oldpos := code.Pos
 	code.Pos += n
-	return code.text[oldpos:code.Pos]
+	return helpers.SliceString(code.text, oldpos, code.Pos)
 }
 
 // Get next hex byte(s) as number.
@@ -161,7 +153,7 @@ func (code *CodeStream) Hex(pLen *int) uint64 {
 // didMatch indicates whether is succeeded
 // in which case the match is in `m`
 func (code *CodeStream) MatchString(s string) (didMatch bool, m string) {
-	if s != code.text[code.Pos:code.Pos+len(s)] {
+	if s != helpers.SliceString(code.text, code.Pos, code.Pos+len(s)) {
 		return false, ""
 	}
 	code.Pos += len(s)
@@ -175,22 +167,12 @@ func (code *CodeStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string) 
 	if firstMatchLoc := re.FindStringIndex(code.text[code.Pos:]); firstMatchLoc == nil {
 		return false, ""
 	} else {
-		if firstMatchLoc[0] != code.Pos {
+		if firstMatchLoc[0] != 0 {
 			return false, ""
 		} else {
-			// TODO test it!
-			// original code is
-			/*
-			   # Regex returns null if match failed,
-			   # otherwise returns match[0] which may be ''
-			   regex.lastIndex = @pos
-			   match = regex.exec(@text)
-			   return null if not match or match.index != @pos
-			   @pos = regex.lastIndex
-			   return match[0]
-			*/
-			code.Pos = firstMatchLoc[1]
-			return true, code.text[firstMatchLoc[0]:firstMatchLoc[1]]
+			s := helpers.SliceString(code.text, code.Pos+firstMatchLoc[0], code.Pos+firstMatchLoc[1])
+			code.Pos += firstMatchLoc[1]
+			return true, s
 		}
 	}
 }
