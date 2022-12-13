@@ -18,7 +18,7 @@ just admit that the current implementation is imperfect, and limit grammar usage
 
 @trace = trace =
   #filterLine: 299
-  stack:      no
+  stack:      yes
   loop:       no
   skipSetup:  yes
 
@@ -133,6 +133,25 @@ cacheSet = (frame, result, endPos) ->
     timeEnd? 'restorewith'
     return
 
+# so that it doesn't log "object" for everything
+showtype = (result) ->
+    if result != null
+        return "Ref" if result.ref?
+        return "Str" if result.str?
+        return "Regex" if result.reStr?
+        return "Sequence" if result.sequence?
+        return "Rank or Choice" if result.choices?
+        return "Existential or Not" if result.it?
+        return "Lookahead" if result.expr?
+        return "STRING!" if typeof result is "string"
+        if typeof result is "object"
+            s = ""
+            for name in result
+                s = s + name + ","
+            return "object keys:{" + s + "}"
+        else
+            return "Unknown"
+
 ###
   In addition to the attributes defined by subclasses,
     the following attributes exist for all nodes.
@@ -171,7 +190,7 @@ cacheSet = (frame, result, endPos) ->
 
         # The only time a cache hit will simply return is when loopStage is 0
         if frame.endPos?
-          $.log "#{cyan "`-hit:"} #{escape frame.result} #{black typeof frame.result}" if trace.stack
+          $.log "#{cyan "`-hit:"} #{"'"+frame.result+"'"} #{cyan(showtype(frame.result))} ${magenta typeof frame.result}" if trace.stack
           $.code.pos = frame.endPos
           return frame.result
 
@@ -183,7 +202,7 @@ cacheSet = (frame, result, endPos) ->
           when 1 # non-recursive (done)
             frame.loopStage = 0
             cacheSet frame, result, $.code.pos
-            $.log "#{cyan "`-set:"} #{escape result} #{black typeof result}" if trace.stack
+            $.log "#{cyan "`-set:"} '#{result}' #{cyan showtype result} #{magenta typeof result}" if trace.stack
             return result
 
           when 2 # recursion detected by subroutine above
@@ -673,7 +692,7 @@ Line = clazz 'Line', ->
       try
         # HACK: temporarily halt trace
         oldTrace = trace
-        trace = stack:no, loop:no if trace.skipSetup
+        # trace = stack:no, loop:no if trace.skipSetup
         rule = GRAMMAR.parse rule
         trace = oldTrace
       catch err
