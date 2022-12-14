@@ -135,7 +135,7 @@ cacheSet = (frame, result, endPos) ->
 
 # so that it doesn't log "object" for everything
 showtype = (result) ->
-    if result != null
+    if result?
         return "Ref" if result.ref?
         return "Str" if result.str?
         return "Regex" if result.reStr?
