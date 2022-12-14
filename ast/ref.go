@@ -34,8 +34,6 @@ func NewRef(it Astnode) *Ref {
 	default:
 		panic("unexpected type for NewRef")
 	}
-	// var name NativeString = it[0].(NativeString)
-	// var param Astnode = it[1]
 	ref := Ref{GNode: NewGNode(), ref: name, param: param}
 	if name[0:1] == "_" {
 		ref.GNode.Capture = false

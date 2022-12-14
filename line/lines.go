@@ -12,7 +12,6 @@ type Lines []Line
 
 func NewRankFromLines(rankname string, lines []Line, grammar *ast.Grammar) *ast.Rank {
 	rank := ast.NewEmptyRank(rankname)
-	// TODO i think this is completely wrong and to delete grammar.SetRankIfEmpty(rank)
 	for _, line := range lines {
 		if il, ok := line.(ILine); ok {
 			name, rule := il.ToRule(grammar, rank)

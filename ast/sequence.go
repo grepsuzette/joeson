@@ -1,9 +1,11 @@
 package ast
 
 import (
+	// "fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
+	"reflect"
 	"strings"
 )
 
@@ -140,9 +142,10 @@ func (seq *Sequence) parseAsObject(ctx *ParseContext) Astnode {
 	results := NewEmptyNativeMap()
 	for k, child := range seq.sequence {
 		res := child.Parse(ctx)
-		if res == nil { // note: NativeUndefined must not return here
+		if res == nil {
 			return nil
 		}
+		// TODO dubious comment below, edit soon
 		// if there is a label, child res is normally a NativeMap
 		// otherwise, child res is a Ref
 		if child.GetGNode().Label == "&" {
@@ -162,14 +165,29 @@ func (seq *Sequence) parseAsObject(ctx *ParseContext) Astnode {
 				} else {
 					panic("unhandled case, where Ref in & is not the final element in a sequence, study how to merge")
 				}
+			case *Choice:
+				return v
+			case *Not:
+				return v
+			case *Regex:
+				return v
 			case Str:
 				if k == len(seq.sequence)-1 {
 					return v
 				} else {
 					panic("unhandled case, where Str in & is not the final element in a sequence, study how to merge")
 				}
+			case *Pattern:
+				// fmt.Println("Pattern:")
+				// fmt.Println("Value: " + v.Value.ContentString())
+				// fmt.Println("Join: " + v.Join.ContentString())
+				// fmt.Println("Min: " + v.Min.ContentString())
+				// fmt.Println("Max: " + v.Max.ContentString())
+				return v
+			case *Existential:
+				return v
 			default:
-				panic("unhandled type in parseAsObject")
+				panic("unhandled type in parseAsObject: " + reflect.TypeOf(v).String() + "\n" + ctx.Code.Print())
 			}
 		} else if child.GetGNode().Label == "@" {
 			if _, isUndefined := res.(NativeUndefined); !isUndefined {
@@ -179,7 +197,6 @@ func (seq *Sequence) parseAsObject(ctx *ParseContext) Astnode {
 				}
 			}
 		} else if child.GetGNode().Label != "" {
-			// TODO ^ i have a doubt that maybe label should be *string because of joeson.go:832...
 			results.Set(child.GetGNode().Label, res)
 		}
 	}
@@ -189,8 +206,6 @@ func (seq *Sequence) ForEachChild(f func(Astnode) Astnode) Astnode {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   sequence:   {type:[type:GNode]}
-	// this one seems tricky,
-	//  but think can recursively work with Native*.ForEachChild
 	seq.GetGNode().Rules = ForEachChild_MapString(seq.GetGNode().Rules, f)
 	if seq.sequence != nil {
 		seq.sequence = ForEachChild_Array(seq.sequence, f)

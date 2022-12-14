@@ -97,14 +97,12 @@ func (gm *Grammar) Postinit() {
 	// Connect all the nodes and collect dereferences into @rules
 	Walk(gm, nil, WalkPrepost{
 		Pre: func(node Astnode, parent Astnode) string {
-			// sparent := "nil"
-			// if parent != nil {
-			// 	sparent = parent.ContentString()
-			// }
-			// if Trace.Stack {
-			// 	fmt.Println("grammar PRE: " + node.ContentString() + " typeof= " + reflect.TypeOf(node).String() + " Parent=" + sparent)
-			// }
 			gnode := node.GetGNode()
+			if gnode == nil {
+				// TODO comment
+				fmt.Println("PRE " + node.ContentString() + " has nil gnode, in grammar.Postinit(), returning ''")
+				return ""
+			}
 			// sanity check: it must have no parent yet if it's not a rule
 			if !IsRule(node) && gnode.Parent != nil {
 				panic("Grammar tree should be a DAG, nodes should not be referenced more than once.")
@@ -112,7 +110,8 @@ func (gm *Grammar) Postinit() {
 			gnode.Grammar = gm
 			gnode.Parent = parent
 			if false {
-				// TODO "inline rules are special" in original
+				// "inline rules are special" in original coffeescript
+				// but the bit of code seem unreachable anyway
 			} else {
 				// set node.rule, the root node for this rule
 				if gnode.Rule == nil {
@@ -132,12 +131,13 @@ func (gm *Grammar) Postinit() {
 		Post: func(node Astnode, parent Astnode) string {
 			// fmt.Println("grammar POST: typeof node= " + reflect.TypeOf(node).String() + " cs:" + node.ContentString())
 			gnode := node.GetGNode()
-			if gnode == nil { // TODO remove this if
-				panic("fa88j")
+			if gnode == nil {
+				// TODO comment
+				fmt.Println("POST " + node.ContentString() + " has nil gnode, in grammar.Postinit(), returning ''")
 				// fmt.Println("ignoring gnode==nil type " + reflect.TypeOf(node).String())
+				return ""
 			}
 			if IsRule(node) {
-				// fmt.Println(Green("is rule!!!!!!!!!!!!!!!!!!!!!!"))
 				gm.GetGNode().Rules[gnode.Name] = node
 				gnode.Id = gm.NumRules
 				gm.NumRules++
@@ -145,8 +145,6 @@ func (gm *Grammar) Postinit() {
 				if Trace.Loop { // print out id->rulename for convenience
 					fmt.Println(Red(strconv.Itoa(gnode.Id)) + ":\t" + node.ContentString())
 				}
-			} else {
-				// fmt.Println("notta rul")
 			}
 			return ""
 		},
@@ -180,17 +178,10 @@ func (gm *Grammar) Parse(ctx *ParseContext) Astnode {
 		oldTrace = Trace
 		Trace.Stack = true
 	}
-	// parse
 	if gm.rank == nil {
 		panic("Grammar.rank is nil")
 	}
 	result := gm.rank.Parse(ctx)
-	// TODO
-	// $.result = @rank.parse $
-	// $.result?.code = code  <---- i dodoubt this line (joeson.coffee:625)
-	// if ctx.Result != nil {
-	// 	ctx.Result.code = code
-	// }
 	// undo temprary stack tracing
 	if ctx.Debug {
 		Trace = oldTrace
@@ -224,7 +215,6 @@ func (gm *Grammar) Parse(ctx *ParseContext) Astnode {
 		sErr += Red(ctx.Code.Peek(NewPeek().AfterChars(maxAttempt-ctx.Code.Pos))) + "/"
 		ctx.Code.Pos = maxAttempt
 		sErr += White(ctx.Code.Peek(NewPeek().AfterLines(2))) + "\n"
-		// panic(errors.New(sErr))
 		fmt.Printf(sErr)
 		os.Exit(1)
 	}
@@ -242,7 +232,6 @@ func (gm *Grammar) ContentString() string {
 		gm.rank.ContentString() + Magenta("}")
 }
 
-// satisfy GrammarRuleCounter
 func (gm *Grammar) CountRules() int { return gm.NumRules }
 func (gm *Grammar) IsReady() bool   { return gm.rank != nil && gm.wasInitialized }
 func (gm *Grammar) SetRankIfEmpty(rank *Rank) {

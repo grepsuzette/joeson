@@ -1,4 +1,4 @@
-Those are rule declaration helpers called O() and I().
+Package line is a helper containing rule declaration helpers called O() and I().
 
 In the future there should be other systems to declare rules.
 This one is code-like, with rules containing subrules:
@@ -35,8 +35,8 @@ the pump is initialized by a top-level O() toRule call, and then (in pseudo-code
 |                                                                                    |
 +------------------------------------------------------------------------------------+
 
-As you can notice, it's a cross-recursion, which ultimately will parse all the
-grammar. The same is also true here, even though the GetRule has been inlined
+As you notice, it's a cross-recursion, which ultimately will parse all the
+grammar. The same is also true here in go, even though the GetRule has been inlined
 in ILine.ToRule and OLine.ToRule
 
-
+TODO document: ALine, CLine and SLine are internal stuffs 

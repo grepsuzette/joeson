@@ -16,12 +16,6 @@ type ParseFunction func(*ParseContext) Astnode
 // It is a direct port of joeson.coffee, when it works it can be cleaned.
 // For now an almost exact mapping with joeson.coffee is probably good to have.
 
-var _loopStack []string
-
-func _loopStackPop() {
-	_loopStack = _loopStack[:len(_loopStack)-1]
-}
-
 func LabelOrName(n Astnode) string {
 	if IsRule(n) {
 		return Red(n.GetGNode().Name + ": ")
@@ -62,10 +56,10 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 		if Trace.Stack {
 			log = func(s string) { ctx.log(s) }
 		}
-		log(Blue("*") + " " + x.ContentString() + " " + Black(strconv.Itoa(ctx.counter)))
+		log(Blue("*") + " " + x.ContentString() + " " + BoldBlack(strconv.Itoa(ctx.counter)))
 		if x.GetGNode().SkipCache {
 			result := fparse(ctx)
-			log(Cyan("`->:") + " " + helpers.Escape(result.ContentString()) + " " + Black(helpers.TypeOfToString(result)))
+			log(Cyan("`->:") + " " + helpers.Escape(result.ContentString()) + " " + BoldBlack(helpers.TypeOfToString(result)))
 			return result
 		}
 		frame := ctx.getFrame(x)
@@ -78,7 +72,7 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 			// The only time a cache hit will simply return is when loopStage is 0
 			if frame.endPos.IsSet {
 				if frame.Result != nil {
-					log(Cyan("`-hit:") + " " + helpers.Escape(frame.Result.ContentString()) + " " + Black(helpers.TypeOfToString(frame.Result)))
+					log(Cyan("`-hit: ") + helpers.Escape(frame.Result.ContentString()) + " " + BoldBlack(helpers.TypeOfToString(frame.Result)))
 				} else {
 					log(Cyan("`-hit: nil"))
 				}
@@ -88,7 +82,6 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 			frame.loopStage.Set(1)
 			frame.cacheSet(nil, -1)
 			result := fparse(ctx)
-
 			switch frame.loopStage.Int {
 			case 1: // non-recursive (i.e. done)
 				frame.loopStage.Set(0)
@@ -99,7 +92,7 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 				} else {
 					s += helpers.Escape(result.ContentString())
 					s += " "
-					s += Black(helpers.TypeOfToString(result))
+					s += BoldBlack(helpers.TypeOfToString(result))
 				}
 				log(s)
 				return result
@@ -113,7 +106,8 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 					frame.loopStage.Set(3)
 					if Trace.Loop && ((Trace.FilterLine < 0) || ctx.Code.Line() == Trace.FilterLine) {
 						line := ctx.Code.Line()
-						_loopStack = append(_loopStack, x.GetGNode().Name)
+						// _loopStack = append(_loopStack, x.GetGNode().Name)
+						ctx.loopStackPush(x.GetGNode().Name)
 						var paintInColor func(string) string = nil
 						switch line % 6 {
 						case 0:
@@ -135,7 +129,8 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 						for _, frame := range ctx.stack[0:ctx.stackLength] {
 							s += Red(strconv.Itoa(frame.id))
 						}
-						s += " - " + strings.Join(_loopStack, ", ")
+						// s += " - " + strings.Join(_loopStack, ", ")
+						s += " - " + strings.Join(ctx.loopStack, ", ")
 						s += " - " + Yellow(helpers.Escape(result.ContentString()))
 						s += ": " + Blue(helpers.Escape(ctx.Code.Peek(NewPeek().BeforeChars(10).AfterChars(10))))
 					}
@@ -164,7 +159,7 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 						TimeEnd("loopiteration")
 					}
 					if Trace.Loop {
-						_loopStackPop()
+						ctx.loopStackPop()
 					}
 					ctx.wipeWith(frame, false)
 					ctx.restoreWith(bestStash)
@@ -185,7 +180,7 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 				TimeStart("wipemask")
 			}
 			// Step 1: Collect wipemask so we can wipe the frames later.
-			log(Yellow("`-base: ") + helpers.Escape(frame.Result.ContentString()) + " " + Black(helpers.TypeOfToString(frame.Result)))
+			log(Yellow("`-base: ") + helpers.Escape(frame.Result.ContentString()) + " " + BoldBlack(helpers.TypeOfToString(frame.Result)))
 			if frame.wipemask == nil {
 				frame.wipemask = make([]bool, ctx.grammar.CountRules())
 				for i := ctx.stackLength - 2; i >= 0; i-- {

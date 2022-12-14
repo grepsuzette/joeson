@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"fmt"
+	// "fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/lambda"
@@ -47,8 +47,8 @@ func (ch *Choice) Prepare() {
 
 func (ch *Choice) Parse(ctx *ParseContext) Astnode {
 	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
-		for i, choice := range ch.choices {
-			fmt.Printf("Choice n=%d %s\n", i, choice.ContentString())
+		for _, choice := range ch.choices {
+			// fmt.Printf("Choice n=%d %s\n", i, choice.ContentString())
 			pos := ctx.Code.Pos
 			result := choice.Parse(ctx)
 			if result == nil {

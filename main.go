@@ -21,10 +21,10 @@ func Named(name string, lineStringOrAstnode any) line.NamedRule {
 
 func main() {
 	// fmt.Println("readying hand compiled grammar")
-	// fmt.Println(JOESON_GRAMMAR_RULES)
+	// fmt.Println(JOESON_GRAMMAR_RULES())
 	// fmt.Println("--- new grammar from above rules... ---")
-	gm := line.NewGrammarFromLines("joeson from handcompiled", JOESON_GRAMMAR_RULES, ast.NewEmptyGrammarNamed("empty grammar"))
-	fmt.Println("done, made grammar from JOESON_GRAMMAR_RULES")
+	gm := line.NewGrammarFromLines("joeson from handcompiled", JOESON_GRAMMAR_RULES(), ast.NewEmptyGrammarNamed("empty grammar"))
+	fmt.Println("done, made grammar from JOESON_GRAMMAR_RULES()")
 	fmt.Println("Name: " + Cyan(gm.GetGNode().Name))
 	fmt.Println("Rules: " + BoldYellow(strconv.Itoa(gm.NumRules)))
 	fmt.Println("CountRules: " + BoldYellow(strconv.Itoa(gm.CountRules())))

@@ -15,24 +15,26 @@ type stash struct {
 }
 
 /**
-  This is passed as the arg therebelow called `$` with the following methods (file core/funcs.go):
-    - core.Stack($)
-    - core.Loopify($)
-    - core.PrepareResult($)
-    - core.Wrap($)
-   In the original joeson.coffee, it was named '$' and
-   those functions names were prefixed by a dollar ($stack, $loopify etc)
+  Litteral port from joeson.coffee
+  In the original joeson.coffee, it was named '$' and those functions names
+  were prefixed by a dollar ($stack, $loopify etc).
+  Indirectly passed to the following core/funcs.go:
+    - core.Wrap()
+    - core.stack()
+    - core.loopify()
+    - core.prepareResult()
 */
 type ParseContext struct {
-	grammar GrammarRuleCounter // grammar instance
-	Code    *CodeStream
-	stack   [1024]*frame
-	// Result      Astnode    // joeson.coffee:625, see parseCode() in grammar.go. However a local var seems ok, see grammar.go
+	grammar     GrammarRuleCounter // grammar (iface to break circular decl)
+	Code        *CodeStream
+	stack       [1024]*frame
 	Frames      [][]*frame // frames is 2d, dim is [filelen][grammar.NumRules]
 	stackLength int
 	counter     int
 	SkipLog     bool
 	Debug       bool
+	// Result   Astnode    // joeson.coffee:625, see parseCode() in grammar.go. However a local var seems ok, see grammar.go
+	loopStack []string
 }
 
 func NewParseContext(code *CodeStream, grammar GrammarRuleCounter, attrs ParseOptions) *ParseContext {
@@ -41,7 +43,6 @@ func NewParseContext(code *CodeStream, grammar GrammarRuleCounter, attrs ParseOp
 	//                         ^---- +1 is to include EOF
 	frames := make([][]*frame, len(code.text)+1)
 	for i := range frames {
-		// not using an explicit grammar.NumRules here, see how it goes
 		frames[i] = make([]*frame, grammar.CountRules())
 	}
 	return &ParseContext{
@@ -60,13 +61,13 @@ func (ctx *ParseContext) log(message string) {
 		if Trace.FilterLine == -1 || line == Trace.FilterLine {
 			codeSgmnt := White(strconv.Itoa(line)) + "," + strconv.Itoa(ctx.Code.Col())
 			p := helpers.Escape(ctx.Code.Peek(NewPeek().BeforeChars(5)))
-			codeSgmnt += "\t" + Black(helpers.PadRight(helpers.SliceString(p, len(p)-5, len(p)), 5))
+			codeSgmnt += "\t" + BoldBlack(helpers.PadRight(helpers.SliceString(p, len(p)-5, len(p)), 5))
 			p = helpers.Escape(ctx.Code.Peek(NewPeek().AfterChars(20)))
 			codeSgmnt += Green(helpers.PadLeft(helpers.SliceString(p, 0, 20), 20))
 			if ctx.Code.Pos+20 < len(ctx.Code.text) {
-				codeSgmnt += Black(">")
+				codeSgmnt += BoldBlack(">")
 			} else {
-				codeSgmnt += Black("]")
+				codeSgmnt += BoldBlack("]")
 			}
 			fmt.Printf("%s %s%s\n", codeSgmnt, Cyan(strings.Join(make([]string, ctx.stackLength), "| ")), message)
 		}
@@ -81,6 +82,14 @@ func (ctx *ParseContext) StackPush(x Astnode) {
 	ctx.stackLength++
 }
 func (ctx *ParseContext) StackPop() { ctx.stackLength-- }
+
+func (ctx *ParseContext) loopStackPush(name string) {
+	ctx.loopStack = append(ctx.loopStack, name)
+}
+func (ctx *ParseContext) loopStackPop() {
+	ctx.loopStack = ctx.loopStack[:len(ctx.loopStack)-1]
+}
+
 func (ctx *ParseContext) getFrame(x Astnode) *frame {
 	id := x.GetGNode().Id
 	pos := ctx.Code.Pos
@@ -105,7 +114,6 @@ func (ctx *ParseContext) wipeWith(frame_ *frame, makeStash bool) *stash {
 	}
 	var stash_ []*frame
 	if makeStash {
-		// note: not using numRules below, see how it goes
 		stash_ = make([]*frame, ctx.grammar.CountRules())
 	} else {
 		stash_ = nil
@@ -138,7 +146,6 @@ func (ctx *ParseContext) restoreWith(stash_ *stash) {
 		TimeStart("restorewith")
 	}
 	stashCount := stash_.count
-
 	for i, frame := range stash_.frames {
 		if frame == nil {
 			continue

@@ -27,20 +27,7 @@ func (na *NativeArray) ContentString() string {
 	return Blue("[") + strings.Join(lambda.Map(na.Array, func(x Astnode) string { return x.ContentString() }), Blue(", ")) + Blue("]")
 }
 
-func (na *NativeArray) Parse(ctx *ParseContext) Astnode {
-	panic("uncallable") // or nil? will see
-}
+func (na *NativeArray) Parse(ctx *ParseContext) Astnode { panic("uncallable") }
 
 // no Native* object must walk through children: see node.coffee:78 `if ptr.child instanceof Node`
 func (na *NativeArray) ForEachChild(f func(Astnode) Astnode) Astnode { return na }
-
-// func (na *NativeArray) ForEachChild(f func(Astnode) Astnode) Astnode {
-// 	a := []Astnode{}
-// 	for _, child := range na.Array {
-// 		if r := f(child); r != nil {
-// 			a = append(a, r)
-// 		} // remove from array when r != nil
-// 	}
-// 	na.Array = a
-// 	return na
-// }

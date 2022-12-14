@@ -109,12 +109,7 @@ func getRule(grammar *ast.Grammar, name string, line Line, parentRule Astnode, a
 		ast = v.ToRule(grammar, parentRule, OLineByIndexOrName{name: name})
 	case SLine:
 		var ctx *ParseContext
-		// defer func() {
-		// 	if e := recover(); e != nil {
-		// 		fmt.Printf("Error in rule %s, that is %s:\n%v\n", Cyan(name), Magenta(v.Str), e)
-		// 	}
-		// }()
-		// TODO, can surround with halt trace instructions as in coffee impl
+		// may surround with halt trace instructions as in coffee impl
 		ctx = NewParseContext(NewCodeStream(v.Str), grammar, attrs)
 		ast = grammar.Parse(ctx)
 	default:
@@ -128,11 +123,9 @@ func getRule(grammar *ast.Grammar, name string, line Line, parentRule Astnode, a
 	if rule.Name != "" && rule.Name != name {
 		panic("assert")
 	}
-	// if attrs != nil {
 	rule.SkipCache = attrs.SkipCache
 	rule.SkipLog = attrs.SkipLog
 	rule.CbBuilder = attrs.CbBuilder
 	rule.Debug = attrs.Debug
-	// }
 	return ast
 }

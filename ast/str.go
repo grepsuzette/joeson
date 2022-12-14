@@ -31,7 +31,6 @@ func (str Str) Parse(ctx *ParseContext) Astnode {
 		if didMatch, sMatch := ctx.Code.MatchString(str.str); didMatch {
 			// a string is not a terminal element
 			// so return NativeString.
-			// TODO Very likely one of those classes can be taken away
 			return NewNativeString(sMatch)
 		} else {
 			return nil

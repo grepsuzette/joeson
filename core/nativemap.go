@@ -54,26 +54,12 @@ func (nm NativeMap) ContentString() string {
 	b.WriteString("}")
 	return b.String()
 }
-func (nm NativeMap) HandlesChildLabel() bool { return false }
-func (nm NativeMap) Labels() []string        { return []string{} }
-func (nm NativeMap) Captures() []Astnode     { return []Astnode{} }
-func (nm NativeMap) Prepare()                {}
-func (nm NativeMap) GetGNode() *GNode        { return nil }
-func (nm NativeMap) Parse(ctx *ParseContext) Astnode {
-	// there is nothing to parse... so this should not even ever be called?
-	panic("uncallable") // or nil? will see
-}
+func (nm NativeMap) HandlesChildLabel() bool         { return false }
+func (nm NativeMap) Labels() []string                { return []string{} }
+func (nm NativeMap) Captures() []Astnode             { return []Astnode{} }
+func (nm NativeMap) Prepare()                        {}
+func (nm NativeMap) GetGNode() *GNode                { return nil }
+func (nm NativeMap) Parse(ctx *ParseContext) Astnode { panic("uncallable") }
 
 // no Native* object must walk through children: see node.coffee:78 `if ptr.child instanceof Node`
 func (nm NativeMap) ForEachChild(f func(Astnode) Astnode) Astnode { return nm }
-
-// func (nm NativeMap) ForEachChild(f func(Astnode) Astnode) Astnode {
-// 	h := map[string]Astnode{}
-// 	for k, child := range nm {
-// 		if r := f(child); r != nil {
-// 			h[k] = r
-// 		} // removed from map when r is nil
-// 	}
-// 	nm = h
-// 	return nm
-// }

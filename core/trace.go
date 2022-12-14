@@ -1,6 +1,6 @@
 package core
 
-// This is a direct port from original coffeescript impl.
+// direct port from original coffeescript impl.
 // probably should rewrite
 
 // debugging variables and callbacks

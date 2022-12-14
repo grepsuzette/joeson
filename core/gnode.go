@@ -8,17 +8,16 @@ package core
    node.name = name of the rule, if this is @rule.
 */
 type GNode struct {
-	// Node                              // Node solely containing .id int at this point, and so not being really necessary
 	Name    string             // "" normally but rule name if IsRule()
-	Label   string             // "" if no label <- i have a doubt that maybe should be *string.  Because of joeson.go:832...
-	Rules   map[string]Astnode // all levels have rules (like a tree). Grammar will collect all rules in its post walk, increasing the NumRules each time, and affecting gnode Id = current NumRules
+	Label   string             // "" if no label
+	Rules   map[string]Astnode // Treelike. Grammar collects all rules in its post walk
 	Id      int                // Numeric id of a Rule. It is incremented in Grammar. joeson.coffee:604: `node.id = @numRules++`
 	Index   int                // joeson.coffee:1303
-	Rule    Astnode            // set by Grammar.Postinit's walk into grammar nodes. An Astnode is a Rule when ast.GetGNode().Rule == ast
-	Parent  Astnode            // set by Grammar.Postinit's walk into grammar nodes. Grammar tree should be a DAG implies 1 Parent.
-	Grammar Astnode            // set by Grammar.Postinit's walk into grammar nodes. joeson.coffee:592, joeson.coffee:532. Type is Grammar.
-	Capture bool               // true by default, it's false for instance for Str
-	_origin Origin             // automatically set by prepareResult when a node is being parsed (prepareResult is called by wrap)
+	Rule    Astnode            // An Astnode is a Rule when ast.GetGNode().Rule == ast. Set by Grammar.Postinit's walk into grammar nodes.
+	Parent  Astnode            // Grammar tree should be a DAG implying 1 Parent. Set by Grammar.Postinit's walk into grammar nodes.
+	Grammar Astnode            // joeson.coffee:592, joeson.coffee:532.
+	Capture bool               // usually true, false for instance for Str
+	_origin Origin             // automatically set by prepareResult when a node is being parsed (prepareResult is called by wrap). Unused ATM
 
 	/*
 	 `cbBuilder` represents optional callbacks declared within inlined rules.

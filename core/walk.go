@@ -1,8 +1,8 @@
 package core
 
-import (
-	"sort"
-)
+import "sort"
+
+// Walk is a Depth-first walk
 
 type WalkPrepost struct {
 	Pre  func(Astnode, parent Astnode) string // called during 🡖  .  "__stop__" to interrupt

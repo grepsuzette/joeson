@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
+	"reflect"
 	"strings"
 )
 
@@ -28,9 +29,29 @@ func NewPattern(it Astnode) *Pattern {
 		patt.Min = NewNativeInt(-1)
 		patt.Max = NewNativeInt(-1)
 		if min, exist := nativemap.GetExist("min"); exist {
-			patt.Min = min.(NativeInt)
+			// can also be NativeUndefined, when Existential returns it
+			switch v := min.(type) {
+			case NativeUndefined:
+				patt.Min = NewNativeInt(-1)
+			case NativeInt:
+				patt.Min = v
+			case NativeString:
+				patt.Min = NewNativeIntFromString(v.Str)
+			default:
+				panic("NewPattern unhandled type for min: " + reflect.TypeOf(min).String())
+			}
 		} else if max, exist := nativemap.GetExist("max"); exist {
-			patt.Max = max.(NativeInt)
+			// can also be NativeUndefined, when Existential returns it
+			switch v := max.(type) {
+			case NativeUndefined:
+				patt.Max = NewNativeInt(-1)
+			case NativeInt:
+				patt.Max = v
+			case NativeString:
+				patt.Max = NewNativeIntFromString(v.Str)
+			default:
+				panic("NewPattern unhandled type for max: " + reflect.TypeOf(max).String())
+			}
 		}
 	}
 	return &patt
@@ -74,8 +95,6 @@ func (patt *Pattern) Parse(ctx *ParseContext) Astnode {
 			ctx.Code.Pos = pos
 			return nil
 		}
-		// a := lambda.Map(matches, func(s) { return NewNativeString(s) })
-		// return NewNativeArray(a)
 		return NewNativeArray(matches)
 	}, patt)(ctx)
 }
@@ -92,10 +111,6 @@ func (patt *Pattern) ContentString() string {
 		b.WriteString(patt.Join.ContentString())
 	}
 	if patt.Min < 0 && patt.Max < 0 {
-		// if patt.Min <= 0 && patt.Max == -1 {
-		// 	return b.String() + Cyan("*")
-		// } else if patt.Min == 1 && patt.Max == -1 {
-		// 	return b.String() + Cyan("+")
 		return b.String()
 	} else {
 		cyan := "{"

@@ -56,10 +56,6 @@ func (il ILine) StringIndent(nIndent int) string {
 	return s
 }
 
-// note TODO think parentRule could almost simply be GNode
-// Does it return:
-// 1. (name string, rule Line) or
-// 2. (name string, rule Astnode)?
 func (il ILine) ToRule(grammar *ast.Grammar, parentRule Astnode) (name string, rule Astnode) {
 	return il.name, getRule(grammar, il.name, il.content, parentRule, il.attrs)
 }

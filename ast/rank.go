@@ -1,24 +1,20 @@
 package ast
 
 import (
-	"fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/lambda"
-
-	// "strconv"
 	"strings"
 )
 
 type Rank struct {
-	// *GNode
 	*Choice
 }
 
 // init: in joeson.coffee is (@name, @choices=[], includes={})
 // You really want to look at line.NewRankFromRules() instead
 func NewEmptyRank(rankname string) *Rank {
-	rank := Rank{ /*NewGNode(), */ NewEmptyChoice()}
+	rank := Rank{NewEmptyChoice()}
 	rank.GetGNode().Name = rankname
 	return &rank
 }
@@ -35,9 +31,6 @@ func (rank *Rank) Labels() []string        { return rank.Choice.Labels() }
 func (rank *Rank) Captures() []Astnode     { return rank.Choice.Captures() }
 func (rank *Rank) ContentString() string {
 	var b strings.Builder
-	if !IsRule(rank) {
-		return "oops, not a rule"
-	}
 	b.WriteString(LabelOrName(rank))
 	b.WriteString(Blue("Rank("))
 	a := lambda.Map(rank.Choice.choices, func(x Astnode) string {
@@ -58,17 +51,14 @@ func (rank *Rank) ForEachChild(f func(Astnode) Astnode) Astnode {
 	return rank
 }
 
-// Rank.Parse is special because Rank inherits from Choice
-// in original implementation. In coffee, the Parse function
-// of Rank is bound to Rank, but the code is that of Choice.Parse.
-// To replicate that here easily, we repeat Choice.Parse code instead.
 func (rank *Rank) Parse(ctx *ParseContext) Astnode {
-	// return rank.Choice.Parse(ctx) // no, it needs to be bound to rank as
-	// below:
 	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
-		for i, choice := range rank.Choice.choices {
-			fmt.Printf("Rank..Choice n=%d %s\n", i, choice.ContentString())
+		for _, choice := range rank.Choice.choices {
+			// fmt.Printf("Rank..Choice n=%d %s\n", i, choice.ContentString())
 			pos := ctx.Code.Pos
+			// Rank inherits from Choice in original implementation.
+			// In coffee, the Parse function of Rank is bound to Rank,
+			// In go, no inheritance, we inline the call instead.
 			result := choice.Parse(ctx)
 			if result == nil {
 				ctx.Code.Pos = pos

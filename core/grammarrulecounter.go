@@ -1,7 +1,7 @@
 package core
 
-// helps storing grammar nodes,
-// Grammar being part of ast/ & core/ must not depend on ast
+// Grammar is part of both ast/ & core/ package,
+// this helps preventing circular deps
 type GrammarRuleCounter interface {
 	IsReady() bool
 	CountRules() int
