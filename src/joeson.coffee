@@ -23,6 +23,7 @@ just admit that the current implementation is imperfect, and limit grammar usage
   skipSetup:  yes
 
 {clazz, colors:{red, blue, cyan, magenta, green, normal, black, white, yellow}} = require('cardamom')
+black = normal
 {inspect} = require 'util'
 assert = require 'assert'
 {CodeStream} = require './codestream'
@@ -190,7 +191,7 @@ showtype = (result) ->
 
         # The only time a cache hit will simply return is when loopStage is 0
         if frame.endPos?
-          $.log "#{cyan "`-hit:"} #{"'"+frame.result+"'"} #{cyan(showtype(frame.result))} ${magenta typeof frame.result}" if trace.stack
+          $.log "#{cyan "`-hit:"} #{"'"+frame.result+"'"} #{cyan(showtype(frame.result))} #{magenta typeof frame.result}" if trace.stack
           $.code.pos = frame.endPos
           return frame.result
 
