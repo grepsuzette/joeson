@@ -135,7 +135,8 @@ cacheSet = (frame, result, endPos) ->
     return
 
 # so that it doesn't log "object" for everything
-showtype = (result) ->
+showtype = (result) -> black(showtypenocolor(result), yes)
+showtypenocolor = (result) ->
     if result?
         return "Ref" if result.ref?
         return "Str" if result.str?
@@ -144,14 +145,14 @@ showtype = (result) ->
         return "Rank or Choice" if result.choices?
         return "Existential or Not" if result.it?
         return "Lookahead" if result.expr?
-        return "STRING!" if typeof result is "string"
+        return "(js)string" if typeof result is "string"
         if typeof result is "object"
             s = ""
             for name in result
                 s = s + name + ","
-            return "object keys:{" + s + "}"
+            return "object,keys:{" + s + "}"
         else
-            return "Unknown"
+            return typeof result
 
 ###
   In addition to the attributes defined by subclasses,
@@ -179,7 +180,7 @@ showtype = (result) ->
 
     if @skipCache
       result = fn.call this, $
-      $.log "#{cyan "`->:"} #{escape result} #{black typeof result}" if trace.stack
+      $.log "#{cyan "`->:"} #{escape result} #{ showtype result}" if trace.stack
       return result
 
     frame = $.getFrame this
@@ -191,7 +192,7 @@ showtype = (result) ->
 
         # The only time a cache hit will simply return is when loopStage is 0
         if frame.endPos?
-          $.log "#{cyan "`-hit:"} #{"'"+frame.result+"'"} #{cyan(showtype(frame.result))} #{magenta typeof frame.result}" if trace.stack
+          $.log "#{cyan "`-hit:"} #{"'"+frame.result+"'"} #{ showtype frame.result}" if trace.stack
           $.code.pos = frame.endPos
           return frame.result
 
@@ -203,7 +204,7 @@ showtype = (result) ->
           when 1 # non-recursive (done)
             frame.loopStage = 0
             cacheSet frame, result, $.code.pos
-            $.log "#{cyan "`-set:"} '#{result}' #{cyan showtype result} #{magenta typeof result}" if trace.stack
+            $.log "#{cyan "`-set:"} '#{result}' #{ showtype result}" if trace.stack
             return result
 
           when 2 # recursion detected by subroutine above
@@ -261,7 +262,7 @@ showtype = (result) ->
 
         timeStart? 'wipemask'
         # Step 1: Collect wipemask so we can wipe the frames later.
-        $.log "#{yellow "`-base:"} #{escape frame.result} #{black typeof frame.result}" if trace.stack
+        $.log "#{yellow "`-base:"} #{ showtype frame.result}" if trace.stack
         frame.wipemask ?= new Array($.grammar.numRules)
         for i in [$.stackLength-2..0] by -1
           i_frame = $.stack[i]
