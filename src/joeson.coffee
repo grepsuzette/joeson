@@ -23,6 +23,9 @@ just admit that the current implementation is imperfect, and limit grammar usage
   skipSetup:  yes
 
 {clazz, colors:{red, blue, cyan, magenta, green, normal, black, white, yellow}} = require('cardamom')
+
+oldblack = black
+black = (s) -> oldblack(s, yes)
 {inspect} = require 'util'
 assert = require 'assert'
 {CodeStream} = require './codestream'
