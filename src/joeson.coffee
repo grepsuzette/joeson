@@ -23,7 +23,6 @@ just admit that the current implementation is imperfect, and limit grammar usage
   skipSetup:  yes
 
 {clazz, colors:{red, blue, cyan, magenta, green, normal, black, white, yellow}} = require('cardamom')
-black = normal
 {inspect} = require 'util'
 assert = require 'assert'
 {CodeStream} = require './codestream'
@@ -135,8 +134,7 @@ cacheSet = (frame, result, endPos) ->
     return
 
 # so that it doesn't log "object" for everything
-showtype = (result) -> black(showtypenocolor(result), yes)
-showtypenocolor = (result) ->
+showtype = (result) ->
     if result?
         return "Ref" if result.ref?
         return "Str" if result.str?
@@ -145,14 +143,14 @@ showtypenocolor = (result) ->
         return "Rank or Choice" if result.choices?
         return "Existential or Not" if result.it?
         return "Lookahead" if result.expr?
-        return "(js)string" if typeof result is "string"
+        return "STRING!" if typeof result is "string"
         if typeof result is "object"
             s = ""
             for name in result
                 s = s + name + ","
-            return "object,keys:{" + s + "}"
+            return "object keys:{" + s + "}"
         else
-            return typeof result
+            return "Unknown"
 
 ###
   In addition to the attributes defined by subclasses,
@@ -180,7 +178,7 @@ showtypenocolor = (result) ->
 
     if @skipCache
       result = fn.call this, $
-      $.log "#{cyan "`->:"} #{escape result} #{ showtype result}" if trace.stack
+      $.log "#{cyan "`->:"} #{escape result} #{black typeof result}" if trace.stack
       return result
 
     frame = $.getFrame this
@@ -192,7 +190,7 @@ showtypenocolor = (result) ->
 
         # The only time a cache hit will simply return is when loopStage is 0
         if frame.endPos?
-          $.log "#{cyan "`-hit:"} #{"'"+frame.result+"'"} #{ showtype frame.result}" if trace.stack
+          $.log "#{cyan "`-hit:"} #{"'"+frame.result+"'"} #{cyan(showtype(frame.result))} ${magenta typeof frame.result}" if trace.stack
           $.code.pos = frame.endPos
           return frame.result
 
@@ -204,7 +202,7 @@ showtypenocolor = (result) ->
           when 1 # non-recursive (done)
             frame.loopStage = 0
             cacheSet frame, result, $.code.pos
-            $.log "#{cyan "`-set:"} '#{result}' #{ showtype result}" if trace.stack
+            $.log "#{cyan "`-set:"} '#{result}' #{cyan showtype result} #{magenta typeof result}" if trace.stack
             return result
 
           when 2 # recursion detected by subroutine above
@@ -262,7 +260,7 @@ showtypenocolor = (result) ->
 
         timeStart? 'wipemask'
         # Step 1: Collect wipemask so we can wipe the frames later.
-        $.log "#{yellow "`-base:"} #{ showtype frame.result}" if trace.stack
+        $.log "#{yellow "`-base:"} #{escape frame.result} #{black typeof frame.result}" if trace.stack
         frame.wipemask ?= new Array($.grammar.numRules)
         for i in [$.stackLength-2..0] by -1
           i_frame = $.stack[i]
@@ -614,6 +612,8 @@ showtypenocolor = (result) ->
         node.parent = parent
         # inline rules are special
         if node.inlineLabel?
+          console.log "ASSERT THIS IS NEVER CALLED, RIGHT?"
+          throw "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
           node.rule = node
           parent.rule.include node.inlineLabel, node
         # set node.rule, the root node for this rule
