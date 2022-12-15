@@ -20,8 +20,6 @@ func NewRegexFromString(sRegex string) *Regex {
 	}
 }
 
-// wtf TODO check those 2 funcs
-// Astnode must be a NativeArray of NativeString
 func NewRegex(it Astnode) *Regex {
 	return NewRegexFromString(joinNativeArrayOfNativeString(it))
 }

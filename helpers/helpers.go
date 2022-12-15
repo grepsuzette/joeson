@@ -12,6 +12,23 @@ func Escape(str string) string {
 }
 
 func EscapeButKeepNonAscii(str string) string {
+	/*
+		@escape = (str, asciiOnly=yes) ->
+		  str = str.replace /[\\\b\f\n\r\t\x22\u2028\u2029\0]/g, (s) ->
+			switch s
+			  when "\\" then "\\\\"
+			  when "\b" then "\\b"
+			  when "\f" then "\\f"
+			  when "\n" then "\\n"
+			  when "\r" then "\\r"
+			  when "\u2028" then "\\u2028"
+			  when "\u2029" then "\\u2029"
+			  when '"'  then "\\\""
+			  when "\0" then "\\0"
+			  else s
+		  str = toAscii str if asciiOnly
+		  return str
+	*/
 	replacer := strings.NewReplacer("\b", "\\b", "\\", "\\\\", "\f", "\\f", "\r", "\\r", "\n", "\\n", "\u2028", "\\u2028", "\u2029", "\\u2029", `"`, `\\\"`, `\0`, `\\0`)
 	return replacer.Replace(str)
 }
@@ -35,34 +52,15 @@ func ToAscii(str string) string {
 	// %q	a double-quoted string safely escaped with Go syntax
 	// %x	base 16, lower-case, two characters per byte
 	// %X	base 16, upper-case, two characters per byte
+	/*
+		@toAscii = toAscii = (str) ->
+		  return str.replace /[\u001b\u0080-\uffff]/g, (ch) ->
+			code = ch.charCodeAt(0).toString(16)
+			code = "0" + code while code.length < 4
+			"\\u"+code
+	*/
 	return fmt.Sprintf("%s", str) // TODO likely not right
 }
-
-/*
-@toAscii = toAscii = (str) ->
-  return str.replace /[\u001b\u0080-\uffff]/g, (ch) ->
-    code = ch.charCodeAt(0).toString(16)
-    code = "0" + code while code.length < 4
-    "\\u"+code
-*/
-
-/*
-@escape = (str, asciiOnly=yes) ->
-  str = str.replace /[\\\b\f\n\r\t\x22\u2028\u2029\0]/g, (s) ->
-    switch s
-      when "\\" then "\\\\"
-      when "\b" then "\\b"
-      when "\f" then "\\f"
-      when "\n" then "\\n"
-      when "\r" then "\\r"
-      when "\u2028" then "\\u2028"
-      when "\u2029" then "\\u2029"
-      when '"'  then "\\\""
-      when "\0" then "\\0"
-      else s
-  str = toAscii str if asciiOnly
-  return str
-*/
 
 func TypeOfToString(t any) string {
 	return fmt.Sprintf("%T", t)
@@ -110,6 +108,7 @@ func SliceString(s string, start int, end int) string {
 	}
 	return s[start:end]
 }
+
 func SliceStringFrom(s string, start int) string {
 	return SliceString(s, start, len(s))
 }

@@ -11,8 +11,7 @@ type Rank struct {
 	*Choice
 }
 
-// init: in joeson.coffee is (@name, @choices=[], includes={})
-// You really want to look at line.NewRankFromRules() instead
+// See also line.NewRankFromLines()
 func NewEmptyRank(rankname string) *Rank {
 	rank := Rank{NewEmptyChoice()}
 	rank.GetGNode().Name = rankname
@@ -44,8 +43,6 @@ func (rank *Rank) ForEachChild(f func(Astnode) Astnode) Astnode {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}
-	// we must first wall through rules, and then only through choices
-	//  this is done in Choice.ForEachChild
 	ch := rank.Choice.ForEachChild(f)
 	rank.Choice = ch.(*Choice)
 	return rank
@@ -54,7 +51,6 @@ func (rank *Rank) ForEachChild(f func(Astnode) Astnode) Astnode {
 func (rank *Rank) Parse(ctx *ParseContext) Astnode {
 	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
 		for _, choice := range rank.Choice.choices {
-			// fmt.Printf("Rank..Choice n=%d %s\n", i, choice.ContentString())
 			pos := ctx.Code.Pos
 			// Rank inherits from Choice in original implementation.
 			// In coffee, the Parse function of Rank is bound to Rank,

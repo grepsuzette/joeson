@@ -26,7 +26,7 @@ type GNode struct {
 
 	 Since this example have labels, `result` will be of type NativeMap (which
 	 implements Astnode) with the 3 keys "value", "join" and "@". Otherwise
-	 it will be a TODO TBD.
+	 it will be a NativeArray.
 
 	 Second arg `...*ParseContext` is rarely passed in practice,
 	 see a rare use in joescript.coffee:660.
@@ -35,7 +35,6 @@ type GNode struct {
 	 or joeson.coffee:278) and represents the bounded `this` in javascript.
 	*/
 	CbBuilder func(nativeMapUsually Astnode, ctx *ParseContext, caller Astnode) Astnode
-	Parse     func(ctx ParseContext) Astnode
 	SkipCache bool
 	SkipLog   bool
 	Debug     bool

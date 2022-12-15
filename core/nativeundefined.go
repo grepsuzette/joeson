@@ -27,3 +27,13 @@ func (nu NativeUndefined) Parse(ctx *ParseContext) Astnode { panic("unparsable?"
 
 // no Native* object must walk through children: see node.coffee:78 `if ptr.child instanceof Node`
 func (n NativeUndefined) ForEachChild(f func(Astnode) Astnode) Astnode { return n } // undefined has no children, thus f is not called
+
+func NotNilAndNotNativeUndefined(x Astnode) bool {
+	if x == nil {
+		return false
+	}
+	if _, isUndefined := x.(NativeUndefined); isUndefined {
+		return false
+	}
+	return true
+}

@@ -9,15 +9,15 @@ type frame struct {
 	endPos    helpers.NullInt // can be left undefined
 	loopStage helpers.NullInt // can be left undefined
 	wipemask  []bool          // len = ctx.grammar.numRules
-	//TODO delete, its not in the original work. subframes map[string]frame
-	pos   int
-	id    int
-	Param Astnode // used in ref.go or joeson.coffee:536
+	pos       int
+	id        int
+	Param     Astnode // used in ref.go or joeson.coffee:536
 }
 
 func (f frame) toString() string {
 	return "TODO frame.toString"
 }
+
 func (fr *frame) cacheSet(result Astnode, endPos int) {
 	fr.Result = result
 	if endPos < 0 {

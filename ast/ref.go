@@ -15,7 +15,6 @@ type Ref struct {
 }
 
 func NewRef(it Astnode) *Ref {
-	// it -> name string, param any
 	var name string
 	var param Astnode = nil
 	switch v := it.(type) {

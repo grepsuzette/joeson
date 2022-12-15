@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"reflect"
@@ -29,9 +28,8 @@ func NewPattern(it Astnode) *Pattern {
 		patt.Min = NewNativeInt(-1)
 		patt.Max = NewNativeInt(-1)
 		if min, exist := nativemap.GetExist("min"); exist {
-			// can also be NativeUndefined, when Existential returns it
 			switch v := min.(type) {
-			case NativeUndefined:
+			case NativeUndefined: // because of Existential
 				patt.Min = NewNativeInt(-1)
 			case NativeInt:
 				patt.Min = v
@@ -71,7 +69,7 @@ func (patt *Pattern) Parse(ctx *ParseContext) Astnode {
 		var matches []Astnode = []Astnode{resValue}
 		for true {
 			pos2 := ctx.Code.Pos
-			if patt.Join != nil {
+			if NotNilAndNotNativeUndefined(patt.Join) {
 				resJoin := patt.Join.Parse(ctx)
 				// return nil to revert pos
 				if resJoin == nil {
@@ -85,7 +83,7 @@ func (patt *Pattern) Parse(ctx *ParseContext) Astnode {
 				ctx.Code.Pos = pos2
 				break
 			}
-			fmt.Printf("Pattern matches = append(matches, resValue='%s')\n", resValue.ContentString())
+			// fmt.Printf("Pattern matches = append(matches, resValue='%s')\n", resValue.ContentString())
 			matches = append(matches, resValue)
 			if patt.Max > -1 && len(matches) >= int(patt.Max) {
 				break
@@ -107,7 +105,7 @@ func (patt *Pattern) ContentString() string {
 	var b strings.Builder
 	b.WriteString(LabelOrName(patt))
 	b.WriteString(patt.Value.ContentString() + Cyan("*"))
-	if patt.Join != nil {
+	if NotNilAndNotNativeUndefined(patt.Join) {
 		b.WriteString(patt.Join.ContentString())
 	}
 	if patt.Min < 0 && patt.Max < 0 {

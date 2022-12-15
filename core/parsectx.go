@@ -14,8 +14,8 @@ type stash struct {
 	count  int
 }
 
-/**
-  Litteral port from joeson.coffee
+/*
+  Literal port from joeson.coffee
   In the original joeson.coffee, it was named '$' and those functions names
   were prefixed by a dollar ($stack, $loopify etc).
   Indirectly passed to the following core/funcs.go:
@@ -33,8 +33,7 @@ type ParseContext struct {
 	counter     int
 	SkipLog     bool
 	Debug       bool
-	// Result   Astnode    // joeson.coffee:625, see parseCode() in grammar.go. However a local var seems ok, see grammar.go
-	loopStack []string
+	loopStack   []string
 }
 
 func NewParseContext(code *CodeStream, grammar GrammarRuleCounter, attrs ParseOptions) *ParseContext {

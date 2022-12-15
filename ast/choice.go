@@ -48,7 +48,6 @@ func (ch *Choice) Prepare() {
 func (ch *Choice) Parse(ctx *ParseContext) Astnode {
 	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
 		for _, choice := range ch.choices {
-			// fmt.Printf("Choice n=%d %s\n", i, choice.ContentString())
 			pos := ctx.Code.Pos
 			result := choice.Parse(ctx)
 			if result == nil {

@@ -7,20 +7,11 @@ import (
 	"strings"
 )
 
-// in short, use NewJoeson()
-
-// {{{1 imports and funcs
-// this is the hand-compiled joeson grammar
+// Use NewJoeson() to instantiate a new joeson grammar.
+// This is the hand-compiled joeson grammar
 // it comes from the original joeson.coffee
 
-// the ast files alone won't do anything.
-// for joeson to parse joeson grammars, its
-// own grammar needs to be written somewhere.
-
-// this is where. We will use line package
-// to follow original coffee impl. as much
-// as possible
-
+// {{{1 imports and funcs
 func C(a ...Astnode) Astnode { return NewChoice(NewNativeArray(a)) }
 func E(it Astnode) Astnode   { return NewExistential(it) }
 func L(label string, node Astnode) Astnode {
@@ -111,7 +102,7 @@ func JOESON_GRAMMAR_RULES() Lines {
 									}
 									return NewRef(NewNativeArray([]Astnode{na.Get(1), na.Get(3)}))
 								}),
-								o(R("WORD"), func(it Astnode) Astnode { return NewRef(it) }), // TODO really need callback here?
+								o(R("WORD"), func(it Astnode) Astnode { return NewRef(it) }),
 								o(S(St("("), L("inlineLabel", E(S(R("WORD"), St(": ")))), L("expr", R("EXPR")), St(")"), E(S(R("_"), St("->"), R("_"), L("code", R("CODE"))))), func(it Astnode) Astnode {
 									h := it.(NativeMap)
 									if h.Get("code") != nil {
@@ -122,7 +113,7 @@ func JOESON_GRAMMAR_RULES() Lines {
 								// i "CODE", o S(St("{"), P(S(N(St("}")), C(R("ESC1"), R(".")))), St("}")), (it) -> require('./joescript').parse(it.join '')),
 								i(Named("CODE", o(S(St("{"), P(S(N(St("}")), C(R("ESC1"), R("."))), nil, -1, -1), St("}")))), func(it Astnode) Astnode {
 									// TODO condense it or write a function
-									// deprecate code in joeson
+									// deprecated code in joeson
 									var caps = it.Captures()
 									if len(caps) == 0 {
 										return NewNativeUndefined()

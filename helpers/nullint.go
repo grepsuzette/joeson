@@ -1,5 +1,7 @@
 package helpers
 
+// A value which is either set to an Int, or not set
+
 type NullInt struct {
 	Int   int
 	IsSet bool
@@ -28,20 +30,3 @@ type NullBool struct {
 func NewNullBool(b bool) NullBool {
 	return NullBool{Bool: b, IsSet: true}
 }
-
-// func (o *NullInt) UnmarshalJSON(data []byte) error {
-//     if string(data) != "null" {
-//         if err := json.Unmarshal(data, &o.Int); err != nil {
-//             return err
-//         }
-//         o.IsValid = true
-//     }
-//     return nil
-// }
-
-// func (o NullInt) MarshalJSON() ([]byte, error) {
-//     if o.IsValid {
-//         return json.Marshal(o.Int)
-//     }
-//     return json.Marshal(nil)
-// }

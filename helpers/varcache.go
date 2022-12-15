@@ -1,11 +1,15 @@
 package helpers
 
-// variable caching (can be set, or not)
-// E.g.:
+// a simple cache in a variable (can be set, or not set),
+// helping for laziness
+
+// A bad example:
+
 // var precalculated Varcache[string]
 // return precalculated.GetCacheOrSet(func (s string) string {
-//	  return "concatenation " + "happens " + "only once"
+//	  return "concat " + "virtually happening " + "only once"
 // })
+
 type Varcache[T any] struct{ val *T }
 
 func (k Varcache[T]) IsCacheSet() bool { return k.val != nil }

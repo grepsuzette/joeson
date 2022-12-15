@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// don't instanciate directly, instead use e.g. NewPeek().BeforeLines(2).AfterLines(4) etc
+// E.g. NewPeek().BeforeLines(2).AfterLines(4)
 type peekOper struct {
 	beforeChars int // they all use -1 for unspecified
 	beforeLines int

@@ -99,8 +99,7 @@ func (gm *Grammar) Postinit() {
 		Pre: func(node Astnode, parent Astnode) string {
 			gnode := node.GetGNode()
 			if gnode == nil {
-				// TODO comment
-				fmt.Println("PRE " + node.ContentString() + " has nil gnode, in grammar.Postinit(), returning ''")
+				// fmt.Println("PRE " + node.ContentString() + " has nil gnode, in grammar.Postinit(), returning ''")
 				return ""
 			}
 			// sanity check: it must have no parent yet if it's not a rule
@@ -132,9 +131,7 @@ func (gm *Grammar) Postinit() {
 			// fmt.Println("grammar POST: typeof node= " + reflect.TypeOf(node).String() + " cs:" + node.ContentString())
 			gnode := node.GetGNode()
 			if gnode == nil {
-				// TODO comment
-				fmt.Println("POST " + node.ContentString() + " has nil gnode, in grammar.Postinit(), returning ''")
-				// fmt.Println("ignoring gnode==nil type " + reflect.TypeOf(node).String())
+				// fmt.Println("POST " + node.ContentString() + " has nil gnode, in grammar.Postinit(), returning ''")
 				return ""
 			}
 			if IsRule(node) {
@@ -153,7 +150,7 @@ func (gm *Grammar) Postinit() {
 	Walk(gm, nil, WalkPrepost{
 		Post: func(node Astnode, parent Astnode) string {
 			// if Trace.Stack {
-			// 	fmt.Println("grammar POST: " + node.ContentString() + " , now calling prepare()")
+			// fmt.Println("grammar POST: " + node.ContentString() + " , now calling prepare()")
 			// }
 			node.Prepare()
 			return ""

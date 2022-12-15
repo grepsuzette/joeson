@@ -35,21 +35,11 @@ func I(a ...any) ILine {
 
 func (il ILine) LineType() string { return "i" }
 func (il ILine) Content() Line    { return il.content }
-func (il ILine) String() string   { return il.StringIndent(0) }
 func (il ILine) StringIndent(nIndent int) string {
-	s := helpers.Indent(nIndent) + il.LineType() + " "
-	// s += (reflect.TypeOf(il.content).String() + "=")
-	switch v := il.content.(type) {
-	case SLine:
-		s += BoldRed("SLine=\"") + BoldRed(v.Str) + BoldRed("\"")
-	case OLine:
-		s += v.String()
-	case CLine:
-		s += v.ast.ContentString()
-	default:
-		s += "??"
-		//Magenta("<unhandled>reflect.TypeOf=") + reflect.TypeOf(arg).String()
-	}
+	s := helpers.Indent(nIndent)
+	s += il.LineType()
+	s += " "
+	s += il.content.StringIndent(nIndent)
 	if il.attrs.CbBuilder != nil {
 		s += Green(", ") + Yellow("𝘧")
 	}

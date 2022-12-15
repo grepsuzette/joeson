@@ -22,7 +22,7 @@ func NewRankFromLines(rankname string, lines []Line, grammar *ast.Grammar) *ast.
 			rank.Append(choice)
 			// } else if someAttr. But it won't be useful now
 		} else {
-			panic("Unknown type line, expected 'o' or 'i' line, got '" + line.String() + "' (" + reflect.TypeOf(line).String() + ")")
+			panic("Unknown type line, expected 'o' or 'i' line, got '" + line.StringIndent(0) + "' (" + reflect.TypeOf(line).String() + ")")
 		}
 	}
 	return rank
@@ -42,7 +42,7 @@ func NewGrammarFromLines(name string, lines []Line, grammar *ast.Grammar) *ast.G
 func (a Lines) String() string {
 	var b strings.Builder
 	for _, line := range a {
-		b.WriteString(line.String() + "\n")
+		b.WriteString(line.StringIndent(0) + "\n")
 	}
 	return b.String()
 }

@@ -42,7 +42,12 @@ func (ex *Existential) Labels() []string {
 	})
 	return ex._labels.GetCache()
 }
-func (ex *Existential) Captures() []Astnode { return ex._captures.GetCache() }
+func (ex *Existential) Captures() []Astnode {
+	if !ex._captures.IsCacheSet() {
+		panic("cache not set, why? prepare not called?")
+	}
+	return ex._captures.GetCache()
+}
 
 func (ex *Existential) Prepare() {
 	captures := ex.it.Captures()

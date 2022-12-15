@@ -6,14 +6,14 @@ package main
 
 import (
 	"fmt"
-
 	. "grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/ast/handcompiled"
-
+	// . "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
-
+	// "grepsuzette/joeson/helpers"
 	line "grepsuzette/joeson/line"
 	"testing"
+	"time"
 )
 
 func RAW_GRAMMAR() line.Lines {
@@ -139,4 +139,42 @@ func TestAab(t *testing.T) {
 		t.Fail()
 	}
 	fmt.Println(aab.ContentString())
+}
+
+func Test100Times(t *testing.T) {
+	// this test comes directly from joeson_test.coffee
+	start := time.Now()
+	iter := 100
+	for i := 0; i < iter; i++ {
+		// testGrammar(line.NewALine(RAW_GRAMMAR()), 0, "")
+		fmt.Println(line.NewALine(RAW_GRAMMAR()).StringIndent(0))
+		fmt.Println("-------------")
+	}
+	fmt.Printf("Duration for %d iterations: %d ms\n", iter, time.Now().Sub(start).Milliseconds())
+}
+
+func TestCalculator(t *testing.T) {
+	joeson := NewJoeson()
+	CALC := []line.Line{
+		o(Named("Input", "expr:Expression")),
+		i(Named("Expression", "first:Term rest:( _ AddOp _ Term )*")),
+		i(Named("Term", "first:Factor rest:( _ MulOp _ Factor  )*")),
+		i(Named("Factor", "'(' expr:Expression _ ')' | integer:Integer")),
+		i(Named("AddOp", "'+' | '-'")),
+		i(Named("MulOp", "'*' | '/'")),
+		// i(Named("Integer", "'-'? [0-9]{1,}")),
+		i(Named("Integer", "[0-9]{1,}")),
+		i(Named("_", "[ \n\t\r]*")),
+		// i(Named("EOF", "!.")),
+	}
+	calc := line.NewGrammarFromLines("calc", CALC, joeson)
+	if !calc.IsReady() {
+		t.Fail()
+	} else {
+		fmt.Println(calc.ContentString())
+		// x := calc.ParseString("241 + (513 ) * -24 + ((1934 - 192 *2)/7) +1", ParseOptions{})
+		x := calc.ParseString("241 + (513 ) -24", ParseOptions{})
+		fmt.Println(x.ContentString())
+		panic("ok")
+	}
 }

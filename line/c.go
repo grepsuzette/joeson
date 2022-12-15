@@ -8,8 +8,9 @@ type CLine struct {
 	ast Astnode
 }
 
-func NewCLine(x Astnode) CLine                   { return CLine{x} }
-func (cl CLine) Content() Line                   { panic("uncallable") }
-func (cl CLine) LineType() string                { return "c" }
-func (cl CLine) String() string                  { return "cline" }
-func (cl CLine) StringIndent(nIndent int) string { return "cline" }
+func NewCLine(x Astnode) CLine    { return CLine{x} }
+func (cl CLine) Content() Line    { panic("uncallable") }
+func (cl CLine) LineType() string { return "c" }
+func (cl CLine) StringIndent(nIndent int) string {
+	return cl.ast.ContentString()
+}

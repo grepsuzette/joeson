@@ -39,4 +39,5 @@ As you notice, it's a cross-recursion, which ultimately will parse all the
 grammar. The same is also true here in go, even though the GetRule has been inlined
 in ILine.ToRule and OLine.ToRule
 
-TODO document: ALine, CLine and SLine are internal stuffs 
+TODO document: ALine, CLine and SLine are simple internal stuffs, 
+see line.go:rule2line()

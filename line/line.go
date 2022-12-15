@@ -3,8 +3,6 @@ package line
 import (
 	"grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/core"
-
-	//. "grepsuzette/joeson/colors"
 	"reflect"
 )
 
@@ -17,10 +15,9 @@ import (
 // These are a system to enter rules of a grammar
 // in a code-like fashion (as a tree, rather than linearly).
 type Line interface {
-	LineType() string // i, o, a, s, c
-	Content() Line    // Sline, OLine, ALine, CLine (containing an Astnode)...
-	String() string
-	StringIndent(nIndent int) string // same as String(), but indenting with `nIdent` levels (for nested rules)
+	LineType() string                // i, o, a, s, c
+	Content() Line                   // Sline, OLine, ALine, CLine (containing an Astnode)...
+	StringIndent(nIndent int) string // indent with `nIdent` levels (for nested rules)
 }
 
 // common functions callable by both ILine nd OLine
@@ -51,7 +48,7 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 			case ParseOptions:
 				attrs = v
 			default:
-				panic("unfaweif293ager8")
+				panic("assert")
 			}
 		}
 	}
@@ -71,16 +68,14 @@ func rule2line(x any) Line {
 	case CLine:
 		return v
 	case SLine:
-		// TODO let's try directly to wrap it in O?
 		return O(v.Str)
-		// panic("Cannot accept a string directly here for now, please wrap it in an OLine: " + v.Str)
 	case ILine:
-		panic("impossible")
+		panic("assert")
 	case []Line:
-		panic("unused me thinks it would be ALine instead")
-		return NewALine(v)
+		panic("assert") // should have been ALine // return NewALine(v)
 	default:
-		panic("impossible type in rule2line: " + reflect.TypeOf(x).String())
+		panic("assert")
+		// panic("impossible type in rule2line: " + reflect.TypeOf(x).String())
 	}
 }
 

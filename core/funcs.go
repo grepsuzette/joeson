@@ -7,23 +7,13 @@ import (
 	"strings"
 )
 
+// The tricky part
+// it is ported as literally as possible from the coffeescript impl.
+
 // in coffeescript/js, the 2nd argument (`Astnode`) doesn't exist,
 // instead .bind(this) is used
 type ParseFunction2 func(*ParseContext, Astnode) Astnode
 type ParseFunction func(*ParseContext) Astnode
-
-// This file is the dirtiest part of this implementation.
-// It is a direct port of joeson.coffee, when it works it can be cleaned.
-// For now an almost exact mapping with joeson.coffee is probably good to have.
-
-func LabelOrName(n Astnode) string {
-	if IsRule(n) {
-		return Red(n.GetGNode().Name + ": ")
-	} else if n.GetGNode().Label != "" {
-		return Cyan(n.GetGNode().Label + ":")
-	}
-	return ""
-}
 
 // in joeson.coffee those functions were originally declared as
 // class method to GNode and had a $ prefix:
@@ -33,7 +23,13 @@ func LabelOrName(n Astnode) string {
 //   @$prepareResult = (fn) -> ($) -> Astnode
 //   @$wrap = (fn) -> Astnode
 //
-// Here they are called _stack, _loopify, _prepareResult and _wrap
+// Here they are called stack, loopify, prepareResult and Wrap:
+//
+// - func stack(fparse ParseFunction, x Astnode) ParseFunction
+// - func loopify(fparse ParseFunction, x Astnode) ParseFunction
+// - func prepareResult(fparse2 ParseFunction2, caller Astnode) ParseFunction
+// - func Wrap(fparse2 ParseFunction2, node Astnode) ParseFunction
+//     notice this line in Wrap:  wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 
 func stack(fparse ParseFunction, x Astnode) ParseFunction {
 	return func(ctx *ParseContext) Astnode {
@@ -106,7 +102,6 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 					frame.loopStage.Set(3)
 					if Trace.Loop && ((Trace.FilterLine < 0) || ctx.Code.Line() == Trace.FilterLine) {
 						line := ctx.Code.Line()
-						// _loopStack = append(_loopStack, x.GetGNode().Name)
 						ctx.loopStackPush(x.GetGNode().Name)
 						var paintInColor func(string) string = nil
 						switch line % 6 {
@@ -129,7 +124,6 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 						for _, frame := range ctx.stack[0:ctx.stackLength] {
 							s += Red(strconv.Itoa(frame.id))
 						}
-						// s += " - " + strings.Join(_loopStack, ", ")
 						s += " - " + strings.Join(ctx.loopStack, ", ")
 						s += " - " + Yellow(helpers.Escape(result.ContentString()))
 						s += ": " + Blue(helpers.Escape(ctx.Code.Peek(NewPeek().BeforeChars(10).AfterChars(10))))
@@ -217,7 +211,7 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 func prepareResult(fparse2 ParseFunction2, caller Astnode) ParseFunction {
 	return func(ctx *ParseContext) Astnode {
 		ctx.counter++
-		result := fparse2(ctx, caller) // .call() is used in js
+		result := fparse2(ctx, caller)
 		if result != nil {
 			// handle labels for standalone nodes
 			gn := caller.GetGNode()
@@ -230,28 +224,20 @@ func prepareResult(fparse2 ParseFunction2, caller Astnode) ParseFunction {
 				code: ctx.Code.text,
 				start: Cursor{
 					line: ctx.Code.PosToLine(start),
-					col:  ctx.Code.PosToLine(start), // TODO there's likely a bug in original here, how about PosToCol, but never mind
+					col:  ctx.Code.PosToCol(start),
 					pos:  start,
 				},
 				end: Cursor{
 					line: ctx.Code.PosToLine(end),
-					col:  ctx.Code.PosToLine(end), // TODO there's likely a bug in original here, but never mind
+					col:  ctx.Code.PosToCol(end),
 					pos:  end,
 				},
 			}
 			if gn.CbBuilder != nil {
-				// Native* don't have a GNode.
-				// It also doesn't make sense to store an origin
-				// for them anyway
 				if result.GetGNode() != nil {
 					result.GetGNode()._origin = origin
 				}
-				// in js, it is bounded to this (`caller`)
 				result = gn.CbBuilder(result, ctx, caller)
-			}
-			// TODO remove this next line after proven it works without
-			if result.GetGNode() != nil {
-				result.GetGNode()._origin = origin // set it again. though original impl. has this, it is most definitely not required here
 			}
 		}
 		return result

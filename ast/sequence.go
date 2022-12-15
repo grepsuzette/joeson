@@ -151,8 +151,7 @@ func (seq *Sequence) parseAsObject(ctx *ParseContext) Astnode {
 		if child.GetGNode().Label == "&" {
 			switch v := res.(type) {
 			case NativeMap:
-				// TODO seems this case never happens after all,
-				// it seems to be a Ref instead
+				// TODO seems this case never happens after all
 				panic("AGAGAGA")
 				resMap := v
 				for _, k := range results.Keys() {
@@ -178,11 +177,6 @@ func (seq *Sequence) parseAsObject(ctx *ParseContext) Astnode {
 					panic("unhandled case, where Str in & is not the final element in a sequence, study how to merge")
 				}
 			case *Pattern:
-				// fmt.Println("Pattern:")
-				// fmt.Println("Value: " + v.Value.ContentString())
-				// fmt.Println("Join: " + v.Join.ContentString())
-				// fmt.Println("Min: " + v.Min.ContentString())
-				// fmt.Println("Max: " + v.Max.ContentString())
 				return v
 			case *Existential:
 				return v

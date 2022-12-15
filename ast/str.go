@@ -4,10 +4,9 @@ import "grepsuzette/joeson/helpers"
 import . "grepsuzette/joeson/core"
 import . "grepsuzette/joeson/colors"
 
-// This does not represent a native string
-// but a Str in the joeson grammar.
-// see NativeString which is a terminal element
-// both are similar otherwise
+// Str does not represent a native string
+// but rather a `Str` in the joeson grammar.
+// see NativeString which is a terminal element (a native string in js)
 type Str struct {
 	*GNode
 	str string

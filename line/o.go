@@ -1,15 +1,14 @@
 package line
 
 import (
-	// "fmt"
 	"grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/colors"
 	"grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
-	"grepsuzette/joeson/lambda"
-	"reflect"
+	// "grepsuzette/joeson/lambda"
+	// "reflect"
 	"strconv"
-	"strings"
+	// "strings"
 )
 
 type OLine struct {
@@ -39,22 +38,11 @@ func O(a ...any) OLine {
 
 func (ol OLine) LineType() string { return "o" }
 func (ol OLine) Content() Line    { return ol.content }
-func (ol OLine) String() string   { return ol.StringIndent(0) }
 func (ol OLine) StringIndent(nIndent int) string {
-	s := helpers.Indent(nIndent) + ol.LineType() + " "
-	switch v := ol.content.(type) {
-	case SLine:
-		s += v.Str
-	case CLine:
-		s += v.ast.ContentString()
-	case ALine:
-		s += BoldBlue("[\n") + strings.Join(
-			lambda.Map(v.Array, func(line Line) string { return line.StringIndent(nIndent + 1) }),
-			"\n",
-		) + "\n" + helpers.Indent(nIndent) + BoldBlue("]")
-	default:
-		s += "?" + reflect.TypeOf(v).String() + "?"
-	}
+	s := helpers.Indent(nIndent)
+	s += ol.LineType()
+	s += " "
+	s += ol.content.StringIndent(nIndent)
 	if ol.attrs.CbBuilder != nil {
 		s += Green(", ") + Yellow("𝘧")
 	}

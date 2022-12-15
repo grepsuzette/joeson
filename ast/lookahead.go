@@ -26,8 +26,8 @@ func (look *Lookahead) ContentString() string {
 func (look *Lookahead) Parse(ctx *ParseContext) Astnode {
 	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
 		pos := ctx.Code.Pos
-		result := look.expr.Parse(ctx) // check whether it parses
-		ctx.Code.Pos = pos             // but revert pos
+		result := look.expr.Parse(ctx) // check whether it parses...
+		ctx.Code.Pos = pos             // ...but revert to prev pos if so
 		return result
 	}, look)(ctx)
 }
