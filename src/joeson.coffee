@@ -193,7 +193,7 @@ showtype = (result) ->
 
         # The only time a cache hit will simply return is when loopStage is 0
         if frame.endPos?
-          $.log "#{cyan "`-hit:"} #{"'"+frame.result+"'"} #{cyan(showtype(frame.result))} ${magenta typeof frame.result}" if trace.stack
+          $.log "#{cyan "`-hit:"} #{"'"+frame.result+"'"} #{cyan(showtype(frame.result))} #{magenta typeof frame.result}" if trace.stack
           $.code.pos = frame.endPos
           return frame.result
 
