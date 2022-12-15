@@ -24,8 +24,7 @@ just admit that the current implementation is imperfect, and limit grammar usage
 
 {clazz, colors:{red, blue, cyan, magenta, green, normal, black, white, yellow}} = require('cardamom')
 
-oldblack = black
-black = (s) -> oldblack(s, yes)
+boldblack = (s) -> black(s, yes)
 {inspect} = require 'util'
 assert = require 'assert'
 {CodeStream} = require './codestream'
@@ -91,12 +90,12 @@ cacheSet = (frame, result, endPos) ->
       line = @code.line
       return if trace.filterLine? and line isnt trace.filterLine
       codeSgmnt = "#{ white ''+line+','+@code.col \
-                }\t#{ black pad right:5, (p=escape(@code.peek beforeChars:5))[p.length-5...] \
+                }\t#{ boldblack pad right:5, (p=escape(@code.peek beforeChars:5))[p.length-5...] \
                   }#{ green pad left:20, (p=escape(@code.peek afterChars:20))[0...20] \
                   }#{ if @code.pos+20 < @code.text.length
-                        black '>'
+                        boldblack '>'
                       else
-                        black ']'}"
+                        boldblack ']'}"
       console.log "#{codeSgmnt} #{cyan Array(@stackLength).join '| '}#{message}"
 
   stackPeek: (skip=0) -> @stack[@stackLength-1-skip]
@@ -177,11 +176,11 @@ showtype = (result) ->
 
   @$loopify = (fn) -> ($) ->
     # STACK TRACE
-    $.log "#{blue '*'} #{this} #{black $.counter}" if trace.stack
+    $.log "#{blue '*'} #{this} #{boldblack $.counter}" if trace.stack
 
     if @skipCache
       result = fn.call this, $
-      $.log "#{cyan "`->:"} #{escape result} #{black typeof result}" if trace.stack
+      $.log "#{cyan "`->:"} #{escape result} #{boldblack typeof result}" if trace.stack
       return result
 
     frame = $.getFrame this
@@ -263,7 +262,7 @@ showtype = (result) ->
 
         timeStart? 'wipemask'
         # Step 1: Collect wipemask so we can wipe the frames later.
-        $.log "#{yellow "`-base:"} #{escape frame.result} #{black typeof frame.result}" if trace.stack
+        $.log "#{yellow "`-base:"} #{escape frame.result} #{boldblack typeof frame.result}" if trace.stack
         frame.wipemask ?= new Array($.grammar.numRules)
         for i in [$.stackLength-2..0] by -1
           i_frame = $.stack[i]
