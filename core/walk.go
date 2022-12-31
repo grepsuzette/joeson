@@ -1,6 +1,6 @@
 package core
 
-import "sort"
+// import "sort"
 
 // Depth-first walk
 
@@ -31,7 +31,7 @@ func Walk(ast Astnode, parent Astnode, prepost WalkPrepost) Astnode {
 	return ast
 }
 
-// -- following are shortcut functions. They help prevent blunders --
+// -- following are shortcut functions.
 
 // shortcut calling ForEachChild for members being []Astnode
 func ForEachChild_Array(a []Astnode, f func(Astnode) Astnode) []Astnode {
@@ -45,17 +45,36 @@ func ForEachChild_Array(a []Astnode, f func(Astnode) Astnode) []Astnode {
 }
 
 // shortcut calling ForEachChild for members being map[string]Astnode
-func ForEachChild_MapString(h map[string]Astnode, f func(Astnode) Astnode) map[string]Astnode {
+// beware, maps are not ordered in golang. Use instead ForEachChild_InRules
+// func ForEachChild_MapString(h map[string]Astnode, f func(Astnode) Astnode) map[string]Astnode {
+// 	hnew := map[string]Astnode{}
+// 	sortedKeys := []string{}
+// 	for k := range h {
+// 		sortedKeys = append(sortedKeys, k)
+// 	}
+// 	sort.Strings(sortedKeys)
+// 	for _, k := range sortedKeys {
+// 		if r := f(h[k]); r != nil {
+// 			hnew[k] = r
+// 		} // else, removed
+// 	}
+// 	return hnew
+// }
+
+// where x.GetGNode().Rules and x.GetGNode().RulesK are considered
+// this is ordered, the new x.GetGNode().Rules is returned,
+func ForEachChild_InRules(x Astnode, f func(Astnode) Astnode) map[string]Astnode {
 	hnew := map[string]Astnode{}
-	sortedKeys := []string{}
-	for k := range h {
-		sortedKeys = append(sortedKeys, k)
+	gn := x.GetGNode()
+	if gn == nil || gn.Rules == nil {
+		return nil
 	}
-	sort.Strings(sortedKeys)
-	for _, k := range sortedKeys {
-		if r := f(h[k]); r != nil {
-			hnew[k] = r
-		} // else, removed
+	for _, k := range gn.RulesK {
+		if v, exists := gn.Rules[k]; exists {
+			if r := f(v); r != nil {
+				hnew[k] = r
+			}
+		}
 	}
 	return hnew
 }

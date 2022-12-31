@@ -1,7 +1,6 @@
 package ast
 
 import (
-	// "fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/lambda"
@@ -13,10 +12,16 @@ type Choice struct {
 	choices []Astnode
 }
 
-func NewEmptyChoice() *Choice { return &Choice{NewGNode(), []Astnode{}} }
+func NewEmptyChoice() *Choice {
+	ch := &Choice{NewGNode(), []Astnode{}}
+	ch.GNode.Node = ch
+	return ch
+}
 func NewChoice(it Astnode) *Choice {
 	if a, ok := it.(*NativeArray); ok {
-		return &Choice{NewGNode(), a.Array}
+		ch := &Choice{NewGNode(), a.Array}
+		ch.GNode.Node = ch
+		return ch
 	} else {
 		panic("Choice expects a NativeArray")
 	}
@@ -33,8 +38,7 @@ func (ch *Choice) IsThereOnlyOneChoice() (bool, Astnode) {
 func (ch *Choice) Append(node Astnode)     { ch.choices = append(ch.choices, node) }
 func (ch *Choice) GetGNode() *GNode        { return ch.GNode }
 func (ch *Choice) HandlesChildLabel() bool { return false }
-func (ch *Choice) Labels() []string        { return MyLabelIfDefinedOrEmpty(ch) }
-func (ch *Choice) Captures() []Astnode     { return MeIfCaptureOrEmpty(ch) }
+
 func (ch *Choice) Prepare() {
 	for _, choice := range ch.choices {
 		if !choice.GetGNode().Capture {
@@ -62,10 +66,9 @@ func (ch *Choice) Parse(ctx *ParseContext) Astnode {
 
 func (ch *Choice) ContentString() string {
 	var b strings.Builder
-	b.WriteString(LabelOrName(ch))
 	b.WriteString(Blue("("))
-	a := lambda.Map(ch.choices, func(nn Astnode) string {
-		return nn.ContentString()
+	a := lambda.Map(ch.choices, func(x Astnode) string {
+		return Prefix(x) + x.ContentString()
 	})
 	b.WriteString(strings.Join(a, Blue(" | ")))
 	b.WriteString(Blue(")"))
@@ -76,9 +79,8 @@ func (ch *Choice) ForEachChild(f func(Astnode) Astnode) Astnode {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}
-	// we must first wall through rules, and then only through choices
-	ch.GetGNode().Rules = ForEachChild_MapString(ch.GetGNode().Rules, f)
+	// we must first walk through rules, and then only through choices
+	ch.GetGNode().Rules = ForEachChild_InRules(ch, f)
 	ch.choices = ForEachChild_Array(ch.choices, f)
 	return ch
 }
-func (ch *Choice) String() string { return "AFAKFAKg" }

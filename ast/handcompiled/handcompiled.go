@@ -1,8 +1,11 @@
 package ast
 
 import (
+	"fmt"
 	. "grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/core"
+	"reflect"
+	// "grepsuzette/joeson/helpers"
 	. "grepsuzette/joeson/line"
 	"strings"
 )
@@ -12,14 +15,25 @@ import (
 // it comes from the original joeson.coffee
 
 // {{{1 imports and funcs
-func C(a ...Astnode) Astnode { return NewChoice(NewNativeArray(a)) }
-func E(it Astnode) Astnode   { return NewExistential(it) }
+func C(a ...Astnode) Astnode {
+	r := NewChoice(NewNativeArray(a))
+	s := ""
+	for _, v := range a {
+		s += v.ContentString() + ","
+	}
+	fmt.Println("ohm Choice in=" + s + " out=" + r.ContentString())
+	return r
+}
+func E(it Astnode) Astnode { return NewExistential(it) }
 func L(label string, node Astnode) Astnode {
-	// fmt.Println(reflect.TypeOf(node).String() + " -  " + label)
+	fmt.Println("ohm " + reflect.TypeOf(node).String() + " -  " + label)
 	node.GetGNode().Label = label
 	return node
 }
-func N(it Astnode) Astnode { return NewNot(it) }
+func N(it Astnode) Astnode {
+	fmt.Println("ohm Not it=" + it.ContentString())
+	return NewNot(it)
+}
 func P(value, join Astnode, minmax ...int) *Pattern {
 	min := -1
 	max := -1
@@ -29,17 +43,44 @@ func P(value, join Astnode, minmax ...int) *Pattern {
 			max = minmax[1]
 		}
 	}
-	return NewPattern(NewNativeMap(map[string]Astnode{
+	p := NewPattern(NewNativeMap(map[string]Astnode{
 		"value": value,
 		"join":  join,
 		"min":   NewNativeInt(min),
 		"max":   NewNativeInt(max),
 	}))
+	// sJoin := "nil"
+	// if join != nil {
+	// 	sJoin = join.ContentString()
+	// }
+	// sJoin2 := "nil"
+	// if p.Join != nil {
+	// 	sJoin2 = p.Join.ContentString()
+	// }
+	// fmt.Println("ohm Pattern in = " + value.ContentString() + " " + sJoin + " " + strconv.Itoa(min) + " " + strconv.Itoa(max))
+	// fmt.Println("ohm         out = " + p.Value.ContentString() + " " + sJoin2 + " " + p.Min.String() + " " + p.Max.String())
+	return p
 }
-func R(s string) *Ref          { return NewRef(NewNativeString(s)) }
-func Re(s string) *Regex       { return NewRegexFromString(s) }
-func S(a ...Astnode) *Sequence { return NewSequence(NewNativeArray(a)) }
-func St(s string) Str          { return NewStr(s) }
+func R(s string) *Ref {
+	r := NewRef(NewNativeString(s))
+	// fmt.Println("ohm Ref in=" + s + " out=" + r.ContentString())
+	return r
+}
+func Re(s string) *Regex { return NewRegexFromString(s) }
+func S(a ...Astnode) *Sequence {
+	r := NewSequence(NewNativeArray(a))
+	s := ""
+	for _, v := range a {
+		s += Prefix(v) + v.ContentString() + ","
+	}
+	fmt.Println("ohm Sequence in=" + s + " out=" + r.ContentString())
+	return r
+}
+func St(s string) Str {
+	r := NewStr(s)
+	// fmt.Println("ohm Str in='" + helpers.Escape(s) + "' out=" + r.ContentString())
+	return r
+}
 
 func AttemptToJoinANativeArrayOrPanic(it Astnode) string {
 	var b strings.Builder
@@ -59,10 +100,11 @@ func rules(lines ...Line) ALine { return NewALine(lines) }
 const JoesonNbRules int = 35
 
 const QUOTE string = "'\\''"
+const JOESON_GRAMMAR_NAME = "__grammar__"
 
 func NewJoeson() *Grammar {
 	return NewGrammarFromLines(
-		"joeson from handcompiled",
+		JOESON_GRAMMAR_NAME,
 		JOESON_GRAMMAR_RULES(),
 		NewEmptyGrammarNamed("empty grammar"),
 	)
@@ -73,23 +115,35 @@ func JOESON_GRAMMAR_RULES() Lines {
 		o(Named("EXPR", rules(
 			o(S(R("CHOICE"), R("_"))),
 			o(Named("CHOICE", rules(
-				o(S(P(R("_PIPE"), nil), P(R("SEQUENCE"), R("_PIPE"), 2), P(R("_PIPE"), nil)), func(it Astnode) Astnode { return NewChoice(it) }),
+				o(S(P(R("_PIPE"), nil), P(R("SEQUENCE"), R("_PIPE"), 2), P(R("_PIPE"), nil)), func(it Astnode) Astnode {
+					return NewChoice(it)
+				}),
 				o(Named("SEQUENCE", rules(
-					o(P(R("UNIT"), nil, 2), func(it Astnode) Astnode { return NewSequence(it) }),
+					o(P(R("UNIT"), nil, 2), func(it Astnode) Astnode {
+						fmt.Println("ohm UNIT .. NewSequence from it=" + it.ContentString())
+						return NewSequence(it)
+					}),
 					o(Named("UNIT", rules(
 						o(S(R("_"), R("LABELED"))),
 						o(Named("LABELED", rules(
 							o(S(E(S(L("label", R("LABEL")), St(":"))), L("&", C(R("DECORATED"), R("PRIMARY"))))),
 							o(Named("DECORATED", rules(
 								o(S(R("PRIMARY"), St("?")), func(it Astnode) Astnode { return NewExistential(it) }),
-								o(S(L("value", R("PRIMARY")), St("*"), L("join", E(S(N(R("__")), R("PRIMARY")))), L("@", E(R("RANGE")))), func(it Astnode) Astnode { return NewPattern(it) }),
+								o(S(L("value", R("PRIMARY")), St("*"), L("join", E(S(N(R("__")), R("PRIMARY")))), L("@", E(R("RANGE")))), func(it Astnode) Astnode {
+									fmt.Println("ohm DECORATED[1] value:PRIMARY* join:(!__ PRIMARY)? @:RANGE? NewPattern from it=" + it.ContentString())
+									return NewPattern(it)
+								}),
 								o(S(L("value", R("PRIMARY")), St("+"), L("join", E(S(N(R("__")), R("PRIMARY"))))), func(it Astnode) Astnode {
+									fmt.Println("ohm DECORATED[2] value:PRIMARY+ join:(!__ PRIMARY)? @:RANGE? NewPattern from it=" + it.ContentString())
 									h := it.(NativeMap)
 									h.Set("Min", NewNativeInt(1))
 									h.Set("Max", NewNativeInt(-1))
 									return NewPattern(h)
 								}),
-								o(S(L("value", R("PRIMARY")), L("@", R("RANGE"))), func(it Astnode) Astnode { return NewPattern(it) }), // note: the @ label will "source" and "import" the labels from RANGE node into `it`
+								o(S(L("value", R("PRIMARY")), L("@", R("RANGE"))), func(it Astnode) Astnode {
+									fmt.Println("ohm DECORATED[3] value:PRIMARY @:RANGE NewPattern from it=" + it.ContentString())
+									return NewPattern(it)
+								}),
 								o(S(St("!"), R("PRIMARY")), func(it Astnode) Astnode { return NewNot(it) }),
 								o(C(S(St("(?"), L("expr", R("EXPR")), St(")")), S(St("?"), L("expr", R("EXPR")))), func(it Astnode) Astnode { return NewLookahead(it) }),
 								i(Named("RANGE", o(S(St("{"), R("_"), L("min", E(R("INT"))), R("_"), St(","), R("_"), L("max", E(R("INT"))), R("_"), St("}"))))),
@@ -114,17 +168,13 @@ func JOESON_GRAMMAR_RULES() Lines {
 								i(Named("CODE", o(S(St("{"), P(S(N(St("}")), C(R("ESC1"), R("."))), nil, -1, -1), St("}")))), func(it Astnode) Astnode {
 									// TODO condense it or write a function
 									// deprecated code in joeson
-									var caps = it.Captures()
-									if len(caps) == 0 {
-										return NewNativeUndefined()
-									}
-									switch v := caps[0].(type) {
-									case NativeString:
-										if len(v.Str) == 0 {
-											return NewNativeUndefined()
-										} else {
+									switch v := it.(type) {
+									case NativeMap:
+										if v.Get("code") != nil {
 											panic("code in joeson is obsolete")
 										}
+										expr := v.Get("expr")
+										return expr
 									default:
 										panic("assert")
 									}
@@ -148,7 +198,9 @@ func JOESON_GRAMMAR_RULES() Lines {
 		))),
 		i(Named("LABEL", C(St("&"), St("@"), R("WORD")))),
 		i(Named("WORD", Re("[a-zA-Z\\._][a-zA-Z\\._0-9]*"))),
-		i(Named("INT", Re("[0-9]+"))), //, func(it Astnode) Astnode { return NewNativeIntFromNativeString(it.(NativeString)) }),
+		i(Named("INT", Re("[0-9]+")), func(it Astnode) Astnode {
+			return NewNativeIntFrom(it)
+		}),
 		i(Named("_PIPE", S(R("_"), St("|")))),
 		i(Named("_", P(C(St(" "), St("\n")), nil))),
 		i(Named("__", P(C(St(" "), St("\n")), nil, 1))),

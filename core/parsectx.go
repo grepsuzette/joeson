@@ -58,7 +58,7 @@ func (ctx *ParseContext) log(message string) {
 	if !ctx.SkipLog {
 		line := ctx.Code.Line()
 		if Trace.FilterLine == -1 || line == Trace.FilterLine {
-			codeSgmnt := White(strconv.Itoa(line)) + "," + strconv.Itoa(ctx.Code.Col())
+			codeSgmnt := White(strconv.Itoa(line) + "," + strconv.Itoa(ctx.Code.Col()))
 			p := helpers.Escape(ctx.Code.Peek(NewPeek().BeforeChars(5)))
 			codeSgmnt += "\t" + BoldBlack(helpers.PadRight(helpers.SliceString(p, len(p)-5, len(p)), 5))
 			p = helpers.Escape(ctx.Code.Peek(NewPeek().AfterChars(20)))

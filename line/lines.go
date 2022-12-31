@@ -1,8 +1,8 @@
 package line
 
 import (
-	// "fmt"
 	"grepsuzette/joeson/ast"
+	// "grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
 	"reflect"
 	"strings"
@@ -13,14 +13,12 @@ type Lines []Line
 func NewRankFromLines(rankname string, lines []Line, grammar *ast.Grammar) *ast.Rank {
 	rank := ast.NewEmptyRank(rankname)
 	for _, line := range lines {
-		if il, ok := line.(ILine); ok {
-			name, rule := il.ToRule(grammar, rank)
-			rank.GetGNode().Include(name, rule)
-		} else if ol, ok := line.(OLine); ok {
-			// fmt.Printf("funcs.go NewRankFromLines name=%s rank.len:%d\n", rankname, rank.Length())
+		if ol, ok := line.(OLine); ok {
 			choice := ol.ToRule(grammar, rank, OLineByIndexOrName{index: helpers.NewNullInt(rank.Length())})
 			rank.Append(choice)
-			// } else if someAttr. But it won't be useful now
+		} else if il, ok := line.(ILine); ok {
+			name, rule := il.ToRule(grammar, rank)
+			rank.GetGNode().Include(name, rule)
 		} else {
 			panic("Unknown type line, expected 'o' or 'i' line, got '" + line.StringIndent(0) + "' (" + reflect.TypeOf(line).String() + ")")
 		}

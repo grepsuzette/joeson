@@ -10,8 +10,8 @@ var TimeEnd func(name string) = nil
 
 var Trace = TraceSettings{
 	Stack:      true,
-	Loop:       false,
-	SkipSetup:  true,
+	Loop:       true,
+	SkipSetup:  false,
 	FilterLine: -1,
 }
 

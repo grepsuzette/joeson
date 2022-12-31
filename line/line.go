@@ -102,6 +102,9 @@ func getRule(grammar *ast.Grammar, name string, line Line, parentRule Astnode, a
 		panic("ILine is impossible here")
 	case OLine:
 		ast = v.ToRule(grammar, parentRule, OLineByIndexOrName{name: name})
+		if ast.GetGNode().Name == "" {
+			ast.GetGNode().Name = name
+		}
 	case SLine:
 		var ctx *ParseContext
 		// may surround with halt trace instructions as in coffee impl

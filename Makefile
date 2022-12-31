@@ -6,7 +6,7 @@ run: it
 	./Joeson
 
 test: 
-	go test .
+	go test . --run TestDebugLabel -v
 
 # test: it
 # 	go test ./...

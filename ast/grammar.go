@@ -4,8 +4,11 @@ import (
 	"fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
-	"os"
+	"grepsuzette/joeson/helpers"
+	// "os"
+	"errors"
 	"strconv"
+	"strings"
 )
 
 /*
@@ -17,7 +20,7 @@ import (
 */
 type Grammar struct {
 	*GNode
-	rank *Rank
+	rank Astnode // can be a *Rank or a Ref to a rank
 
 	// each ast node can have rules, recursively.
 	// in the Postinit below, Grammar will however
@@ -33,9 +36,10 @@ type Grammar struct {
 }
 
 func NewEmptyGrammarNamed(name string) *Grammar {
-	gm := Grammar{NewGNode(), nil, 0, map[int]Astnode{}, false}
+	gm := &Grammar{NewGNode(), nil, 0, map[int]Astnode{}, false}
 	gm.GNode.Name = name
-	return &gm
+	gm.GNode.Node = gm
+	return gm
 }
 
 func (gm *Grammar) GetGNode() *GNode { return gm.GNode }
@@ -99,18 +103,24 @@ func (gm *Grammar) Postinit() {
 		Pre: func(node Astnode, parent Astnode) string {
 			gnode := node.GetGNode()
 			if gnode == nil {
-				// fmt.Println("PRE " + node.ContentString() + " has nil gnode, in grammar.Postinit(), returning ''")
 				return ""
 			}
 			// sanity check: it must have no parent yet if it's not a rule
-			if !IsRule(node) && gnode.Parent != nil {
+			if !IsRule(node) && gnode != nil && gnode.Parent != nil {
 				panic("Grammar tree should be a DAG, nodes should not be referenced more than once.")
 			}
+
+			// sParentContentString := "nil"
+			// if parent != nil {
+			// 	sParentContentString = parent.ContentString()
+			// }
+			// fmt.Println(" PRE connect nodes, parent:" + sParentContentString + " node: " + ContentStringWithPrefix(node.GetGNode().Rule) + node.ContentString() + " type: " + helpers.TypeOfToString(node))
 			gnode.Grammar = gm
 			gnode.Parent = parent
 			if false {
 				// "inline rules are special" in original coffeescript
 				// but the bit of code seem unreachable anyway
+				panic("assert")
 			} else {
 				// set node.rule, the root node for this rule
 				if gnode.Rule == nil {
@@ -118,9 +128,7 @@ func (gm *Grammar) Postinit() {
 					if parent != nil {
 						r = parent.GetGNode().Rule
 					} else {
-						// must we return nil or undefined?
-						r = NewNativeUndefined() // solution 1
-						//r = nil // solution 2
+						r = NewNativeUndefined()
 					}
 					gnode.Rule = r
 				}
@@ -135,23 +143,56 @@ func (gm *Grammar) Postinit() {
 				return ""
 			}
 			if IsRule(node) {
+				gm.GetGNode().RulesK = append(gm.GetGNode().RulesK, gnode.Name)
 				gm.GetGNode().Rules[gnode.Name] = node
 				gnode.Id = gm.NumRules
 				gm.NumRules++
 				gm.Id2Rule[gnode.Id] = node
 				if Trace.Loop { // print out id->rulename for convenience
-					fmt.Println(Red(strconv.Itoa(gnode.Id)) + ":\t" + node.ContentString())
+					fmt.Println("Loop " + Red(strconv.Itoa(gnode.Id)) + ":\t" + Prefix(node) + node.ContentString())
 				}
 			}
 			return ""
 		},
 	})
+
+	// just show the tree
+	// nbNodes := 0
+	// Walk(gm, nil, WalkPrepost{
+	// 	Pre: func(node Astnode, parent Astnode) string {
+	// 		s := "undefined"
+	// 		if parent != nil {
+	// 			s = parent.ContentString()
+	// 		}
+	// 		fmt.Println("grammar PRE node:" + node.ContentString() + "/" + helpers.TypeOfToString(node) + " parent:" + s)
+	// 		nbNodes++
+	// 		depth := func(ast Astnode) int {
+	// 			deep := 0
+	// 			var x Astnode = ast
+	// 			var parent = x.GetGNode().Parent
+	// 			for parent != nil && parent != x {
+	// 				deep++
+	// 				x = parent
+	// 				parent = x.GetGNode().Parent
+	// 			}
+	// 			return deep
+	// 		}
+	// 		sParentName := "parent: -"
+	// 		if parent != nil && parent.GetGNode() != nil {
+	// 			if parent.GetGNode().Name == "" {
+	// 				sParentName = "parent: undefined"
+	// 			} else {
+	// 				sParentName = "parent: " + parent.GetGNode().Name
+	// 			}
+	// 		}
+	// 		fmt.Println("DEEP " + helpers.PadLeft(sParentName, 34) + strconv.Itoa(depth(node)) + " Node " + Prefix(node) + node.ContentString())
+	// 		return ""
+	// 	},
+	// })
 	// Prepare all the nodes, child first.
+
 	Walk(gm, nil, WalkPrepost{
 		Post: func(node Astnode, parent Astnode) string {
-			// if Trace.Stack {
-			// fmt.Println("grammar POST: " + node.ContentString() + " , now calling prepare()")
-			// }
 			node.Prepare()
 			return ""
 		},
@@ -159,16 +200,30 @@ func (gm *Grammar) Postinit() {
 	gm.wasInitialized = true
 }
 
-// MAIN GRAMMAR PARSE FUNCTION
-func (gm *Grammar) ParseString(sCode string, attrs ParseOptions) Astnode {
-	return gm.ParseCode(NewCodeStream(sCode), attrs)
+// ♥ call this one (MAIN GRAMMAR PARSE FUNCTION)
+func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) (Astnode, error) {
+	if len(attrs) > 0 {
+		return gm.ParseCode(NewCodeStream(sCode), attrs[0])
+	} else {
+		return gm.ParseCode(NewCodeStream(sCode), ParseOptions{})
+	}
 }
 
-func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) Astnode {
-	return gm.Parse(NewParseContext(code, gm, attrs))
+func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) (Astnode, error) {
+	return gm.parseOrFail(NewParseContext(code, gm, attrs))
 }
 
+// this one conforms the interface, but you would normally call
+// grammar.ParseString() or grammar.ParseCode().
 func (gm *Grammar) Parse(ctx *ParseContext) Astnode {
+	if ast, error := gm.parseOrFail(ctx); error == nil {
+		return ast
+	} else {
+		panic(error)
+	}
+}
+
+func (gm *Grammar) parseOrFail(ctx *ParseContext) (Astnode, error) {
 	var oldTrace TraceSettings
 	if ctx.Debug {
 		// temporarily enable stack tracing
@@ -201,6 +256,7 @@ func (gm *Grammar) Parse(ctx *ParseContext) Astnode {
 			}
 		}
 		sErr := fmt.Sprintf("Error parsing at char:%d=(line:%d,col:%d).", maxSuccess, ctx.Code.PosToLine(maxSuccess), ctx.Code.PosToCol(maxSuccess))
+		sErr += "\n" + ctx.Code.Print()
 		sErr += "\nDetails:\n"
 		sErr += Green("OK") + "/"
 		sErr += Yellow("Parsing") + "/"
@@ -212,26 +268,21 @@ func (gm *Grammar) Parse(ctx *ParseContext) Astnode {
 		sErr += Red(ctx.Code.Peek(NewPeek().AfterChars(maxAttempt-ctx.Code.Pos))) + "/"
 		ctx.Code.Pos = maxAttempt
 		sErr += White(ctx.Code.Peek(NewPeek().AfterLines(2))) + "\n"
-		fmt.Printf(sErr)
-		os.Exit(1)
+		return nil, errors.New(sErr)
 	}
 	// joeson.coffee has a opts.returnContext but won't implement it
-	return result
+	return result, nil
 }
 
 func (gm *Grammar) Prepare()                {}
 func (gm *Grammar) HandlesChildLabel() bool { return false }
-func (gm *Grammar) Labels() []string        { return MyLabelIfDefinedOrEmpty(gm) }
-func (gm *Grammar) Captures() []Astnode     { return MeIfCaptureOrEmpty(gm) }
 func (gm *Grammar) ContentString() string {
-	return Magenta("GRAMMAR{") +
-		LabelOrName(gm) +
-		gm.rank.ContentString() + Magenta("}")
+	return Magenta("GRAMMAR{") + helpers.TypeOfToString(gm.rank) + Prefix(gm.rank) + gm.rank.ContentString() + Magenta("}")
 }
 
 func (gm *Grammar) CountRules() int { return gm.NumRules }
 func (gm *Grammar) IsReady() bool   { return gm.rank != nil && gm.wasInitialized }
-func (gm *Grammar) SetRankIfEmpty(rank *Rank) {
+func (gm *Grammar) SetRankIfEmpty(rank Astnode) {
 	if gm.rank != nil {
 		return
 	}
@@ -242,8 +293,49 @@ func (gm *Grammar) SetRankIfEmpty(rank *Rank) {
 }
 func (gm *Grammar) ForEachChild(f func(Astnode) Astnode) Astnode {
 	// @defineChildren rank: {type:Rank}
+	// TODO but must rules to be executed in a proper order? Rules is a map, in go it is in any order.
+	//      Check whether Rules respect the insertion order
+	gm.GetGNode().Rules = ForEachChild_InRules(gm, f)
 	if gm.rank != nil {
-		gm.rank = f(gm.rank).(*Rank)
+		gm.rank = f(gm.rank)
 	}
 	return gm
+}
+
+func (gm *Grammar) PrintRules() {
+	fmt.Println("+ -- Grammar.Debug() --------")
+	fmt.Println("| name         : " + gm.GNode.Name)
+	fmt.Println("| label        : " + gm.GNode.Label)
+	fmt.Println("| contentString: " + gm.ContentString())
+	fmt.Println("| rules        : " + strconv.Itoa(gm.NumRules))
+	fmt.Println("| ")
+	fmt.Println("| ",
+		helpers.PadLeft("key", 14),
+		helpers.PadLeft("id", 3),
+		helpers.PadLeft("type", 13),
+		helpers.PadLeft("cap", 3),
+		helpers.PadLeft("label", 7),
+		helpers.PadLeft("labels()", 21),
+		helpers.PadLeft("parent.name", 16),
+		helpers.PadLeft("contentString", 30),
+	)
+	fmt.Println("|   -------------------------------------------------------------------------------------")
+	for i := 0; i < gm.NumRules; i++ {
+		v := gm.Id2Rule[i]
+		sParentName := "-"
+		if v.GetGNode().Parent != nil {
+			sParentName = v.GetGNode().Parent.GetGNode().Name
+		}
+		fmt.Println("|  ",
+			helpers.PadLeft(v.GetGNode().Name, 14),
+			helpers.PadLeft(strconv.Itoa(v.GetGNode().Id), 3),
+			helpers.PadLeft(helpers.TypeOfToString(v), 13),
+			helpers.PadLeft(helpers.BoolToString(v.GetGNode().Capture), 3),
+			helpers.PadLeft(v.GetGNode().Label, 7),
+			helpers.PadLeft(strings.Join(v.GetGNode().Labels_.Get(), ","), 21),
+			helpers.PadLeft(sParentName, 16),
+			helpers.PadLeft(v.ContentString(), 30),
+		)
+	}
+	fmt.Println("| ")
 }

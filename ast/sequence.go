@@ -1,11 +1,10 @@
 package ast
 
 import (
-	// "fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
-	"reflect"
+	"grepsuzette/joeson/lambda"
 	"strings"
 )
 
@@ -19,20 +18,28 @@ const (
 
 type Sequence struct {
 	*GNode
-	sequence      []Astnode
-	_internalType helpers.Varcache[sequenceRepr] // internal cache for internalType()
-	_labels       helpers.Varcache[[]string]     // internal cache for Labels()
-	_captures     helpers.Varcache[[]Astnode]    // internal cache for Captures()
+	sequence []Astnode
+	type_    *helpers.Lazy0[sequenceRepr] // internal cache for internalType()
+	// moved to GNode
+	// _labels       helpers.Varcache[[]string]     // internal cache for Labels()
+	// _captures     helpers.Varcache[[]Astnode]    // internal cache for Captures()
 }
 
 func NewSequence(it Astnode) *Sequence {
-	if a, ok := it.(*NativeArray); ok {
+	if a, ok := it.(*NativeArray); !ok {
+		panic("Sequence expected a NativeArray")
+	} else {
 		if a == nil {
 			panic("expecting non nil array")
 		}
-		return &Sequence{GNode: NewGNode(), sequence: a.Array}
-	} else {
-		panic("Sequence expected a NativeArray")
+		gn := NewGNode()
+		seq := &Sequence{GNode: gn, sequence: a.Array}
+		gn.Node = seq
+		gn.Labels_ = helpers.NewLazy0[[]string](func() []string { return seq.calculateLabels() })
+		// note it could have been a Lazy0
+		gn.Captures_ = helpers.NewLazy0[[]Astnode](func() []Astnode { return seq.calculateCaptures() })
+		seq.type_ = helpers.NewLazy0[sequenceRepr](func() sequenceRepr { return seq.calculateType() })
+		return seq
 	}
 }
 
@@ -40,59 +47,50 @@ func (seq *Sequence) GetGNode() *GNode        { return seq.GNode }
 func (seq *Sequence) HandlesChildLabel() bool { return true }
 func (seq *Sequence) Prepare()                {}
 
-func (seq *Sequence) Labels() []string {
-	return seq._labels.GetCacheOrSet(func() []string {
-		a := []string{}
-		for _, child := range seq.sequence {
-			for _, label := range child.Labels() {
-				a = append(a, label)
-			}
+func (seq *Sequence) calculateLabels() []string {
+	a := []string{}
+	for _, child := range seq.sequence {
+		for _, label := range child.GetGNode().Labels_.Get() {
+			a = append(a, label)
 		}
-		return a
-	})
+	}
+	return a
 }
-
-func (seq *Sequence) Captures() []Astnode {
-	return seq._captures.GetCacheOrSet(func() []Astnode {
-		a := []Astnode{}
-		for _, child := range seq.sequence {
-			for _, capture := range child.Captures() {
-				a = append(a, capture)
-			}
+func (seq *Sequence) calculateCaptures() []Astnode {
+	a := []Astnode{}
+	for _, child := range seq.sequence {
+		for _, captured := range child.GetGNode().Captures_.Get() {
+			a = append(a, captured)
 		}
-		return a
-	})
+	}
+	return a
 }
 
 // as soon as there is >=1 label, it is Object
 // otherwise, if at least 1 capture, it is Array
 // otherwise a Single
-func (seq *Sequence) internalType() sequenceRepr {
-	return seq._internalType.GetCacheOrSet(func() sequenceRepr {
-		if len(seq.Labels()) == 0 {
-			if len(seq.Captures()) > 1 {
-				return Array
-			} else {
-				return Single
-			}
+func (seq *Sequence) calculateType() sequenceRepr {
+	if len(seq.GetGNode().Labels_.Get()) == 0 {
+		if len(seq.GetGNode().Captures_.Get()) > 1 {
+			return Array
 		} else {
-			return Object
+			return Single
 		}
-	})
+	} else {
+		return Object
+	}
 }
 
 func (seq *Sequence) ContentString() string {
 	var b strings.Builder
-	b.WriteString(LabelOrName(seq))
-	for _, x := range seq.sequence {
-		b.WriteString(x.ContentString() + " ")
-	}
+	as := lambda.Map(seq.sequence, func(x Astnode) string { return Prefix(x) + x.ContentString() })
+	b.WriteString(strings.Join(as, " "))
 	return Blue("(") + b.String() + Blue(")")
 }
 
 func (seq *Sequence) Parse(ctx *ParseContext) Astnode {
 	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
-		switch seq.internalType() {
+		switch seq.type_.Get() {
 		case Array:
 			return seq.parseAsArray(ctx)
 		case Single:
@@ -104,7 +102,7 @@ func (seq *Sequence) Parse(ctx *ParseContext) Astnode {
 				return seq.parseAsObject(ctx)
 			}
 		default:
-			panic("Unexpected type " + string(seq.internalType()))
+			panic("Unexpected type " + string(seq.type_.Get()))
 		}
 		panic("Error")
 	}, seq)(ctx)
@@ -139,68 +137,47 @@ func (seq *Sequence) parseAsArray(ctx *ParseContext) Astnode {
 }
 
 func (seq *Sequence) parseAsObject(ctx *ParseContext) Astnode {
-	results := NewEmptyNativeMap()
-	for k, child := range seq.sequence {
+	var results Astnode
+	results = NewNativeUndefined()
+	for _, child := range seq.sequence {
 		res := child.Parse(ctx)
 		if res == nil {
+			// fmt.Printf(Red("sequence %x %d parseAsObject childlabel=%s res==nil\n"), rnd, k, childLabel)
 			return nil
 		}
-		// TODO dubious comment below, edit soon
-		// if there is a label, child res is normally a NativeMap
-		// otherwise, child res is a Ref
 		if child.GetGNode().Label == "&" {
-			switch v := res.(type) {
-			case NativeMap:
-				// TODO seems this case never happens after all
-				panic("AGAGAGA")
-				resMap := v
-				for _, k := range results.Keys() {
-					resMap.Set(k, results.Get(k))
-				}
-				results = resMap
-			case *Ref:
-				if k == len(seq.sequence)-1 {
-					return v
-				} else {
-					panic("unhandled case, where Ref in & is not the final element in a sequence, study how to merge")
-				}
-			case *Choice:
-				return v
-			case *Not:
-				return v
-			case *Regex:
-				return v
-			case Str:
-				if k == len(seq.sequence)-1 {
-					return v
-				} else {
-					panic("unhandled case, where Str in & is not the final element in a sequence, study how to merge")
-				}
-			case *Pattern:
-				return v
-			case *Existential:
-				return v
-			default:
-				panic("unhandled type in parseAsObject: " + reflect.TypeOf(v).String() + "\n" + ctx.Code.Print())
+			if NotNilAndNotNativeUndefined(results) {
+				results = Merge(res, results)
+			} else {
+				results = res
 			}
 		} else if child.GetGNode().Label == "@" {
-			if _, isUndefined := res.(NativeUndefined); !isUndefined {
-				h := res.(NativeMap)
-				for _, k := range h.Keys() {
-					results.Set(k, h.Get(k))
-				}
+			if NotNilAndNotNativeUndefined(results) {
+				results = Merge(results, res)
+			} else {
+				results = res
 			}
 		} else if child.GetGNode().Label != "" {
-			results.Set(child.GetGNode().Label, res)
+			if NotNilAndNotNativeUndefined(results) {
+				if h, isMap := results.(NativeMap); isMap {
+					h.Set(child.GetGNode().Label, res)
+				} else {
+					panic("assert")
+				}
+			} else {
+				results = NewEmptyNativeMap()
+				results.(NativeMap).Set(child.GetGNode().Label, res)
+			}
 		}
 	}
 	return results
 }
+
 func (seq *Sequence) ForEachChild(f func(Astnode) Astnode) Astnode {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   sequence:   {type:[type:GNode]}
-	seq.GetGNode().Rules = ForEachChild_MapString(seq.GetGNode().Rules, f)
+	seq.GetGNode().Rules = ForEachChild_InRules(seq, f)
 	if seq.sequence != nil {
 		seq.sequence = ForEachChild_Array(seq.sequence, f)
 	}

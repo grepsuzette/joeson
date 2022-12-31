@@ -1,6 +1,6 @@
 package core
 
-import . "grepsuzette/joeson/colors"
+// import . "grepsuzette/joeson/colors"
 
 // NativeInt and NativeString denote our need to express a terminal element
 // that at the same time satisfies the `Astnode` interface.
@@ -16,7 +16,7 @@ func (ns NativeString) HandlesChildLabel() bool         { return false }
 func (ns NativeString) Labels() []string                { return []string{} }
 func (ns NativeString) Captures() []Astnode             { return []Astnode{} }
 func (ns NativeString) Prepare()                        {}
-func (ns NativeString) ContentString() string           { return Red(`"`) + ns.Str + Red(`"`) }
+func (ns NativeString) ContentString() string           { return ns.Str }
 func (ns NativeString) Parse(ctx *ParseContext) Astnode { panic("uncallable") }
 
 // no Native* object must walk through children: see node.coffee:78 `if ptr.child instanceof Node`

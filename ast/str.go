@@ -9,25 +9,24 @@ import . "grepsuzette/joeson/colors"
 // see NativeString which is a terminal element (a native string in js)
 type Str struct {
 	*GNode
-	str string
+	Str string
 }
 
 func NewStr(s string) Str {
-	g := NewGNode()
-	g.Capture = false
-	return Str{g, s}
+	str := Str{NewGNode(), s}
+	str.GNode.Capture = false
+	str.GNode.Node = str
+	return str
 }
 func (str Str) GetGNode() *GNode        { return str.GNode }
 func (str Str) Prepare()                {}
 func (str Str) HandlesChildLabel() bool { return false }
-func (str Str) Labels() []string        { return MyLabelIfDefinedOrEmpty(str) }
-func (str Str) Captures() []Astnode     { return MeIfCaptureOrEmpty(str) }
 func (str Str) ContentString() string {
-	return LabelOrName(str) + Green("'"+helpers.Escape(str.str)+"'")
+	return Green("'" + helpers.Escape(str.Str) + "'")
 }
 func (str Str) Parse(ctx *ParseContext) Astnode {
 	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
-		if didMatch, sMatch := ctx.Code.MatchString(str.str); didMatch {
+		if didMatch, sMatch := ctx.Code.MatchString(str.Str); didMatch {
 			// a string is not a terminal element
 			// so return NativeString.
 			return NewNativeString(sMatch)
@@ -37,6 +36,9 @@ func (str Str) Parse(ctx *ParseContext) Astnode {
 	}, str)(ctx)
 }
 func (str Str) ForEachChild(f func(Astnode) Astnode) Astnode {
-	// no children defined in coffee
+	// no children defined for Str, but GNode has:
+	// @defineChildren
+	//   rules:      {type:{key:undefined,value:{type:GNode}}}
+	str.GetGNode().Rules = ForEachChild_InRules(str, f)
 	return str
 }

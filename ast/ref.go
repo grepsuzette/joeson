@@ -2,16 +2,15 @@ package ast
 
 import (
 	. "grepsuzette/joeson/colors"
-	"grepsuzette/joeson/helpers"
-
 	. "grepsuzette/joeson/core"
+	"grepsuzette/joeson/helpers"
+	"strconv"
 )
 
 type Ref struct {
 	*GNode
-	ref     string                     // ref because joeson.coffee used @ref, because @name was reserved
-	param   Astnode                    // thought it was `any`, see frame.go (`param` field) and joeson.coffee:67. But Astnode must be good
-	_labels helpers.Varcache[[]string] // internal cache for labels()
+	ref   string  // ref because joeson.coffee used @ref, because @name was reserved
+	param Astnode // thought it was `any`, see frame.go (`param` field) and joeson.coffee:67. But Astnode must be good
 }
 
 func NewRef(it Astnode) *Ref {
@@ -33,11 +32,28 @@ func NewRef(it Astnode) *Ref {
 	default:
 		panic("unexpected type for NewRef")
 	}
-	ref := Ref{GNode: NewGNode(), ref: name, param: param}
+	ref := &Ref{GNode: NewGNode(), ref: name, param: param}
+	ref.GNode.Node = ref
 	if name[0:1] == "_" {
 		ref.GNode.Capture = false
 	}
-	return &ref
+	ref.GNode.Labels_ = helpers.NewLazy0[[]string](func() []string {
+		if ref.GNode.Label == "@" {
+			referenced := ref.GNode.Grammar.GetGNode().Rules[ref.ref]
+			if referenced == nil {
+				panic("ref " + ref.ref + " was not found in grammar.Rules")
+			} else if referenced.GetGNode() == nil {
+				panic("assert")
+			} else {
+				return referenced.GetGNode().Labels_.Get()
+			}
+		} else if ref.GNode.Label != "" {
+			return []string{ref.GNode.Label}
+		} else {
+			return []string{}
+		}
+	})
+	return ref
 }
 
 func (ref *Ref) GetGNode() *GNode        { return ref.GNode }
@@ -45,32 +61,20 @@ func (ref *Ref) HandlesChildLabel() bool { return false }
 func (ref *Ref) Prepare()                {}
 func (ref *Ref) Parse(ctx *ParseContext) Astnode {
 	return Wrap(func(ctx *ParseContext, _ Astnode) Astnode {
-		var x Astnode = ref.GNode.Grammar.(*Grammar).Rules[ref.ref]
-		if x == nil {
-			panic("Unknown reference " + ref.ref)
+		node := ref.GNode.Grammar.GetGNode().Rules[ref.ref]
+		if node == nil {
+			panic("Unknown reference " + ref.ref + ". Grammar has " + strconv.Itoa(len(ref.GNode.Grammar.GetGNode().Rules)) + " rules. ")
 		}
 		ctx.StackPeek(0).Param = ref.param
-		return x.Parse(ctx)
+		return node.Parse(ctx)
 	}, ref)(ctx)
 }
 
-func (ref *Ref) Captures() []Astnode { return MeIfCaptureOrEmpty(ref) }
-func (ref *Ref) Labels() []string {
-	return ref._labels.GetCacheOrSet(func() []string {
-		if ref.GNode.Label == "@" {
-			return ref.GNode.Grammar.(*Grammar).Rules[ref.ref].Labels()
-		} else if ref.GNode.Label != "" {
-			return []string{ref.GNode.Label}
-		} else {
-			return []string{}
-		}
-	})
-}
-
-func (ref *Ref) ContentString() string {
-	return LabelOrName(ref) + Yellow(ref.ref)
-}
+func (ref *Ref) ContentString() string { return Red(ref.ref) }
 func (ref *Ref) ForEachChild(f func(Astnode) Astnode) Astnode {
-	// no children defined in coffee
+	// no children defined for Ref, but GNode has:
+	// @defineChildren
+	//   rules:      {type:{key:undefined,value:{type:GNode}}}
+	ref.GetGNode().Rules = ForEachChild_InRules(ref, f)
 	return ref
 }

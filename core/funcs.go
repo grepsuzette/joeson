@@ -3,6 +3,7 @@ package core
 import (
 	. "grepsuzette/joeson/colors"
 	"grepsuzette/joeson/helpers"
+	// "reflect"
 	"strconv"
 	"strings"
 )
@@ -52,7 +53,8 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 		if Trace.Stack {
 			log = func(s string) { ctx.log(s) }
 		}
-		log(Blue("*") + " " + x.ContentString() + " " + BoldBlack(strconv.Itoa(ctx.counter)))
+		log(Blue("*") + " " + Prefix(x) + x.ContentString() + " " + BoldBlack(strconv.Itoa(ctx.counter)))
+		// log(Blue("*") + " " + Prefix(x) + x.ContentString() + " " + reflect.TypeOf(x).String() + BoldBlack(strconv.Itoa(ctx.counter)))
 		if x.GetGNode().SkipCache {
 			result := fparse(ctx)
 			log(Cyan("`->:") + " " + helpers.Escape(result.ContentString()) + " " + BoldBlack(helpers.TypeOfToString(result)))
@@ -68,9 +70,13 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 			// The only time a cache hit will simply return is when loopStage is 0
 			if frame.endPos.IsSet {
 				if frame.Result != nil {
-					log(Cyan("`-hit: ") + helpers.Escape(frame.Result.ContentString()) + " " + BoldBlack(helpers.TypeOfToString(frame.Result)))
+					s := ""
+					s += helpers.Escape(frame.Result.ContentString())
+					s += " "
+					s += Cyan(helpers.TypeOfToString(frame.Result))
+					log(Cyan("`-hit:") + " " + s)
 				} else {
-					log(Cyan("`-hit: nil"))
+					log(Cyan("`-hit:") + " nil")
 				}
 				ctx.Code.Pos = frame.endPos.Int
 				return frame.Result
@@ -82,13 +88,13 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 			case 1: // non-recursive (i.e. done)
 				frame.loopStage.Set(0)
 				frame.cacheSet(result, ctx.Code.Pos)
-				s := Cyan("`-set: ")
+				s := Cyan("`-set:") + " "
 				if result == nil {
 					s += "nil"
 				} else {
 					s += helpers.Escape(result.ContentString())
 					s += " "
-					s += BoldBlack(helpers.TypeOfToString(result))
+					s += Cyan(helpers.TypeOfToString(result))
 				}
 				log(s)
 				return result

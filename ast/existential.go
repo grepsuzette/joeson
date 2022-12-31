@@ -1,21 +1,24 @@
 package ast
 
-import "grepsuzette/joeson/helpers"
 import . "grepsuzette/joeson/colors"
 import . "grepsuzette/joeson/core"
 
 type Existential struct {
 	*GNode
-	it        Astnode
-	_labels   helpers.Varcache[[]string]  // internal cache for Labels()
-	_captures helpers.Varcache[[]Astnode] // internal cache for Captures()
+	it Astnode
+	// moved to GNode
+	// _labels   helpers.Lazy[[]string]  // internal cache for Labels()
+	// _captures helpers.Lazy[[]Astnode] // internal cache for Captures()
 }
 
 func NewExistential(it Astnode) *Existential {
-	ex := Existential{GNode: NewGNode(), it: it}
-	return &ex
+	ex := &Existential{GNode: NewGNode(), it: it}
+	ex.GNode.Node = ex
+	return ex
 }
 
+// TODO handlesChildLabel$: get: -> @parent?.handlesChildLabel
+// examine this case^
 func (ex *Existential) HandlesChildLabel() bool {
 	if ex.GNode.Parent != nil {
 		return ex.GNode.Parent.HandlesChildLabel()
@@ -26,37 +29,33 @@ func (ex *Existential) HandlesChildLabel() bool {
 
 func (ex *Existential) GetGNode() *GNode { return ex.GNode }
 
-// their cache have been written in Prepare()
-func (ex *Existential) Labels() []string {
-	return ex._labels.GetCacheOrSet(func() []string {
-		var labels []string
-		if ex.GNode.Label != "" && ex.GNode.Label != "@" && ex.GNode.Label != "&" {
-			labels = []string{ex.GNode.Label}
-		} else {
-			labels = ex.it.Labels()
-		}
-		if len(labels) > 0 && ex.GNode.Label == "" {
-			ex.GNode.Label = "@"
-		}
-		return labels
-	})
-	return ex._labels.GetCache()
-}
-func (ex *Existential) Captures() []Astnode {
-	if !ex._captures.IsCacheSet() {
-		panic("cache not set, why? prepare not called?")
-	}
-	return ex._captures.GetCache()
-}
+func (ex *Existential) Labels() []string    { panic("z") }
+func (ex *Existential) Captures() []Astnode { panic("z") }
 
 func (ex *Existential) Prepare() {
-	captures := ex.it.Captures()
-	ex.GNode.Capture = captures != nil && len(captures) > 0
-	ex._captures.SetCache(captures)
+	gn := ex.GetGNode()
+	var lbls = ex.calculateLabels()
+	gn.Labels_.Set(lbls)
+	if len(lbls) > 0 && gn.Label == "" {
+		gn.Label = "@"
+	}
+	var caps = ex.it.GetGNode().Captures_.Get()
+	gn.Captures_.Set(caps)
+	gn.Capture = len(caps) > 0
+}
+
+func (ex *Existential) calculateLabels() []string {
+	gn := ex.GetGNode()
+	lbl := gn.Label
+	if lbl != "" && lbl != "@" && lbl != "&" {
+		return []string{lbl}
+	} else {
+		return ex.it.GetGNode().Labels_.Get()
+	}
 }
 
 func (ex *Existential) ContentString() string {
-	return LabelOrName(ex) + ex.it.ContentString() + Blue("?")
+	return Prefix(ex.it) + ex.it.ContentString() + Blue("?")
 }
 
 func (ex *Existential) Parse(ctx *ParseContext) Astnode {
@@ -75,7 +74,7 @@ func (ex *Existential) ForEachChild(f func(Astnode) Astnode) Astnode {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}
-	ex.GetGNode().Rules = ForEachChild_MapString(ex.GetGNode().Rules, f)
+	ex.GetGNode().Rules = ForEachChild_InRules(ex, f)
 	if ex.it != nil {
 		ex.it = f(ex.it)
 	}

@@ -1,10 +1,12 @@
 package line
 
 import (
+	// "fmt"
 	"grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/colors"
 	"grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
+
 	// "grepsuzette/joeson/lambda"
 	// "reflect"
 	"strconv"
@@ -57,7 +59,7 @@ func (ol OLine) ToRule(grammar *ast.Grammar, parentRule core.Astnode, by OLineBy
 	if ol.name != "" {
 		// A named rule
 		// fmt.Println("o.go Named rule: ol.name=" + ol.name)
-		name = ol.name
+		//name = ol.name
 	} else if by.name != "" {
 		name = by.name
 		// fmt.Printf("o.go by=%v parentRule!=nil?%v by.index.IsSet?%v", by, parentRule != nil, by.index.IsSet)

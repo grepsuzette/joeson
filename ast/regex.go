@@ -16,7 +16,9 @@ func NewRegexFromString(sRegex string) *Regex {
 	if compiledRegexp, e := regexp.Compile("(" + sRegex + ")"); e != nil {
 		panic("Invalid regex: " + sRegex)
 	} else {
-		return &Regex{NewGNode(), sRegex, *compiledRegexp}
+		re := &Regex{NewGNode(), sRegex, *compiledRegexp}
+		re.GNode.Node = re
+		return re
 	}
 }
 
@@ -29,12 +31,13 @@ func NewRegexCharClass(it Astnode) *Regex {
 
 func (re *Regex) GetGNode() *GNode { return re.GNode }
 func (re *Regex) ContentString() string {
-	return LabelOrName(re) + BoldRed("/") + Magenta(re.re.String()) + BoldRed("/")
+	// below /g is purely for output conformance to original coffee impl.
+	return Magenta("/" + re.re.String() + "/g")
 }
 func (re *Regex) HandlesChildLabel() bool { return false }
 func (re *Regex) Prepare()                {}
-func (re *Regex) Labels() []string        { return MyLabelIfDefinedOrEmpty(re) }
-func (re *Regex) Captures() []Astnode     { return MeIfCaptureOrEmpty(re) }
+func (re *Regex) Labels() []string        { panic("z") }
+func (re *Regex) Captures() []Astnode     { panic("z") }
 func (re *Regex) Parse(ctx *ParseContext) Astnode {
 	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
 		if didMatch, sMatch := ctx.Code.MatchRegexp(re.re); !didMatch {
@@ -68,6 +71,9 @@ func joinNativeArrayOfNativeString(node Astnode) string {
 	}
 }
 func (re *Regex) ForEachChild(f func(Astnode) Astnode) Astnode {
-	// no children defined in coffee
+	// no children defined for Ref, but GNode has:
+	// @defineChildren
+	//   rules:      {type:{key:undefined,value:{type:GNode}}}
+	re.GetGNode().Rules = ForEachChild_InRules(re, f)
 	return re
 }

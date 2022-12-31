@@ -29,8 +29,11 @@ func EscapeButKeepNonAscii(str string) string {
 		  str = toAscii str if asciiOnly
 		  return str
 	*/
-	replacer := strings.NewReplacer("\b", "\\b", "\\", "\\\\", "\f", "\\f", "\r", "\\r", "\n", "\\n", "\u2028", "\\u2028", "\u2029", "\\u2029", `"`, `\\\"`, `\0`, `\\0`)
+	// replacer := strings.NewReplacer( /*"\b", "\\b", "\f", "\\f", "\r", "\\r",*/ "\n", "n", "\u2028", "\\u2028", "\u2029", "\\u2029" /*`"`, `\\\"`,*/, `\0`, `\\0`)
+	// return replacer.Replace(str)
+	replacer := strings.NewReplacer("\n", "\\n", "\r", "\\r", "\t", "\\t", `\`, "\\\\")
 	return replacer.Replace(str)
+	return str
 }
 
 func Indent(c int) string {
@@ -99,16 +102,45 @@ func Max[T constraints.Ordered](a, b T) T {
 }
 
 // SliceString must act similar to javascript "string".slice(start, end)
-func SliceString(s string, start int, end int) string {
-	if start < 0 || start > len(s) || end < start {
+// indexStart: The index of the first character to include in the returned substring.
+// indexEnd: The index of the first character to exclude from the returned substring.
+// slice() extracts up to but not including indexEnd. For example, str.slice(1, 4)
+// extracts the second character through the fourth character (characters indexed 1, 2, and 3).
+func SliceString(s string, indexStart int, indexEnd int) string {
+	// If indexStart >= str.length, an empty string is returned.
+	if indexStart >= len(s) {
 		return ""
 	}
-	if end > len(s) {
-		end = len(s)
+	// If indexStart < 0, the index is counted from the end of the string. More
+	// formally, in this case, the substring starts at max(indexStart + str.length, 0).
+	if indexStart < 0 {
+		indexStart = Max(indexStart+len(s), 0)
 	}
-	return s[start:end]
+	// If indexEnd < 0, the index is counted from the end of the string. More
+	// formally, in this case, the substring ends at max(indexEnd + str.length, 0).
+	if indexEnd < 0 {
+		indexEnd = Max(indexEnd+len(s), 0)
+	}
+	// If indexEnd <= indexStart after normalizing negative values (i.e.
+	// indexEnd represents a character that's before indexStart), an empty
+	// string is returned.
+	if indexEnd <= indexStart {
+		return ""
+	}
+	if indexEnd > len(s) {
+		indexEnd = len(s)
+	}
+	return s[indexStart:indexEnd]
 }
 
 func SliceStringFrom(s string, start int) string {
 	return SliceString(s, start, len(s))
+}
+
+func BoolToString(b bool) string {
+	if b {
+		return "y"
+	} else {
+		return "n"
+	}
 }

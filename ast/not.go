@@ -9,16 +9,18 @@ type Not struct {
 }
 
 func NewNot(it Astnode) *Not {
-	g := NewGNode()
-	g.Capture = false
-	return &Not{g, it}
+	gn := NewGNode()
+	not := &Not{gn, it}
+	gn.Capture = false
+	gn.Node = not
+	return not
 }
 
 func (not *Not) GetGNode() *GNode        { return not.GNode }
 func (not *Not) Prepare()                {}
 func (not *Not) HandlesChildLabel() bool { return false }
-func (not *Not) Labels() []string        { return MyLabelIfDefinedOrEmpty(not) }
-func (not *Not) Captures() []Astnode     { return MeIfCaptureOrEmpty(not) }
+func (not *Not) Labels() []string        { panic("z") }
+func (not *Not) Captures() []Astnode     { panic("z") }
 
 func (not *Not) Parse(ctx *ParseContext) Astnode {
 	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
@@ -34,13 +36,13 @@ func (not *Not) Parse(ctx *ParseContext) Astnode {
 }
 
 func (not *Not) ContentString() string {
-	return LabelOrName(not) + Yellow("!") + not.it.ContentString()
+	return Yellow("!") + Prefix(not.it) + not.it.ContentString()
 }
 func (not *Not) ForEachChild(f func(Astnode) Astnode) Astnode {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}
-	not.GetGNode().Rules = ForEachChild_MapString(not.GetGNode().Rules, f)
+	not.GetGNode().Rules = ForEachChild_InRules(not, f)
 	if not.it != nil {
 		not.it = f(not.it)
 	}

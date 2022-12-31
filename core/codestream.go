@@ -182,7 +182,7 @@ func (code *CodeStream) Print() string {
 	s := "Code at offset " + BoldYellow(strconv.Itoa(code.Pos)) + "/" + BoldYellow(strconv.Itoa(len(code.text))) + ": '"
 	s += Cyan(helpers.SliceString(code.text, helpers.Max(0, code.Pos-20), code.Pos))
 	s += BoldCyan("|")
-	s += BoldWhite(helpers.SliceString(code.text, code.Pos, code.Pos+40))
-	s += "' (note: caret | and colors extraneously inserted)"
+	s += BoldWhite(helpers.SliceString(code.text, code.Pos, code.Pos+40)) + "'"
+	// s += "' (note: caret | and colors extraneously inserted)"
 	return s
 }

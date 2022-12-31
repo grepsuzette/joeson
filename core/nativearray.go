@@ -1,7 +1,8 @@
 package core
 
 import "grepsuzette/joeson/lambda"
-import . "grepsuzette/joeson/colors"
+
+// import . "grepsuzette/joeson/colors"
 import "strings"
 
 type NativeArray struct {
@@ -24,7 +25,7 @@ func (na *NativeArray) Labels() []string        { return []string{} }
 func (na *NativeArray) Captures() []Astnode     { return []Astnode{} }
 func (na *NativeArray) Prepare()                {}
 func (na *NativeArray) ContentString() string {
-	return Blue("[") + strings.Join(lambda.Map(na.Array, func(x Astnode) string { return x.ContentString() }), Blue(", ")) + Blue("]")
+	return "[" + strings.Join(lambda.Map(na.Array, func(x Astnode) string { return x.ContentString() }), ",") + "]"
 }
 
 func (na *NativeArray) Parse(ctx *ParseContext) Astnode { panic("uncallable") }
