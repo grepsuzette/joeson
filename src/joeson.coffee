@@ -19,8 +19,8 @@ just admit that the current implementation is imperfect, and limit grammar usage
 @trace = trace =
   #filterLine: 299
   stack:      yes
-  loop:       no
-  skipSetup:  yes
+  loop:       yes
+  skipSetup:  no
 
 {clazz, colors:{red, blue, cyan, magenta, green, normal, black, white, yellow}} = require('cardamom')
 
@@ -135,24 +135,74 @@ cacheSet = (frame, result, endPos) ->
     timeEnd? 'restorewith'
     return
 
+# typeof replacement
+toType = (obj) ->
+    ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+
 # so that it doesn't log "object" for everything
 showtype = (result) ->
     if result?
-        return "Ref" if result.ref?
-        return "Str" if result.str?
-        return "Regex" if result.reStr?
-        return "Sequence" if result.sequence?
-        return "Rank or Choice" if result.choices?
-        return "Existential or Not" if result.it?
-        return "Lookahead" if result.expr?
-        return "STRING!" if typeof result is "string"
-        if typeof result is "object"
-            s = ""
-            for name in result
-                s = s + name + ","
-            return "object keys:{" + s + "}"
-        else
-            return "Unknown"
+        # if true # show as go types, for diff_go_vs_coffee
+            return "<NativeUndefined>" if result is undefined
+            return "*core.NativeArray" if Array.isArray(result)
+            return "Grammar" if result.rank?
+            return "*ast.Ref" if result.ref?
+            return "ast.Str" if result.str?
+            return "*ast.Pattern" if result.value?
+            return "Regex" if result.reStr?
+            return "*ast.Sequence" if result.sequence?
+            return "Rank" if result?.contentString?().indexOf(blue("Rank(")) == 0
+            return "*ast.Choice" if result.choices?
+            return "Exis|Not" if result.it?
+            return "Lookahead" if result.expr?
+            return "core.NativeString" if toType(result) == "string"
+            return "core.NativeInt" if toType(result) is "number"
+            # return toType result
+            if typeof result is "object"
+                s = ""
+                first = true
+                for key in Object.keys(result)
+                    s += ", " if !first
+                    s += key + ":" + if result[key] == undefined then "<NativeUndefined>" else result[key]
+                    first = false
+                return "NativeMap{" + s + "} " + cyan "core.NativeMap"
+                # return "object keys:{" + Object.keys(result) + "}"
+            else
+                return "Unknown"
+        # else # show original js types
+        #     return "array" if Array.isArray(result)
+        #     return "Grammar" if result.rank?
+        #     return "Ref" if result.ref?
+        #     return "Str" if result.str?
+        #     return "Regex" if result.reStr?
+        #     return "Sequence" if result.sequence?
+        #     return "Rank" if result?.contentString?().indexOf(blue("Rank(")) == 0
+        #     return "Choic" if result.choices?
+        #     return "Exis|Not" if result.it?
+        #     return "Lookahead" if result.expr?
+        #     return "STRING!" if toType(result) == "string"
+        #     return "number" if toType(result) == "number"
+        #     if typeof result is "object"
+        #         # return "object keys:{" + Object.keys(result) + "}"
+        #         s = ""
+        #         for key, v in result
+        #             s = s + key + ","
+        #         return "object keys:{" + s + "}"
+        #         # return "object keys:" + Object.keys(result) + "."+ toType(result)
+        #     else
+        #         return "Unknown"
+
+# used in $.log to facilitate conformance of outputs of the coffee and golang impl.
+showcontent = (result) ->
+    if result == null
+        "nil"
+    else
+        if Array.isArray(result) # weirdness so output is similar to golang
+            return "[" + result + "] " + cyan showtype result
+        else if (result + "") == "[object Object]" # ditto. Strip outer ansi codes
+            return (cyan showtype result).slice(5, -4)
+        else # but, in general...
+            return result + " " + cyan showtype result
 
 ###
   In addition to the attributes defined by subclasses,
@@ -176,6 +226,7 @@ showtype = (result) ->
 
   @$loopify = (fn) -> ($) ->
     # STACK TRACE
+    # $.log "#{blue '*'} #{this} #{showtype this} #{boldblack $.counter}" if trace.stack
     $.log "#{blue '*'} #{this} #{boldblack $.counter}" if trace.stack
 
     if @skipCache
@@ -192,7 +243,8 @@ showtype = (result) ->
 
         # The only time a cache hit will simply return is when loopStage is 0
         if frame.endPos?
-          $.log "#{cyan "`-hit:"} #{"'"+frame.result+"'"} #{cyan(showtype(frame.result))} #{magenta typeof frame.result}" if trace.stack
+          # $.log "#{cyan "`-hit:"} #{if frame.result == null then "nil" else (frame.result + " " + cyan(showtype(frame.result)))}" if trace.stack
+          $.log "#{cyan "`-hit:"} #{showcontent frame.result}" if trace.stack
           $.code.pos = frame.endPos
           return frame.result
 
@@ -204,7 +256,8 @@ showtype = (result) ->
           when 1 # non-recursive (done)
             frame.loopStage = 0
             cacheSet frame, result, $.code.pos
-            $.log "#{cyan "`-set:"} '#{result}' #{cyan showtype result} #{magenta typeof result}" if trace.stack
+            # $.log "#{cyan "`-set:"} #{if result == null then "nil" else (result + " " + cyan showtype result)}" if trace.stack
+            $.log "#{cyan "`-set:"} #{showcontent result}" if trace.stack
             return result
 
           when 2 # recursion detected by subroutine above
@@ -373,7 +426,10 @@ showtype = (result) ->
     rank = Rank name
     for line, idx in lines
       if line instanceof OLine
+        console.log "Rank fromLines OLine="
+        console.log line
         choice = line.toRule rank, index:rank.choices.length
+        console.log "Rank      -------> choice=" + choice + "typeofchoice=" + showtype(choice)
         rank.choices.push choice
       else if line instanceof ILine
         for own name, rule of line.toRules()
@@ -473,6 +529,7 @@ showtype = (result) ->
   handlesChildLabel$: get: -> @parent?.handlesChildLabel
   init: (@it) ->
   prepare: ->
+    console.log "Existential.prepare " + @contentString() + " parent?parent?:" + @.parent?.parent?.contentString()
     labels   = if @label? and @label not in ['@','&'] then [@label] else @it.labels
     @label   ?= '@' if labels.length > 0
     captures  = @it.captures
@@ -591,18 +648,18 @@ showtype = (result) ->
 
     # TODO refactor into translation passes.
     # Merge Choices with just a single choice.
-    @walk
-      pre: ({child:node, parent, desc, key, index}) =>
-        if node instanceof Choice and node.choices.length is 1
-          # Merge label
-          node.choices[0].label ?= node.label
-          # Merge included rules
-          Object.merge (node.choices[0].rules?={}), node.rules if node.rules?
-          # Replace with grandchild
-          if index?
-            parent[key][index] = node.choices[0]
-          else
-            parent[key] = node.choices[0]
+    # @walk
+    #   pre: ({child:node, parent, desc, key, index}) =>
+    #     if node instanceof Choice and node.choices.length is 1
+    #       # Merge label
+    #       node.choices[0].label ?= node.label
+    #       # Merge included rules
+    #       Object.merge (node.choices[0].rules?={}), node.rules if node.rules?
+    #       # Replace with grandchild
+    #       if index?
+    #         parent[key][index] = node.choices[0]
+    #       else
+    #         parent[key] = node.choices[0]
 
     # Connect all the nodes and collect dereferences into @rules
     @walk
@@ -610,6 +667,7 @@ showtype = (result) ->
         # sanity check
         if node.parent? and node isnt node.rule
           throw Error 'Grammar tree should be a DAG, nodes should not be referenced more than once.'
+        console.log " PRE connect nodes, parent:" + parent?.contentString() + " node: " + node.rule + " " + node.contentString() + " type:" + showtype(node)
         node.grammar = this
         node.parent = parent
         # inline rules are special
@@ -627,7 +685,9 @@ showtype = (result) ->
           node.id = @numRules++
           @id2Rule[node.id] = node
           if trace.loop # print out id->rulename for convenience
-            console.log "#{red node.id}:\t#{node}"
+            console.log "Loop #{red node.id}:\t#{node}"
+
+    @walk pre: ({child:node, parent}) -> console.log "grammar PRE node:" + node.contentString() + "/" + showtype(node) + " parent:" + parent?.contentString()
 
     # Prepare all the nodes, child first.
     @walk post: ({child:node, parent}) -> node.prepare()
@@ -682,7 +742,43 @@ showtype = (result) ->
     else
       return $.result
 
-  contentString: -> magenta('GRAMMAR{')+@rank+magenta('}')
+  contentString: -> magenta('GRAMMAR{')+showtype(@rank)+" "+@rank+magenta('}')
+
+  debug: ->
+    console.log "+ -- Grammar.debug() --------"
+    console.log "| name         : " + @.name
+    console.log "| label        : " + @.label
+    console.log "| contentString: " + @.contentString()
+    console.log "| rules        : " + @.numRules
+    console.log "| "
+    console.log "| ",
+        pad(left:10, "key"),
+        pad(left:3, "id"),
+        pad(left:13, "type"),
+        pad(left:3, "cap"),
+        pad(left:7, "label"),
+        pad(left:9, "labels()"),
+        pad(left:16, "parent.name"),
+        pad(left:30, "contentString"),
+    console.log "|   -------------------------------------------------------------------------------------"
+    for k,v of @rules
+        console.log "|  ",
+            pad(left:10, k),
+            pad(left:3, v.id),
+            pad(left:13, showtype(v)),
+            pad(left:3,
+                if v.capture == true
+                    "y"
+                else "n"
+            ),
+            pad(left:7, if v.label?
+                v.label
+            else ""),
+            pad(left:9, v.labels),
+            pad(left:16, v.parent?.name),
+            pad(left:30, v.contentString())
+    console.log "| "
+
 
 Line = clazz 'Line', ->
   init: (@args...) ->
