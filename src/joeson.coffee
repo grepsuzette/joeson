@@ -161,7 +161,7 @@ showtype = (result) ->
             if typeof result is "object"
                 s = ""
                 first = true
-                for key in Object.keys(result)
+                for key in Object.keys(result).sort() # sort keys (we sort them in golang too)
                     s += ", " if !first
                     s += key + ":" + if result[key] == undefined then "<NativeUndefined>" else result[key]
                     first = false
@@ -199,9 +199,9 @@ showcontent = (result) ->
     else
         if Array.isArray(result) # weirdness so output is similar to golang
             return "[" + result + "] " + cyan showtype result
-        else if (result + "") == "[object Object]" # ditto. Strip outer ansi codes
-            return (cyan showtype result).slice(5, -4)
-        else # but, in general...
+        else if (result + "") == "[object Object]" # ditto
+            return (cyan showtype result).slice(5, -4) # strip outside ansi sequence for cyan
+        else # but, in general
             return result + " " + cyan showtype result
 
 ###
