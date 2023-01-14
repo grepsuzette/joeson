@@ -27,14 +27,7 @@ func NewChoice(it Ast) *Choice {
 	}
 }
 
-func (ch *Choice) IsThereOnlyOneChoice() (bool, Ast) {
-	if len(ch.choices) == 1 {
-		return true, ch.choices[0]
-	} else {
-		return false, nil
-	}
-}
-
+func (ch *Choice) IsMonoChoice() bool      { return len(ch.choices) == 1 }
 func (ch *Choice) Append(node Ast)         { ch.choices = append(ch.choices, node) }
 func (ch *Choice) GetGNode() *GNode        { return ch.GNode }
 func (ch *Choice) HandlesChildLabel() bool { return false }

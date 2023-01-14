@@ -10,13 +10,10 @@ import (
 	"strings"
 )
 
-/*
-# Main external access.
-# I dunno if Grammar should be a GNode or not. It
-# might come in handy when embedding grammars
-# in some glue language.
-  jae 2012-04-18 in original joeson.coffee
-*/
+// Grammar is the one to use in this package.
+// See examples and tests to build a grammar.
+// Then just use ParseString().
+
 type Grammar struct {
 	*GNode
 	rank Ast // can be a *Rank or a Ref to a rank
@@ -41,159 +38,6 @@ func NewEmptyGrammarNamed(name string) *Grammar {
 	return gm
 }
 
-func (gm *Grammar) GetGNode() *GNode { return gm.GNode }
-
-// after Rank has already been set,
-// collect and collect rules, simplify the rule tree etc.
-func (gm *Grammar) Postinit() {
-	if gm.rank == nil {
-		panic("You can only call grammar.Postinit() after some rank has been set")
-	}
-	// from joeson.coffee
-	// "TODO refactor into translation passes."
-
-	// TODO Optimization that can wait  it's about:
-	// Merge Choices with just a single choice.
-	Walk(gm, nil, WalkPrepost{
-		Pre: func(node Astnode, parent Astnode) Astnode {
-			/*
-							if choice, ok := node.(Choice); ok && len(choice.choices) == 1 {
-								// Merge label
-								if choice.choices[0].GetGNode().Label == "" {
-									choice.choices[0].GetGNode().Label = choice.GetGNode().Label
-								}
-								// Merge included rules
-								if len(choice.GetGNode().Rules) > 0 {
-									for k, v := range choice.GetGNode().Rules {
-										choice.choices[0].GetGNode().Rules[k] = v
-									}
-								}
-								// Replace with grandchild
-								// hum the key, index are not available in our implementation
-								// TODO finish
-								// ANOTHER WAY would be, when descending, if
-								// child is sequence and
-								// grandchildren are "choices", annd only 1, then
-								// set it directly to grandchild[0]
-								//
-								// There is also a usage however in javascript.joeson
-								// wait for now
-								if index  > -1 {
-									// TODO check hypothesis
-									// hypothesis is if index is provided, it is an array
-									reflect.ValueOf(parent).FieldByName(key).FieldByIndex(index)
-								} else {
-				   i					parent.GetGNode().SetArbitraryField(key, choice.Choice.choices[0])
-									// tricky, needs & and Elem(). Also, field name must be
-									// exported (capitalized first letter)
-									// https://stackoverflow.com/questions/6395076/using-reflect-how-do-you-set-the-value-of-a-struct-field
-
-									reflect.ValueOf(&parent).Elem().FieldByName(key).se
-								}
-								parent
-								reflect.S
-							}
-			*/
-		},
-	})
-
-	// Connect all the nodes and collect dereferences into @rules
-	Walk(gm, nil, WalkPrepost{
-		Pre: func(node Ast, parent Ast) string {
-			gnode := node.GetGNode()
-			if gnode == nil {
-				return ""
-			}
-			// sanity check: it must have no parent yet if it's not a rule
-			if !IsRule(node) && gnode != nil && gnode.Parent != nil {
-				panic("Grammar tree should be a DAG, nodes should not be referenced more than once.")
-			}
-
-			gnode.Grammar = gm
-			gnode.Parent = parent
-			if false {
-				// "inline rules are special" in original coffeescript
-				// but the bit of code seem unreachable anyway
-				panic("assert")
-			} else {
-				// set node.rule, the root node for this rule
-				if gnode.Rule == nil {
-					var r Ast
-					if parent != nil {
-						r = parent.GetGNode().Rule
-					} else {
-						r = NewNativeUndefined()
-					}
-					gnode.Rule = r
-				}
-			}
-			return ""
-		},
-		Post: func(node Ast, parent Ast) string {
-			// fmt.Println("grammar POST: typeof node= " + reflect.TypeOf(node).String() + " cs:" + node.ContentString())
-			gnode := node.GetGNode()
-			if gnode == nil {
-				// fmt.Println("POST " + node.ContentString() + " has nil gnode, in grammar.Postinit(), returning ''")
-				return ""
-			}
-			if IsRule(node) {
-				gm.GetGNode().RulesK = append(gm.GetGNode().RulesK, gnode.Name)
-				gm.GetGNode().Rules[gnode.Name] = node
-				gnode.Id = gm.NumRules
-				gm.NumRules++
-				gm.Id2Rule[gnode.Id] = node
-				if Trace.Loop { // print out id->rulename for convenience
-					fmt.Println("Loop " + Red(strconv.Itoa(gnode.Id)) + ":\t" + Prefix(node) + node.ContentString())
-				}
-			}
-			return ""
-		},
-	})
-
-	// just show the tree
-	// nbNodes := 0
-	// Walk(gm, nil, WalkPrepost{
-	// 	Pre: func(node Astnode, parent Astnode) string {
-	// 		s := "undefined"
-	// 		if parent != nil {
-	// 			s = parent.ContentString()
-	// 		}
-	// 		fmt.Println("grammar PRE node:" + node.ContentString() + "/" + helpers.TypeOfToString(node) + " parent:" + s)
-	// 		nbNodes++
-	// 		depth := func(ast Astnode) int {
-	// 			deep := 0
-	// 			var x Astnode = ast
-	// 			var parent = x.GetGNode().Parent
-	// 			for parent != nil && parent != x {
-	// 				deep++
-	// 				x = parent
-	// 				parent = x.GetGNode().Parent
-	// 			}
-	// 			return deep
-	// 		}
-	// 		sParentName := "parent: -"
-	// 		if parent != nil && parent.GetGNode() != nil {
-	// 			if parent.GetGNode().Name == "" {
-	// 				sParentName = "parent: undefined"
-	// 			} else {
-	// 				sParentName = "parent: " + parent.GetGNode().Name
-	// 			}
-	// 		}
-	// 		fmt.Println("DEEP " + helpers.PadLeft(sParentName, 34) + strconv.Itoa(depth(node)) + " Node " + Prefix(node) + node.ContentString())
-	// 		return ""
-	// 	},
-	// })
-	// Prepare all the nodes, child first.
-
-	Walk(gm, nil, WalkPrepost{
-		Post: func(node Ast, parent Ast) string {
-			node.Prepare()
-			return ""
-		},
-	})
-	gm.wasInitialized = true
-}
-
 // ♥ call this one (MAIN GRAMMAR PARSE FUNCTION)
 func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) (Ast, error) {
 	if len(attrs) > 0 {
@@ -206,6 +50,10 @@ func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) (Ast, error)
 func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) (Ast, error) {
 	return gm.parseOrFail(NewParseContext(code, gm, attrs))
 }
+
+// -- after this are the lower level stuffs --
+
+func (gm *Grammar) GetGNode() *GNode { return gm.GNode }
 
 // this one conforms the interface, but you would normally call
 // grammar.ParseString() or grammar.ParseCode().
@@ -294,6 +142,148 @@ func (gm *Grammar) ForEachChild(f func(Ast) Ast) Ast {
 		gm.rank = f(gm.rank)
 	}
 	return gm
+}
+
+// after Rank has already been set,
+// collect and collect rules, simplify the rule tree etc.
+func (gm *Grammar) Postinit() {
+	if gm.rank == nil {
+		panic("You can only call grammar.Postinit() after some rank has been set")
+	}
+
+	// from joeson.coffee
+	// "TODO refactor into translation passes." <empty>
+
+	// Merge Choices with just a single choice.
+	walkOptimizeAwayMonochoice := WalkPrepost{Pre: nil}
+	walkOptimizeAwayMonochoice.Pre = func(node Ast, parent Ast) string {
+		/*
+			BEFORE:	  somenode            ** foreach child, if one child is a mono choice, optimize it away
+					   \
+					   Choices(1)
+						 \
+						  node below.unaffected
+
+			AFTER:	  somenode+choiceattrs
+						  \
+						   node below.unaffected
+		*/
+		node.ForEachChild(func(child Ast) Ast {
+			if choice, ok := child.(*Choice); ok && choice.IsMonoChoice() {
+				monochoice := choice.choices[0]
+				mono := monochoice.GetGNode()
+				// Merge label
+				if mono.Label == "" {
+					mono.Label = choice.GetGNode().Label
+				}
+				// Merge included rules
+				for k, v := range choice.GetGNode().Rules {
+					mono.Rules[k] = v
+					mono.RulesK = append(mono.RulesK, k)
+				}
+				// grandchild becomes the child
+				return monochoice
+			} else {
+				return Walk(child, node, walkOptimizeAwayMonochoice)
+			}
+		})
+		return ""
+	}
+	Walk(gm, nil, walkOptimizeAwayMonochoice)
+
+	// Connect all the nodes and collect dereferences into @rules
+	Walk(gm, nil, WalkPrepost{
+		Pre: func(node Ast, parent Ast) string {
+			gnode := node.GetGNode()
+			if gnode == nil {
+				return ""
+			}
+			// sanity check: it must have no parent yet if it's not a rule
+			if !IsRule(node) && gnode != nil && gnode.Parent != nil {
+				panic("Grammar tree should be a DAG, nodes should not be referenced more than once.")
+			}
+
+			gnode.Grammar = gm
+			gnode.Parent = parent
+			if false {
+				// "inline rules are special" in original coffeescript
+				// but the bit of code seem unreachable anyway
+				panic("assert")
+			} else {
+				// set node.rule, the root node for this rule
+				if gnode.Rule == nil {
+					var r Ast
+					if parent != nil {
+						r = parent.GetGNode().Rule
+					} else {
+						r = NewNativeUndefined()
+					}
+					gnode.Rule = r
+				}
+			}
+			return ""
+		},
+		Post: func(node Ast, parent Ast) string {
+			gnode := node.GetGNode()
+			if gnode == nil {
+				return ""
+			}
+			if IsRule(node) {
+				gm.GetGNode().RulesK = append(gm.GetGNode().RulesK, gnode.Name)
+				gm.GetGNode().Rules[gnode.Name] = node
+				gnode.Id = gm.NumRules
+				gm.NumRules++
+				gm.Id2Rule[gnode.Id] = node
+				if Trace.Loop { // print out id->rulename for convenience
+					fmt.Println("Loop " + Red(strconv.Itoa(gnode.Id)) + ":\t" + Prefix(node) + node.ContentString())
+				}
+			}
+			return ""
+		},
+	})
+
+	// just show the tree (very low level debug)
+	// nbNodes := 0
+	// Walk(gm, nil, WalkPrepost{
+	// 	Pre: func(node Astnode, parent Astnode) string {
+	// 		s := "undefined"
+	// 		if parent != nil {
+	// 			s = parent.ContentString()
+	// 		}
+	// 		fmt.Println("grammar PRE node:" + node.ContentString() + "/" + helpers.TypeOfToString(node) + " parent:" + s)
+	// 		nbNodes++
+	// 		depth := func(ast Astnode) int {
+	// 			deep := 0
+	// 			var x Astnode = ast
+	// 			var parent = x.GetGNode().Parent
+	// 			for parent != nil && parent != x {
+	// 				deep++
+	// 				x = parent
+	// 				parent = x.GetGNode().Parent
+	// 			}
+	// 			return deep
+	// 		}
+	// 		sParentName := "parent: -"
+	// 		if parent != nil && parent.GetGNode() != nil {
+	// 			if parent.GetGNode().Name == "" {
+	// 				sParentName = "parent: undefined"
+	// 			} else {
+	// 				sParentName = "parent: " + parent.GetGNode().Name
+	// 			}
+	// 		}
+	// 		fmt.Println("DEEP " + helpers.PadLeft(sParentName, 34) + strconv.Itoa(depth(node)) + " Node " + Prefix(node) + node.ContentString())
+	// 		return ""
+	// 	},
+	// })
+
+	// Prepare all the nodes, child first.
+	Walk(gm, nil, WalkPrepost{
+		Post: func(node Ast, parent Ast) string {
+			node.Prepare()
+			return ""
+		},
+	})
+	gm.wasInitialized = true
 }
 
 func (gm *Grammar) PrintRules() {
