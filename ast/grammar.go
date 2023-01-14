@@ -135,8 +135,6 @@ func (gm *Grammar) SetRankIfEmpty(rank Ast) {
 }
 func (gm *Grammar) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren rank: {type:Rank}
-	// TODO but must rules to be executed in a proper order? Rules is a map, in go it is in any order.
-	//      Check whether Rules respect the insertion order
 	gm.GetGNode().Rules = ForEachChild_InRules(gm, f)
 	if gm.rank != nil {
 		gm.rank = f(gm.rank)

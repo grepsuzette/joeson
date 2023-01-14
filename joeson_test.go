@@ -1,190 +1,23 @@
 package main
 
-// run with `go test .` or `make test`
-// or individually like `go test . --run "^TestCalculator\$"`
-
 import (
 	"fmt"
-	. "grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/ast/handcompiled"
-	. "grepsuzette/joeson/colors"
+	. "grepsuzette/joeson/ast/raw"
 	. "grepsuzette/joeson/core"
-	// "grepsuzette/joeson/helpers"
 	line "grepsuzette/joeson/line"
 	"testing"
 	"time"
 )
 
-func RAW_GRAMMAR() line.Lines {
-	return []line.Line{
-		o(Named("EXPR", Rules(
-			o("CHOICE _"),
-			o(Named("CHOICE", Rules(
-				o("_PIPE* SEQUENCE*_PIPE{2,} _PIPE*", func(it Ast) Ast { return NewChoice(it) }),
-				o(Named("SEQUENCE", Rules(
-					o("UNIT{2,}", func(it Ast) Ast { return NewSequence(it) }),
-					o(Named("UNIT", Rules(
-						o("_ LABELED"),
-						o(Named("LABELED", Rules(
-							o("(label:LABEL ':')? &:(DECORATED|PRIMARY)"),
-							o(Named("DECORATED", Rules(
-								o("PRIMARY '?'", func(it Ast) Ast { return NewExistential(it) }),
-								o("value:PRIMARY '*' join:(!__ PRIMARY)? @:RANGE?", func(it Ast) Ast { return NewPattern(it) }),
-								o("value:PRIMARY '+' join:(!__ PRIMARY)?", func(it Ast) Ast {
-									h := it.(NativeMap)
-									h.Set("Min", NewNativeInt(1))
-									h.Set("Max", NewNativeInt(-1))
-									return NewPattern(h)
-								}),
-								o("value:PRIMARY @:RANGE", func(it Ast) Ast { return NewPattern(it) }),
-								o("'!' PRIMARY", func(it Ast) Ast { return NewNot(it) }),
-								o("'(?' expr:EXPR ')' | '?' expr:EXPR", func(it Ast) Ast { return NewLookahead(it) }),
-								i(Named("RANGE", "'{' _ min:INT? _ ',' _ max:INT? _ '}'")), // TODO do this work
-							))),
-							o(Named("PRIMARY", Rules(
-								o("WORD '(' EXPR ')'", func(it Ast) Ast {
-									na := it.(*NativeArray)
-									if na.Length() != 4 {
-										panic("logic")
-									}
-									return NewRef(NewNativeArray([]Ast{na.Get(1), na.Get(3)}))
-								}),
-								o("WORD", func(it Ast) Ast { return NewRef(it) }),
-								o("'(' inlineLabel:(WORD ': ')? expr:EXPR ')' ( _ '->' _ code:CODE )?", func(it Ast) Ast {
-									h := it.(NativeMap)
-									if _, isNativeUndefined := h.Get("code").(NativeUndefined); !isNativeUndefined {
-										panic("code in joeson deprecated")
-									}
-									return h.Get("expr")
-								}),
-								i(Named("CODE", "'{' (!'}' (ESC1 | .))* '}'"), func(it Ast) Ast {
-									// deprecate code in joeson
-									// TODO
-									// assert.ok not code?, "code in joeson deprecated"
-									// return expr
-									panic("TODO")
-									// var caps = it.GetGNode().Captures_.Get()
-									// if len(caps) == 0 {
-									// 	return NewNativeUndefined()
-									// }
-									// switch v := caps[0].(type) {
-									// case NativeString:
-									// 	if len(v.Str) == 0 {
-									// 		return NewNativeUndefined()
-									// 	} else {
-									// 		panic("code in joeson is obsolete")
-									// 	}
-									// default:
-									// 	panic("assert")
-									// }
-								}),
-								o("'\\'' (!'\\'' (ESC1 | .))* '\\''", func(it Ast) Ast {
-									// this will require heavy testings, best case
-									// scenario is captures got into a NativeArray
-									// of NativeString, there are very few chances
-									// we get it right at first though; better get
-									// prepared.
-									return NewStr(AttemptToJoinANativeArrayOrPanic(it))
-								}),
-								o("'/' (!'/' (ESC2 | .))* '/'", func(it Ast) Ast { return NewRegexFromString(AttemptToJoinANativeArrayOrPanic(it)) }),
-								o("'[' (!']' (ESC2 | .))* ']'", func(it Ast) Ast { return NewRegexFromString("[" + AttemptToJoinANativeArrayOrPanic(it) + "]") }),
-							))),
-						))),
-					))),
-				))),
-			))),
-		))),
-		i(Named("LABEL", "'&' | '@' | WORD")),
-		i(Named("WORD", "/[a-zA-Z\\._][a-zA-Z\\._0-9]*/")),
-		i(Named("INT", "/[0-9]+/"), func(it Ast) Ast { return NewNativeIntFrom(it) }),
-		i(Named("_PIPE", "_ '|'")),
-		i(Named("_", "(' ' | '\n')*")),
-		i(Named("__", "(' ' | '\n')+")),
-		i(Named(".", "/[\\s\\S]/")),
-		i(Named("ESC1", "'\\\\' .")),
-		i(Named("ESC2", "'\\\\' ."), func(chr Ast) Ast { return NewNativeString("\\" + chr.(NativeString).Str) }),
-	}
+func o(a ...any) line.OLine               { return line.O(a...) }
+func i(a ...any) line.ILine               { return line.I(a...) }
+func Rules(lines ...line.Line) line.ALine { return line.NewALine(lines) }
+func Named(name string, lineStringOrAstnode any) line.NamedRule {
+	return line.Named(name, lineStringOrAstnode)
 }
 
-// this is the bootstrapped grammar, using joeson to define itself,
-// similar to joeson_test.coffee
-func TestRaw(t *testing.T) {
-	raw := line.NewGrammarFromLines(
-		"bootstrapped grammar",
-		RAW_GRAMMAR(),
-		NewJoeson(),
-	)
-	if !raw.IsReady() {
-		t.Fail()
-	}
-}
-
-func TestPattern(t *testing.T) {
-	var f = func(patt *Pattern, tcase string, expectedMin int, expectedMax int, expectedContent string) {
-		if patt.Value == nil || patt.Value.(Str).Str != "foo" {
-			t.Error(tcase + " patt.Value expected foo")
-		}
-		if int(patt.Min) != expectedMin {
-			t.Errorf(tcase+" patt.Min expected %d, got %d", expectedMin, patt.Min)
-		}
-		if int(patt.Max) != expectedMax {
-			t.Errorf(tcase+" patt.Max expected %d, got %d", expectedMax, patt.Max)
-		}
-		if patt.ContentString() != expectedContent {
-			t.Errorf(tcase+" patt.ContentString() expected %s, got %s", expectedContent, patt.ContentString())
-		}
-	}
-	tcase := "TestPattern case#1"
-	patt := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
-		"min":   NewNativeInt(2),
-		"max":   NewNativeUndefined(),
-	}))
-	f(patt, tcase, 2, -1, Green("'foo'")+Cyan("*")+Cyan("{2,}"))
-	tcase = "TestPattern case#2"
-	patt2 := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
-		"min":   NewNativeInt(2),
-		"max":   NewNativeInt(4),
-	}))
-	f(patt2, tcase, 2, 4, Green("'foo'")+Cyan("*")+Cyan("{2,4}"))
-	tcase = "TestPattern case#3"
-	patt3 := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
-		"min":   NewNativeInt(-1),
-		"max":   NewNativeInt(-1),
-	}))
-	f(patt3, tcase, -1, -1, Green("'foo'")+Cyan("*")+Cyan(""))
-	tcase = "TestPattern case#4"
-	patt4 := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
-		"min":   NewNativeInt(2),
-		"max":   NewNativeUndefined(),
-	}))
-	f(patt4, tcase, 2, -1, Green("'foo'")+Cyan("*")+Cyan("{2,}"))
-	tcase = "TestPattern case#5(non-nil join)"
-	patt5 := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
-		"join":  NewStr("bar"),
-		"min":   NewNativeInt(2),
-		"max":   NewNativeUndefined(),
-	}))
-	f(patt5, tcase, 2, -1, Green("'foo'")+Cyan("*")+Green("'bar'")+Cyan("{2,}"))
-	tcase = "TestPattern case#5(non-nil join)"
-	patt6 := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
-		"join":  NewStr("bar"),
-		"min":   NewNativeInt(-1),
-		"max":   NewNativeUndefined(),
-	}))
-	f(patt6, tcase, -1, -1, Green("'foo'")+Cyan("*")+Green("'bar'")+Cyan(""))
-
-	// in handcompiled, test the function P(..) *Pattern
-	tcase = "TestPattern:TestHandcompiledFuncP case#1"
-	patt = P(NewStr("foo"), NewNativeUndefined(), 2, -1)
-	f(patt, tcase, 2, -1, Green("'foo'")+Cyan("*")+Cyan("{2,}"))
-}
-
+// NewJoeson() is the native, manually compiled joeson grammar defined in handcompiled.go
 func TestHandcompiled(t *testing.T) {
 	gm := NewJoeson()
 	if gm.GetGNode().Name != JOESON_GRAMMAR_NAME {
@@ -194,6 +27,19 @@ func TestHandcompiled(t *testing.T) {
 		t.Errorf("Expected %d rules, got %d\n", JoesonNbRules, gm.CountRules())
 	}
 	if !gm.IsReady() {
+		t.Fail()
+	}
+}
+
+// bootstrapped grammar, using joeson to define itself,
+// similar to joeson_test.coffee
+func TestRaw(t *testing.T) {
+	raw := line.NewGrammarFromLines(
+		"bootstrapped grammar",
+		RAW_GRAMMAR(),
+		NewJoeson(),
+	)
+	if !raw.IsReady() {
 		t.Fail()
 	}
 }

@@ -39,8 +39,6 @@ func (re *Regex) ContentString() string {
 }
 func (re *Regex) HandlesChildLabel() bool { return false }
 func (re *Regex) Prepare()                {}
-func (re *Regex) Labels() []string        { panic("z") }
-func (re *Regex) Captures() []Ast         { panic("z") }
 func (re *Regex) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		if didMatch, sMatch := ctx.Code.MatchRegexp(re.re); !didMatch {
@@ -70,7 +68,7 @@ func joinNativeArrayOfNativeString(node Ast) string {
 		}
 		return b.String()
 	default:
-		panic("expected a NativeArray containing NativeString elements")
+		panic("assert")
 	}
 }
 func (re *Regex) ForEachChild(f func(Ast) Ast) Ast {

@@ -12,10 +12,8 @@ type WalkPrepost struct {
 // `parent` is available for algorithms needing it (just provide the
 // father of `ast` or nil).
 func Walk(ast Ast, parent Ast, prepost WalkPrepost) Ast {
-	// TODO there can be a big difference. checki
 	if prepost.Pre != nil {
-		// note: joeson.coffee can return "__stop__" here, meaning to end here (Not implemented yet)
-		var stop = prepost.Pre(ast, parent) // don't implement coffee version "__stop__" just yet
+		var stop = prepost.Pre(ast, parent)
 		if stop == "__stop__" {
 			return ast
 		}
@@ -29,21 +27,20 @@ func Walk(ast Ast, parent Ast, prepost WalkPrepost) Ast {
 	return ast
 }
 
-// -- following are shortcut functions.
-
 // shortcut calling ForEachChild for members being []Ast
 func ForEachChild_Array(a []Ast, f func(Ast) Ast) []Ast {
 	anew := []Ast{}
 	for _, child := range a {
 		if r := f(child); r != nil {
 			anew = append(anew, r)
-		} // else, removed
+		} // else removed
 	}
 	return anew
 }
 
 // shortcut calling ForEachChild for members being map[string]Ast
 // beware, maps are not ordered in golang. Use instead ForEachChild_InRules
+
 // func ForEachChild_MapString(h map[string]Ast, f func(Ast) Ast) map[string]Ast {
 // 	hnew := map[string]Ast{}
 // 	sortedKeys := []string{}
@@ -59,8 +56,8 @@ func ForEachChild_Array(a []Ast, f func(Ast) Ast) []Ast {
 // 	return hnew
 // }
 
-// where x.GetGNode().Rules and x.GetGNode().RulesK are considered
 // this is ordered, the new x.GetGNode().Rules is returned,
+// x.GetGNode().RulesK is used to get a consistent order
 func ForEachChild_InRules(x Ast, f func(Ast) Ast) map[string]Ast {
 	hnew := map[string]Ast{}
 	gn := x.GetGNode()

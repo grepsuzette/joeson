@@ -11,8 +11,6 @@ func NewEmptyNativeMap() NativeMap            { return NewNativeMap(map[string]A
 func NewNativeMap(h map[string]Ast) NativeMap { return h }
 
 func (nm NativeMap) HandlesChildLabel() bool     { return false }
-func (nm NativeMap) Labels() []string            { return []string{} }
-func (nm NativeMap) Captures() []Ast             { return []Ast{} }
 func (nm NativeMap) Prepare()                    {}
 func (nm NativeMap) GetGNode() *GNode            { return nil }
 func (nm NativeMap) Parse(ctx *ParseContext) Ast { panic("uncallable") }
@@ -25,14 +23,13 @@ func (nm NativeMap) ContentString() string {
 		if !first {
 			b.WriteString(", ")
 		}
-		b.WriteString(k + ":" + nm.Get(k).ContentString())
+		b.WriteString(k + ":" + nm.GetOrPanic(k).ContentString())
 		first = false
 	}
 	b.WriteString("}")
 	return b.String()
 }
 
-// no Native* object must walk through children: see node.coffee:78 `if ptr.child instanceof Node`
 func (nm NativeMap) ForEachChild(f func(Ast) Ast) Ast { return nm }
 
 func (nm NativeMap) Keys() []string {
@@ -74,6 +71,28 @@ func (nm NativeMap) GetIntExists(k string) (int, bool) {
 		return 0, false
 	}
 }
+
+// true when key is not defined or when its value is NativeUndefined.
+// Note: successfully parsed Ast can't possibly return nil.
+func (nm NativeMap) IsUndefined(k string) bool {
+	if v, exists := nm[k]; exists {
+		if _, ok := v.(NativeUndefined); ok {
+			return true
+		} else {
+			return false
+		}
+	}
+	return true
+}
+
+func (nm NativeMap) GetOrPanic(k string) Ast {
+	if r, ok := nm[k]; ok {
+		return r
+	} else {
+		panic("assert")
+	}
+}
+
 func (nm NativeMap) Get(k string) Ast {
 	return nm[k]
 }
@@ -82,7 +101,7 @@ func (nm NativeMap) Set(k string, v Ast) {
 	nm[k] = v
 }
 
-func (nm NativeMap) Has(k string) bool {
+func (nm NativeMap) Exists(k string) bool {
 	_, ok := nm[k]
 	return ok
 }

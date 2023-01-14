@@ -37,7 +37,7 @@ func NewRef(it Ast) *Ref {
 	if name[0:1] == "_" {
 		ref.GNode.Capture = false
 	}
-	ref.GNode.Labels_ = helpers.NewLazy0[[]string](func() []string {
+	ref.GNode.Labels_ = helpers.NewLazy[[]string](func() []string {
 		if ref.GNode.Label == "@" {
 			referenced := ref.GNode.Grammar.GetGNode().Rules[ref.ref]
 			if referenced == nil {

@@ -14,7 +14,7 @@ func NewRankFromLines(rankname string, lines []Line, grammar *ast.Grammar) *ast.
 	rank := ast.NewEmptyRank(rankname)
 	for _, line := range lines {
 		if ol, ok := line.(OLine); ok {
-			choice := ol.ToRule(grammar, rank, OLineByIndexOrName{index: helpers.NewNullInt(rank.Length())})
+			choice := ol.ToRule(grammar, rank, OLineByIndexOrName{index: helpers.NewNilableInt(rank.Length())})
 			rank.Append(choice)
 		} else if il, ok := line.(ILine); ok {
 			name, rule := il.ToRule(grammar, rank)

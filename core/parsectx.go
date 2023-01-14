@@ -127,7 +127,7 @@ func (ctx *ParseContext) wipeWith(frame_ *frame, makeStash bool) *stash {
 		if makeStash {
 			stash_[i] = posFrames[i]
 		}
-		posFrames[i] = nil // TODO make sure we can store nil, else use pointers
+		posFrames[i] = nil
 		stashCount++
 	}
 	if TimeEnd != nil {

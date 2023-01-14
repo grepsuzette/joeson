@@ -1,10 +1,7 @@
 package core
 
 import (
-	"fmt"
-	"grepsuzette/joeson/helpers"
 	"regexp"
-	"strconv"
 	"testing"
 )
 
@@ -53,59 +50,6 @@ line 4`)
 // cs := NewCodeStream("FOO")
 // eq_str(t, cs.Peek(NewPeek().AfterChars(20)), "")
 // }
-
-func TestMinMax(t *testing.T) {
-	eq_int(t, helpers.Min(-1999, 0), -1999)
-	eq_int(t, helpers.Min(0, -10), -10)
-	eq_int(t, helpers.Min(0, 10), 0)
-	eq_int(t, helpers.Max(-1999, 0), 0)
-	eq_int(t, helpers.Max(0, -10), 0)
-	eq_int(t, helpers.Max(0, 10), 10)
-}
-
-func TestSliceString(t *testing.T) {
-	eq_str(t, helpers.SliceString("FOo", 0, 0), "")
-	eq_str(t, helpers.SliceString("FOo", 0, 1), "F")
-	eq_str(t, helpers.SliceString("FOo", 1, 2), "O")
-	eq_str(t, helpers.SliceString("FOo", 2, 3), "o")
-	eq_str(t, helpers.SliceString("FOo", 2, 4), "o")
-	eq_str(t, helpers.SliceString("FOo", 3, 4), "")
-	eq_str(t, helpers.SliceString("FOo", 6, 10), "")
-	eq_str(t, helpers.SliceString("FOo", 6, -2), "")
-	eq_str(t, helpers.SliceString("FOo", -1, -2), "")
-	eq_str(t, helpers.SliceString("FOo", -1, 2), "")
-	eq_str(t, helpers.SliceString("FOo", -1, 4), "")
-	eq_str(t, helpers.SliceString("FOo", 0, 3), "FOo")
-	eq_str(t, helpers.SliceString("FOo", 1, 3), "Oo")
-	eq_str(t, helpers.SliceString("FOo", 2, 3), "o")
-}
-
-func TestPad(t *testing.T) {
-	eq_str(t, helpers.PadLeft("foo", 5), "foo  ")
-	eq_str(t, helpers.PadLeft("foo", 4), "foo ")
-	eq_str(t, helpers.PadLeft("foo", 3), "foo")
-	eq_str(t, helpers.PadLeft("foo", 2), "foo")
-	eq_str(t, helpers.PadLeft("foo", 1), "foo")
-	eq_str(t, helpers.PadLeft("foo", 0), "foo")
-	eq_str(t, helpers.PadLeft("foo", -1), "foo")
-	eq_str(t, helpers.PadLeft("foo", -10), "foo")
-	eq_str(t, helpers.PadRight("foo", 5), "  foo")
-	eq_str(t, helpers.PadRight("foo", 4), " foo")
-	eq_str(t, helpers.PadRight("foo", 3), "foo")
-	eq_str(t, helpers.PadRight("foo", 2), "foo")
-	eq_str(t, helpers.PadRight("foo", 1), "foo")
-	eq_str(t, helpers.PadRight("foo", 0), "foo")
-	eq_str(t, helpers.PadRight("foo", -1), "foo")
-	eq_str(t, helpers.PadRight("foo", -10), "foo")
-}
-
-func TestIndent(t *testing.T) {
-	eq_str(t, helpers.Indent(-1), "")
-	eq_str(t, helpers.Indent(0), "")
-	eq_str(t, helpers.Indent(1), "  ")
-	eq_str(t, helpers.Indent(2), "    ")
-	eq_str(t, helpers.Indent(3), "      ")
-}
 
 func TestRegexp(t *testing.T) {
 	cs := NewCodeStream("A EXPRESSION|B")

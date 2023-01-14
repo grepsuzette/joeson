@@ -15,8 +15,6 @@ func NewNativeString(s string) NativeString {
 }
 func (ns NativeString) GetGNode() *GNode            { return nil }
 func (ns NativeString) HandlesChildLabel() bool     { return false }
-func (ns NativeString) Labels() []string            { return []string{} }
-func (ns NativeString) Captures() []Ast             { return []Ast{} }
 func (ns NativeString) Prepare()                    {}
 func (ns NativeString) ContentString() string       { return ns.Str }
 func (ns NativeString) Parse(ctx *ParseContext) Ast { panic("uncallable") }

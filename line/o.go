@@ -21,7 +21,7 @@ type OLine struct {
 
 type OLineByIndexOrName struct {
 	name  string
-	index helpers.NullInt
+	index helpers.NilableInt
 }
 
 /*

@@ -45,8 +45,6 @@ func (n NativeInt) Int() int                    { return int(n) }
 func (n NativeInt) ContentString() string       { return strconv.Itoa(int(n)) }
 func (n NativeInt) HandlesChildLabel() bool     { return false }
 func (n NativeInt) GetGNode() *GNode            { return nil }
-func (n NativeInt) Labels() []string            { return []string{} }
-func (n NativeInt) Captures() []Ast             { return []Ast{} }
 func (n NativeInt) Prepare()                    {}
 func (n NativeInt) Parse(ctx *ParseContext) Ast { panic("uncallable") }
 

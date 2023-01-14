@@ -1,6 +1,6 @@
 Package line is a helper containing rule declaration helpers called O() and I().
 
-In the future there should be other systems to declare rules.
+In the future there may be other rule declaration packages.
 This one is code-like, with rules containing subrules:
 
 O("EXPR", rules(
@@ -35,9 +35,9 @@ the pump is initialized by a top-level O() toRule call, and then (in pseudo-code
 |                                                                                    |
 +------------------------------------------------------------------------------------+
 
-As you notice, it's a cross-recursion, which ultimately will parse all the
-grammar. The same is also true here in go, even though the GetRule has been inlined
-in ILine.ToRule and OLine.ToRule
+It's a cross-recursion which ultimately will parse all the
+grammar. The same is also true in this implementation. 
+However the GetRule has been inlined in ILine.ToRule and OLine.ToRule.
 
 TODO document: ALine, CLine and SLine are simple internal stuffs, 
 see line.go:rule2line()

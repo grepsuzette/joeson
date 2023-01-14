@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
@@ -19,10 +20,7 @@ const (
 type Sequence struct {
 	*GNode
 	sequence []Ast
-	type_    *helpers.Lazy0[sequenceRepr] // internal cache for internalType()
-	// moved to GNode
-	// _labels       helpers.Varcache[[]string]     // internal cache for Labels()
-	// _captures     helpers.Varcache[[]Astnode]    // internal cache for Captures()
+	type_    *helpers.Lazy[sequenceRepr] // internal cache for internalType()
 }
 
 func NewSequence(it Ast) *Sequence {
@@ -35,10 +33,9 @@ func NewSequence(it Ast) *Sequence {
 		gn := NewGNode()
 		seq := &Sequence{GNode: gn, sequence: a.Array}
 		gn.Node = seq
-		gn.Labels_ = helpers.NewLazy0[[]string](func() []string { return seq.calculateLabels() })
-		// note it could have been a Lazy0
-		gn.Captures_ = helpers.NewLazy0[[]Ast](func() []Ast { return seq.calculateCaptures() })
-		seq.type_ = helpers.NewLazy0[sequenceRepr](func() sequenceRepr { return seq.calculateType() })
+		gn.Labels_ = helpers.NewLazy[[]string](func() []string { return seq.calculateLabels() })
+		gn.Captures_ = helpers.NewLazy[[]Ast](func() []Ast { return seq.calculateCaptures() })
+		seq.type_ = helpers.NewLazy[sequenceRepr](func() sequenceRepr { return seq.calculateType() })
 		return seq
 	}
 }
@@ -102,9 +99,9 @@ func (seq *Sequence) Parse(ctx *ParseContext) Ast {
 				return seq.parseAsObject(ctx)
 			}
 		default:
-			panic("Unexpected type " + string(seq.type_.Get()))
+			panic(fmt.Sprintf("Unexpected type %x", seq.type_.Get()))
 		}
-		panic("Error")
+		panic("assert")
 	}, seq)(ctx)
 }
 

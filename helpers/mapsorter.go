@@ -2,7 +2,7 @@ package helpers
 
 import "sort"
 
-// this brings determinism, golang maps being unordered
+// brings some determinism
 
 func SortIntKeys[V any](h map[int]V) []int {
 	a := []int{}

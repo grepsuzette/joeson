@@ -8,9 +8,6 @@ import (
 type Existential struct {
 	*GNode
 	it Ast
-	// moved to GNode
-	// _labels   helpers.Lazy[[]string]  // internal cache for Labels()
-	// _captures helpers.Lazy[[]Astnode] // internal cache for Captures()
 }
 
 func NewExistential(it Ast) *Existential {
@@ -30,9 +27,6 @@ func (ex *Existential) HandlesChildLabel() bool {
 }
 
 func (ex *Existential) GetGNode() *GNode { return ex.GNode }
-
-func (ex *Existential) Labels() []string { panic("z") }
-func (ex *Existential) Captures() []Ast  { panic("z") }
 
 func (ex *Existential) Prepare() {
 	gn := ex.GetGNode()

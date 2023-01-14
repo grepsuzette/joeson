@@ -4,9 +4,9 @@ import "grepsuzette/joeson/helpers"
 
 type frame struct {
 	Result    Ast
-	endPos    helpers.NullInt // can be left undefined
-	loopStage helpers.NullInt // can be left undefined
-	wipemask  []bool          // len = ctx.grammar.numRules
+	endPos    helpers.NilableInt // can be left undefined
+	loopStage helpers.NilableInt // can be left undefined
+	wipemask  []bool             // len = ctx.grammar.numRules
 	pos       int
 	id        int
 	Param     Ast // used in ref.go or joeson.coffee:536

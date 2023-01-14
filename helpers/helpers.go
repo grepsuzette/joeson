@@ -40,29 +40,9 @@ func Indent(c int) string {
 	return strings.Join(make([]string, c+1), "  ")
 }
 
-// Characters \u0080-\uffff and \u0001b to be written in textual
-// form, e.g. "\\u" + code
+// Characters \u0080-\uffff and \u0001b to be written in text form, e.g. "\\u" + code
 func ToAscii(str string) string {
-	// %v	the value in a default format
-	// 	when printing structs, the plus flag (%+v) adds field names
-	// %#v	a Go-syntax representation of the value
-	// %T	a Go-syntax representation of the type of the value
-	// %%	a literal percent sign; consumes no value
-	//
-	// String and slice of bytes (treated equivalently with these verbs):
-	//
-	// %s	the uninterpreted bytes of the string or slice
-	// %q	a double-quoted string safely escaped with Go syntax
-	// %x	base 16, lower-case, two characters per byte
-	// %X	base 16, upper-case, two characters per byte
-	/*
-		@toAscii = toAscii = (str) ->
-		  return str.replace /[\u001b\u0080-\uffff]/g, (ch) ->
-			code = ch.charCodeAt(0).toString(16)
-			code = "0" + code while code.length < 4
-			"\\u"+code
-	*/
-	return fmt.Sprintf("%s", str) // TODO likely not right
+	return str // TODO
 }
 
 func TypeOfToString(t any) string {

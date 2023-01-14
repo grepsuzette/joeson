@@ -3,10 +3,8 @@ it:
 	go build . 
 
 run: it
-	./Joeson
+	./joeson
 
 test: 
-	go test . --run TestDebugLabel -v
+	go test ./...
 
-# test: it
-# 	go test ./...

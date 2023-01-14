@@ -21,8 +21,6 @@ func NewNot(it Ast) *Not {
 func (not *Not) GetGNode() *GNode        { return not.GNode }
 func (not *Not) Prepare()                {}
 func (not *Not) HandlesChildLabel() bool { return false }
-func (not *Not) Labels() []string        { panic("z") }
-func (not *Not) Captures() []Ast         { panic("z") }
 
 func (not *Not) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(_ *ParseContext, _ Ast) Ast {

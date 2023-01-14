@@ -34,12 +34,9 @@ func Named(name string, lineStringOrAstnode any) NamedRule {
 	}
 }
 
-func (nm NamedRule) Parse(ctx *core.ParseContext) core.Ast { panic("precompiled") }
-func (nm NamedRule) ContentString() string                 { return "--Named--" }
-func (nm NamedRule) GetGNode() *core.GNode                 { panic("idk") }
-func (nm NamedRule) Prepare()                              {}
-func (nm NamedRule) HandlesChildLabel() bool               { return false }
-func (nm NamedRule) Labels() []string                      { return []string{} }
-func (nm NamedRule) Captures() []core.Ast                  { return []core.Ast{} }
-
+func (nm NamedRule) Parse(ctx *core.ParseContext) core.Ast           { panic("precompiled") }
+func (nm NamedRule) ContentString() string                           { return "--Named--" }
+func (nm NamedRule) GetGNode() *core.GNode                           { panic("assert") }
+func (nm NamedRule) Prepare()                                        {}
+func (nm NamedRule) HandlesChildLabel() bool                         { return false }
 func (nm NamedRule) ForEachChild(f func(core.Ast) core.Ast) core.Ast { return nm }
