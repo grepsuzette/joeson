@@ -9,14 +9,14 @@ import (
 
 type Pattern struct {
 	*GNode
-	Value Astnode   // in coffee, declared as `value: {type:GNode}`
-	Join  Astnode   // in coffee, declared as `join:  {type:GNode}`
+	Value Ast       // in coffee, declared as `value: {type:GNode}`
+	Join  Ast       // in coffee, declared as `join:  {type:GNode}`
 	Min   NativeInt // -1 if unspec.
 	Max   NativeInt // -1 if unspec.
 }
 
 // `it` must be a NativeMap with keys like 'value', 'join', 'min', 'max'
-func NewPattern(it Astnode) *Pattern {
+func NewPattern(it Ast) *Pattern {
 	patt := &Pattern{NewGNode(), nil, nil, -1, -1}
 	patt.Node = patt
 	// {value Astnode, join Astnode, min int, max int}
@@ -73,8 +73,8 @@ func NewPattern(it Astnode) *Pattern {
 	return patt
 }
 func (patt *Pattern) GetGNode() *GNode { return patt.GNode }
-func (patt *Pattern) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
+func (patt *Pattern) Parse(ctx *ParseContext) Ast {
+	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		pos := ctx.Code.Pos
 		resValue := patt.Value.Parse(ctx)
 		if resValue == nil {
@@ -82,9 +82,9 @@ func (patt *Pattern) Parse(ctx *ParseContext) Astnode {
 			if patt.Min > 0 {
 				return nil
 			}
-			return NewNativeArray([]Astnode{})
+			return NewNativeArray([]Ast{})
 		}
-		var matches []Astnode = []Astnode{resValue}
+		var matches []Ast = []Ast{resValue}
 		for true {
 			pos2 := ctx.Code.Pos
 			if NotNilAndNotNativeUndefined(patt.Join) {
@@ -117,7 +117,7 @@ func (patt *Pattern) Parse(ctx *ParseContext) Astnode {
 
 func (patt *Pattern) HandlesChildLabel() bool { return false }
 func (patt *Pattern) Labels() []string        { panic("z") }
-func (patt *Pattern) Captures() []Astnode     { panic("z") }
+func (patt *Pattern) Captures() []Ast         { panic("z") }
 func (patt *Pattern) Prepare()                {}
 func (patt *Pattern) ContentString() string {
 	var b strings.Builder
@@ -142,7 +142,7 @@ func (patt *Pattern) ContentString() string {
 		return b.String() + Cyan(cyan)
 	}
 }
-func (patt *Pattern) ForEachChild(f func(Astnode) Astnode) Astnode {
+func (patt *Pattern) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   value:      {type:GNode}

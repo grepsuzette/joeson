@@ -2,23 +2,21 @@ package core
 
 import "grepsuzette/joeson/helpers"
 
-// in joeson there was this comment:
-// # { pos:{ (node.id):{id,result,pos,endPos,stage,...(same object as in stack)}... } }
 type frame struct {
-	Result    Astnode
+	Result    Ast
 	endPos    helpers.NullInt // can be left undefined
 	loopStage helpers.NullInt // can be left undefined
 	wipemask  []bool          // len = ctx.grammar.numRules
 	pos       int
 	id        int
-	Param     Astnode // used in ref.go or joeson.coffee:536
+	Param     Ast // used in ref.go or joeson.coffee:536
 }
 
 func (f frame) toString() string {
-	return "TODO frame.toString"
+	return "N/A frame.toString"
 }
 
-func (fr *frame) cacheSet(result Astnode, endPos int) {
+func (fr *frame) cacheSet(result Ast, endPos int) {
 	fr.Result = result
 	if endPos < 0 {
 		fr.endPos.Unset()

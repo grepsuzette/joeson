@@ -46,6 +46,6 @@ func (il ILine) StringIndent(nIndent int) string {
 	return s
 }
 
-func (il ILine) ToRule(grammar *ast.Grammar, parentRule Astnode) (name string, rule Astnode) {
+func (il ILine) ToRule(grammar *ast.Grammar, parentRule Ast) (name string, rule Ast) {
 	return il.name, getRule(grammar, il.name, il.content, parentRule, il.attrs)
 }

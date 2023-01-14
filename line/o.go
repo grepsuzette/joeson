@@ -51,7 +51,7 @@ func (ol OLine) StringIndent(nIndent int) string {
 	return s
 }
 
-func (ol OLine) ToRule(grammar *ast.Grammar, parentRule core.Astnode, by OLineByIndexOrName) core.Astnode {
+func (ol OLine) ToRule(grammar *ast.Grammar, parentRule core.Ast, by OLineByIndexOrName) core.Ast {
 	//fmt.Println("o.go OLine.ToRule, parentRule=" + parentRule.GetGNode().Name)
 	// figure out the name for this rule
 	var name string = ol.name

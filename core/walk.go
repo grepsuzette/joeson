@@ -1,19 +1,17 @@
 package core
 
-// import "sort"
-
 // Depth-first walk
 
 type WalkPrepost struct {
-	Pre  func(Astnode, parent Astnode) string // called during 🡖  .  "__stop__" to interrupt
-	Post func(Astnode, parent Astnode) string // called during 🡕 .
+	Pre  func(node Ast, parent Ast) string // called during 🡖  .  "__stop__" to interrupt
+	Post func(node Ast, parent Ast) string // called during 🡕 .
 }
 
 // Depth first walk of entire tree.
 // `ast` is the node on which to start descending recursively.
 // `parent` is available for algorithms needing it (just provide the
 // father of `ast` or nil).
-func Walk(ast Astnode, parent Astnode, prepost WalkPrepost) Astnode {
+func Walk(ast Ast, parent Ast, prepost WalkPrepost) Ast {
 	// TODO there can be a big difference. checki
 	if prepost.Pre != nil {
 		// note: joeson.coffee can return "__stop__" here, meaning to end here (Not implemented yet)
@@ -22,7 +20,7 @@ func Walk(ast Astnode, parent Astnode, prepost WalkPrepost) Astnode {
 			return ast
 		}
 	}
-	ast.ForEachChild(func(child Astnode) Astnode {
+	ast.ForEachChild(func(child Ast) Ast {
 		return Walk(child, ast, prepost)
 	})
 	if prepost.Post != nil {
@@ -33,9 +31,9 @@ func Walk(ast Astnode, parent Astnode, prepost WalkPrepost) Astnode {
 
 // -- following are shortcut functions.
 
-// shortcut calling ForEachChild for members being []Astnode
-func ForEachChild_Array(a []Astnode, f func(Astnode) Astnode) []Astnode {
-	anew := []Astnode{}
+// shortcut calling ForEachChild for members being []Ast
+func ForEachChild_Array(a []Ast, f func(Ast) Ast) []Ast {
+	anew := []Ast{}
 	for _, child := range a {
 		if r := f(child); r != nil {
 			anew = append(anew, r)
@@ -44,10 +42,10 @@ func ForEachChild_Array(a []Astnode, f func(Astnode) Astnode) []Astnode {
 	return anew
 }
 
-// shortcut calling ForEachChild for members being map[string]Astnode
+// shortcut calling ForEachChild for members being map[string]Ast
 // beware, maps are not ordered in golang. Use instead ForEachChild_InRules
-// func ForEachChild_MapString(h map[string]Astnode, f func(Astnode) Astnode) map[string]Astnode {
-// 	hnew := map[string]Astnode{}
+// func ForEachChild_MapString(h map[string]Ast, f func(Ast) Ast) map[string]Ast {
+// 	hnew := map[string]Ast{}
 // 	sortedKeys := []string{}
 // 	for k := range h {
 // 		sortedKeys = append(sortedKeys, k)
@@ -63,8 +61,8 @@ func ForEachChild_Array(a []Astnode, f func(Astnode) Astnode) []Astnode {
 
 // where x.GetGNode().Rules and x.GetGNode().RulesK are considered
 // this is ordered, the new x.GetGNode().Rules is returned,
-func ForEachChild_InRules(x Astnode, f func(Astnode) Astnode) map[string]Astnode {
-	hnew := map[string]Astnode{}
+func ForEachChild_InRules(x Ast, f func(Ast) Ast) map[string]Ast {
+	hnew := map[string]Ast{}
 	gn := x.GetGNode()
 	if gn == nil || gn.Rules == nil {
 		return nil

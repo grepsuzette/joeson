@@ -76,7 +76,7 @@ func (ctx *ParseContext) log(message string) {
 func (ctx *ParseContext) StackPeek(skip int) *frame {
 	return ctx.stack[ctx.stackLength-1-skip]
 }
-func (ctx *ParseContext) StackPush(x Astnode) {
+func (ctx *ParseContext) StackPush(x Ast) {
 	ctx.stack[ctx.stackLength] = ctx.getFrame(x)
 	ctx.stackLength++
 }
@@ -89,7 +89,7 @@ func (ctx *ParseContext) loopStackPop() {
 	ctx.loopStack = ctx.loopStack[:len(ctx.loopStack)-1]
 }
 
-func (ctx *ParseContext) getFrame(x Astnode) *frame {
+func (ctx *ParseContext) getFrame(x Ast) *frame {
 	id := x.GetGNode().Id
 	pos := ctx.Code.Pos
 	posFrames := ctx.Frames[pos]

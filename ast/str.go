@@ -1,8 +1,11 @@
 package ast
 
-import "grepsuzette/joeson/helpers"
-import . "grepsuzette/joeson/core"
-import . "grepsuzette/joeson/colors"
+import (
+	. "grepsuzette/joeson/core"
+	"grepsuzette/joeson/helpers"
+
+	. "grepsuzette/joeson/colors"
+)
 
 // Str does not represent a native string
 // but rather a `Str` in the joeson grammar.
@@ -24,8 +27,8 @@ func (str Str) HandlesChildLabel() bool { return false }
 func (str Str) ContentString() string {
 	return Green("'" + helpers.Escape(str.Str) + "'")
 }
-func (str Str) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
+func (str Str) Parse(ctx *ParseContext) Ast {
+	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		if didMatch, sMatch := ctx.Code.MatchString(str.Str); didMatch {
 			// a string is not a terminal element
 			// so return NativeString.
@@ -35,7 +38,7 @@ func (str Str) Parse(ctx *ParseContext) Astnode {
 		}
 	}, str)(ctx)
 }
-func (str Str) ForEachChild(f func(Astnode) Astnode) Astnode {
+func (str Str) ForEachChild(f func(Ast) Ast) Ast {
 	// no children defined for Str, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}

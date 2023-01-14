@@ -8,6 +8,7 @@ import (
 	. "grepsuzette/joeson/core"
 	"strconv"
 	"strings"
+
 	// "grepsuzette/joeson/helpers"
 	line "grepsuzette/joeson/line"
 	"testing"
@@ -30,7 +31,7 @@ func div(a, b int) int { return a / b }
 
 // extract the "expr" key from a result `x` to an int
 // or, failing to do that, call FailNow()
-func extractResult(t *testing.T, x Astnode) int {
+func extractResult(t *testing.T, x Ast) int {
 	t.Helper()
 	if n, exists := x.(NativeMap).GetIntExists("expr"); exists {
 		return n
@@ -41,12 +42,10 @@ func extractResult(t *testing.T, x Astnode) int {
 	return 0 // so it compiles
 }
 
-func eval(first Astnode, rest Astnode) Astnode {
-	var lhs Astnode = first.(NativeInt)
+func eval(first Ast, rest Ast) Ast {
+	var lhs Ast = first.(NativeInt)
 	if a, isArray := rest.(*NativeArray); isArray {
-		// fmt.Printf("eval rest len=%d content=%s\n", a.Length(), a.ContentString())
 		for _, v := range a.Array {
-			// fmt.Println("eval- " + v.ContentString())
 			aFirstRest := v.(*NativeArray)
 			if aFirstRest.Length() != 2 {
 				panic("assert")
@@ -68,13 +67,13 @@ func grammar() *ast.Grammar {
 	joeson := NewJoeson()
 	CALC := []line.Line{
 		o(Named("Input", "expr:Expression")),
-		i(Named("Expression", "_ first:Term rest:( _ AddOp _ Term )* _"), func(it Astnode) Astnode {
+		i(Named("Expression", "_ first:Term rest:( _ AddOp _ Term )* _"), func(it Ast) Ast {
 			return eval(it.(NativeMap).Get("first"), it.(NativeMap).Get("rest"))
 		}),
-		i(Named("Term", "first:Factor rest:( _ MulOp _ Factor )*"), func(it Astnode) Astnode {
+		i(Named("Term", "first:Factor rest:( _ MulOp _ Factor )*"), func(it Ast) Ast {
 			return eval(it.(NativeMap).Get("first"), it.(NativeMap).Get("rest"))
 		}),
-		i(Named("Factor", "'(' expr:Expression ')' | integer:Integer"), func(it Astnode) Astnode {
+		i(Named("Factor", "'(' expr:Expression ')' | integer:Integer"), func(it Ast) Ast {
 			// alternation example
 			var nm NativeMap = it.(NativeMap)
 			if n, exists := nm.GetExists("integer"); exists {
@@ -87,7 +86,7 @@ func grammar() *ast.Grammar {
 		}),
 		i(Named("AddOp", "'+' | '-'")),
 		i(Named("MulOp", "'*' | '/'")),
-		i(Named("Integer", "/^-?[0-9]+/"), func(it Astnode) Astnode { return NewNativeIntFrom(it) }),
+		i(Named("Integer", "/^-?[0-9]+/"), func(it Ast) Ast { return NewNativeIntFrom(it) }),
 		i(Named("_", "[ \t]*")),
 	}
 	return line.NewGrammarFromLines("calc", CALC, joeson)
@@ -95,7 +94,7 @@ func grammar() *ast.Grammar {
 
 func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
 	t.Helper()
-	if res, error := grammar().ParseString(sExpression); error != nil {
+	if res, error := grammar().ParseString(sExpression); error == nil {
 		fmt.Println(
 			Cyan(sExpression),
 			" --> ",
@@ -111,6 +110,7 @@ func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
 	}
 }
 
+func Test_minus7(t *testing.T)         { assertResultIs(t, "-7", -7) }
 func Test_73_plus_4(t *testing.T)      { assertResultIs(t, "73 + 4", 77) }
 func Test_73_plus_minus4(t *testing.T) { assertResultIs(t, "73 +(-4)", 69) }
 func Test_36(t *testing.T)             { assertResultIs(t, "4  *( (2 +1 )*3 )", 36) }
@@ -143,6 +143,7 @@ func Test_failing(t *testing.T) {
 	gm := grammar()
 	var h = map[string]string{
 		"90 (6090)": "Error parsing at char:3",
+		"-(7)":      "Error parsing at char:0",
 	}
 	for s, sExpectedError := range h {
 		res, error := gm.ParseString(s)

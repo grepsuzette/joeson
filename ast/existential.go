@@ -1,17 +1,19 @@
 package ast
 
-import . "grepsuzette/joeson/colors"
-import . "grepsuzette/joeson/core"
+import (
+	. "grepsuzette/joeson/colors"
+	. "grepsuzette/joeson/core"
+)
 
 type Existential struct {
 	*GNode
-	it Astnode
+	it Ast
 	// moved to GNode
 	// _labels   helpers.Lazy[[]string]  // internal cache for Labels()
 	// _captures helpers.Lazy[[]Astnode] // internal cache for Captures()
 }
 
-func NewExistential(it Astnode) *Existential {
+func NewExistential(it Ast) *Existential {
 	ex := &Existential{GNode: NewGNode(), it: it}
 	ex.GNode.Node = ex
 	return ex
@@ -29,8 +31,8 @@ func (ex *Existential) HandlesChildLabel() bool {
 
 func (ex *Existential) GetGNode() *GNode { return ex.GNode }
 
-func (ex *Existential) Labels() []string    { panic("z") }
-func (ex *Existential) Captures() []Astnode { panic("z") }
+func (ex *Existential) Labels() []string { panic("z") }
+func (ex *Existential) Captures() []Ast  { panic("z") }
 
 func (ex *Existential) Prepare() {
 	gn := ex.GetGNode()
@@ -58,8 +60,8 @@ func (ex *Existential) ContentString() string {
 	return Prefix(ex.it) + ex.it.ContentString() + Blue("?")
 }
 
-func (ex *Existential) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
+func (ex *Existential) Parse(ctx *ParseContext) Ast {
+	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		pos := ctx.Code.Pos
 		result := ex.it.Parse(ctx)
 		if result == nil {
@@ -70,7 +72,7 @@ func (ex *Existential) Parse(ctx *ParseContext) Astnode {
 		}
 	}, ex)(ctx)
 }
-func (ex *Existential) ForEachChild(f func(Astnode) Astnode) Astnode {
+func (ex *Existential) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}

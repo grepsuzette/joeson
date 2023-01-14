@@ -1,14 +1,16 @@
 package ast
 
-import . "grepsuzette/joeson/core"
-import . "grepsuzette/joeson/colors"
+import (
+	. "grepsuzette/joeson/colors"
+	. "grepsuzette/joeson/core"
+)
 
 type Not struct {
 	*GNode
-	it Astnode
+	it Ast
 }
 
-func NewNot(it Astnode) *Not {
+func NewNot(it Ast) *Not {
 	gn := NewGNode()
 	not := &Not{gn, it}
 	gn.Capture = false
@@ -20,10 +22,10 @@ func (not *Not) GetGNode() *GNode        { return not.GNode }
 func (not *Not) Prepare()                {}
 func (not *Not) HandlesChildLabel() bool { return false }
 func (not *Not) Labels() []string        { panic("z") }
-func (not *Not) Captures() []Astnode     { panic("z") }
+func (not *Not) Captures() []Ast         { panic("z") }
 
-func (not *Not) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
+func (not *Not) Parse(ctx *ParseContext) Ast {
+	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		pos := ctx.Code.Pos
 		res := not.it.Parse(ctx)
 		ctx.Code.Pos = pos
@@ -38,7 +40,7 @@ func (not *Not) Parse(ctx *ParseContext) Astnode {
 func (not *Not) ContentString() string {
 	return Yellow("!") + Prefix(not.it) + not.it.ContentString()
 }
-func (not *Not) ForEachChild(f func(Astnode) Astnode) Astnode {
+func (not *Not) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}

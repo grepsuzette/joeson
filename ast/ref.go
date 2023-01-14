@@ -9,13 +9,13 @@ import (
 
 type Ref struct {
 	*GNode
-	ref   string  // ref because joeson.coffee used @ref, because @name was reserved
-	param Astnode // thought it was `any`, see frame.go (`param` field) and joeson.coffee:67. But Astnode must be good
+	ref   string // ref because joeson.coffee used @ref, because @name was reserved
+	param Ast    // thought it was `any`, see frame.go (`param` field) and joeson.coffee:67. But Astnode must be good
 }
 
-func NewRef(it Astnode) *Ref {
+func NewRef(it Ast) *Ref {
 	var name string
-	var param Astnode = nil
+	var param Ast = nil
 	switch v := it.(type) {
 	case NativeString:
 		var ns NativeString = v
@@ -59,8 +59,8 @@ func NewRef(it Astnode) *Ref {
 func (ref *Ref) GetGNode() *GNode        { return ref.GNode }
 func (ref *Ref) HandlesChildLabel() bool { return false }
 func (ref *Ref) Prepare()                {}
-func (ref *Ref) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(ctx *ParseContext, _ Astnode) Astnode {
+func (ref *Ref) Parse(ctx *ParseContext) Ast {
+	return Wrap(func(ctx *ParseContext, _ Ast) Ast {
 		node := ref.GNode.Grammar.GetGNode().Rules[ref.ref]
 		if node == nil {
 			panic("Unknown reference " + ref.ref + ". Grammar has " + strconv.Itoa(len(ref.GNode.Grammar.GetGNode().Rules)) + " rules. ")
@@ -71,7 +71,7 @@ func (ref *Ref) Parse(ctx *ParseContext) Astnode {
 }
 
 func (ref *Ref) ContentString() string { return Red(ref.ref) }
-func (ref *Ref) ForEachChild(f func(Astnode) Astnode) Astnode {
+func (ref *Ref) ForEachChild(f func(Ast) Ast) Ast {
 	// no children defined for Ref, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}

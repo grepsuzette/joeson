@@ -1,7 +1,7 @@
 package core
 
 type ParseOptions struct {
-	CbBuilder func(Astnode, *ParseContext, Astnode) Astnode
+	CbBuilder func(Ast, *ParseContext, Ast) Ast
 	SkipLog   bool
 	SkipCache bool
 	Debug     bool

@@ -1,12 +1,11 @@
 package ast
 
 import (
+	"errors"
 	"fmt"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
-	// "os"
-	"errors"
 	"strconv"
 	"strings"
 )
@@ -20,7 +19,7 @@ import (
 */
 type Grammar struct {
 	*GNode
-	rank Astnode // can be a *Rank or a Ref to a rank
+	rank Ast // can be a *Rank or a Ref to a rank
 
 	// each ast node can have rules, recursively.
 	// in the Postinit below, Grammar will however
@@ -30,13 +29,13 @@ type Grammar struct {
 	NumRules int
 
 	// id2Rule: slow lookup for debugging...
-	Id2Rule map[int]Astnode // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
+	Id2Rule map[int]Ast // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
 
 	wasInitialized bool
 }
 
 func NewEmptyGrammarNamed(name string) *Grammar {
-	gm := &Grammar{NewGNode(), nil, 0, map[int]Astnode{}, false}
+	gm := &Grammar{NewGNode(), nil, 0, map[int]Ast{}, false}
 	gm.GNode.Name = name
 	gm.GNode.Node = gm
 	return gm
@@ -56,51 +55,51 @@ func (gm *Grammar) Postinit() {
 	// TODO Optimization that can wait  it's about:
 	// Merge Choices with just a single choice.
 	Walk(gm, nil, WalkPrepost{
-		/*
-					Pre: func(node Astnode, parent Astnode) Astnode {
-						if choice, ok := node.(Choice); ok && len(choice.choices) == 1 {
-							// Merge label
-							if choice.choices[0].GetGNode().Label == "" {
-								choice.choices[0].GetGNode().Label = choice.GetGNode().Label
-							}
-							// Merge included rules
-							if len(choice.GetGNode().Rules) > 0 {
-								for k, v := range choice.GetGNode().Rules {
-									choice.choices[0].GetGNode().Rules[k] = v
+		Pre: func(node Astnode, parent Astnode) Astnode {
+			/*
+							if choice, ok := node.(Choice); ok && len(choice.choices) == 1 {
+								// Merge label
+								if choice.choices[0].GetGNode().Label == "" {
+									choice.choices[0].GetGNode().Label = choice.GetGNode().Label
 								}
-							}
-							// Replace with grandchild
-							// hum the key, index are not available in our implementation
-							// TODO finish
-							// ANOTHER WAY would be, when descending, if
-							// child is sequence and
-							// grandchildren are "choices", annd only 1, then
-							// set it directly to grandchild[0]
-							//
-							// There is also a usage however in javascript.joeson
-							// wait for now
-							if index  > -1 {
-								// TODO check hypothesis
-								// hypothesis is if index is provided, it is an array
-								reflect.ValueOf(parent).FieldByName(key).FieldByIndex(index)
-							} else {
-			   i					parent.GetGNode().SetArbitraryField(key, choice.Choice.choices[0])
-								// tricky, needs & and Elem(). Also, field name must be
-								// exported (capitalized first letter)
-								// https://stackoverflow.com/questions/6395076/using-reflect-how-do-you-set-the-value-of-a-struct-field
+								// Merge included rules
+								if len(choice.GetGNode().Rules) > 0 {
+									for k, v := range choice.GetGNode().Rules {
+										choice.choices[0].GetGNode().Rules[k] = v
+									}
+								}
+								// Replace with grandchild
+								// hum the key, index are not available in our implementation
+								// TODO finish
+								// ANOTHER WAY would be, when descending, if
+								// child is sequence and
+								// grandchildren are "choices", annd only 1, then
+								// set it directly to grandchild[0]
+								//
+								// There is also a usage however in javascript.joeson
+								// wait for now
+								if index  > -1 {
+									// TODO check hypothesis
+									// hypothesis is if index is provided, it is an array
+									reflect.ValueOf(parent).FieldByName(key).FieldByIndex(index)
+								} else {
+				   i					parent.GetGNode().SetArbitraryField(key, choice.Choice.choices[0])
+									// tricky, needs & and Elem(). Also, field name must be
+									// exported (capitalized first letter)
+									// https://stackoverflow.com/questions/6395076/using-reflect-how-do-you-set-the-value-of-a-struct-field
 
-								reflect.ValueOf(&parent).Elem().FieldByName(key).se
+									reflect.ValueOf(&parent).Elem().FieldByName(key).se
+								}
+								parent
+								reflect.S
 							}
-							parent
-							reflect.S
-						}
-					}
-		*/
+			*/
+		},
 	})
 
 	// Connect all the nodes and collect dereferences into @rules
 	Walk(gm, nil, WalkPrepost{
-		Pre: func(node Astnode, parent Astnode) string {
+		Pre: func(node Ast, parent Ast) string {
 			gnode := node.GetGNode()
 			if gnode == nil {
 				return ""
@@ -110,11 +109,6 @@ func (gm *Grammar) Postinit() {
 				panic("Grammar tree should be a DAG, nodes should not be referenced more than once.")
 			}
 
-			// sParentContentString := "nil"
-			// if parent != nil {
-			// 	sParentContentString = parent.ContentString()
-			// }
-			// fmt.Println(" PRE connect nodes, parent:" + sParentContentString + " node: " + ContentStringWithPrefix(node.GetGNode().Rule) + node.ContentString() + " type: " + helpers.TypeOfToString(node))
 			gnode.Grammar = gm
 			gnode.Parent = parent
 			if false {
@@ -124,7 +118,7 @@ func (gm *Grammar) Postinit() {
 			} else {
 				// set node.rule, the root node for this rule
 				if gnode.Rule == nil {
-					var r Astnode
+					var r Ast
 					if parent != nil {
 						r = parent.GetGNode().Rule
 					} else {
@@ -135,7 +129,7 @@ func (gm *Grammar) Postinit() {
 			}
 			return ""
 		},
-		Post: func(node Astnode, parent Astnode) string {
+		Post: func(node Ast, parent Ast) string {
 			// fmt.Println("grammar POST: typeof node= " + reflect.TypeOf(node).String() + " cs:" + node.ContentString())
 			gnode := node.GetGNode()
 			if gnode == nil {
@@ -192,7 +186,7 @@ func (gm *Grammar) Postinit() {
 	// Prepare all the nodes, child first.
 
 	Walk(gm, nil, WalkPrepost{
-		Post: func(node Astnode, parent Astnode) string {
+		Post: func(node Ast, parent Ast) string {
 			node.Prepare()
 			return ""
 		},
@@ -201,7 +195,7 @@ func (gm *Grammar) Postinit() {
 }
 
 // ♥ call this one (MAIN GRAMMAR PARSE FUNCTION)
-func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) (Astnode, error) {
+func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) (Ast, error) {
 	if len(attrs) > 0 {
 		return gm.ParseCode(NewCodeStream(sCode), attrs[0])
 	} else {
@@ -209,13 +203,13 @@ func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) (Astnode, er
 	}
 }
 
-func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) (Astnode, error) {
+func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) (Ast, error) {
 	return gm.parseOrFail(NewParseContext(code, gm, attrs))
 }
 
 // this one conforms the interface, but you would normally call
 // grammar.ParseString() or grammar.ParseCode().
-func (gm *Grammar) Parse(ctx *ParseContext) Astnode {
+func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	if ast, error := gm.parseOrFail(ctx); error == nil {
 		return ast
 	} else {
@@ -223,7 +217,7 @@ func (gm *Grammar) Parse(ctx *ParseContext) Astnode {
 	}
 }
 
-func (gm *Grammar) parseOrFail(ctx *ParseContext) (Astnode, error) {
+func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error) {
 	var oldTrace TraceSettings
 	if ctx.Debug {
 		// temporarily enable stack tracing
@@ -282,7 +276,7 @@ func (gm *Grammar) ContentString() string {
 
 func (gm *Grammar) CountRules() int { return gm.NumRules }
 func (gm *Grammar) IsReady() bool   { return gm.rank != nil && gm.wasInitialized }
-func (gm *Grammar) SetRankIfEmpty(rank Astnode) {
+func (gm *Grammar) SetRankIfEmpty(rank Ast) {
 	if gm.rank != nil {
 		return
 	}
@@ -291,7 +285,7 @@ func (gm *Grammar) SetRankIfEmpty(rank Astnode) {
 	}
 	gm.rank = rank
 }
-func (gm *Grammar) ForEachChild(f func(Astnode) Astnode) Astnode {
+func (gm *Grammar) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren rank: {type:Rank}
 	// TODO but must rules to be executed in a proper order? Rules is a map, in go it is in any order.
 	//      Check whether Rules respect the insertion order

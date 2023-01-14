@@ -35,15 +35,15 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 			}
 		} else {
 			switch v := arg.(type) {
-			case func(it Astnode) Astnode:
-				attrs.CbBuilder = func(x Astnode, _ *ParseContext, _ Astnode) Astnode {
+			case func(it Ast) Ast:
+				attrs.CbBuilder = func(x Ast, _ *ParseContext, _ Ast) Ast {
 					return v(x)
 				}
-			case func(_ Astnode, _ *ParseContext) Astnode:
-				attrs.CbBuilder = func(x Astnode, ctx *ParseContext, _ Astnode) Astnode {
+			case func(_ Ast, _ *ParseContext) Ast:
+				attrs.CbBuilder = func(x Ast, ctx *ParseContext, _ Ast) Ast {
 					return v(x, ctx)
 				}
-			case func(_ Astnode, _ *ParseContext, _ Astnode) Astnode:
+			case func(_ Ast, _ *ParseContext, _ Ast) Ast:
 				attrs.CbBuilder = v
 			case ParseOptions:
 				attrs = v
@@ -63,7 +63,7 @@ func rule2line(x any) Line {
 		return NewSLine(v)
 	case OLine:
 		return v
-	case Astnode:
+	case Ast:
 		return NewCLine(v)
 	case CLine:
 		return v
@@ -87,8 +87,8 @@ func rule2line(x any) Line {
 // parentRule: The actual parent Rule instance
 // attrs:      {cb,...}, extends the result
 // opts:       Parse time options
-func getRule(grammar *ast.Grammar, name string, line Line, parentRule Astnode, attrs ParseOptions) Astnode {
-	var ast Astnode
+func getRule(grammar *ast.Grammar, name string, line Line, parentRule Ast, attrs ParseOptions) Ast {
+	var ast Ast
 	// fmt.Println("getRule name=" + name + reflect.TypeOf(line).String())
 	switch v := line.(type) {
 	case ALine:

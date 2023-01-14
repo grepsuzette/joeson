@@ -5,9 +5,10 @@ import (
 	"strconv"
 )
 
-// NativeInt and NativeString denote our need to express a terminal element
-// that at the same time satisfies the `Astnode` interface. Joeson.coffee used
-// Number or string directly, but javascript is different language
+// NativeInt and NativeString denote terminal nodes
+// and at the same time satisfy the `Ast` interface. Joeson.coffee used
+// Number or string directly.
+
 type NativeInt int
 
 func NewNativeInt(n int) NativeInt { return NativeInt(n) }
@@ -20,14 +21,7 @@ func NewNativeIntFromString(s string) NativeInt {
 	}
 }
 
-// func NewNativeIntFromNativeString(ns NativeString) NativeInt {
-// 	if n, e := strconv.Atoi(ns.Str); e == nil {
-// 		return NewNativeInt(n)
-// 	} else {
-// 		panic(e)
-// 	}
-// }
-func NewNativeIntFrom(x Astnode) NativeInt {
+func NewNativeIntFrom(x Ast) NativeInt {
 	switch v := x.(type) {
 	case NativeString:
 		if n, e := strconv.Atoi(v.Str); e == nil {
@@ -46,15 +40,15 @@ func NewNativeIntFrom(x Astnode) NativeInt {
 	}
 }
 
-func (n NativeInt) String() string                  { return strconv.Itoa(int(n)) }
-func (n NativeInt) Int() int                        { return int(n) }
-func (n NativeInt) ContentString() string           { return strconv.Itoa(int(n)) }
-func (n NativeInt) HandlesChildLabel() bool         { return false }
-func (n NativeInt) GetGNode() *GNode                { return nil }
-func (n NativeInt) Labels() []string                { return []string{} }
-func (n NativeInt) Captures() []Astnode             { return []Astnode{} }
-func (n NativeInt) Prepare()                        {}
-func (n NativeInt) Parse(ctx *ParseContext) Astnode { panic("uncallable") }
+func (n NativeInt) String() string              { return strconv.Itoa(int(n)) }
+func (n NativeInt) Int() int                    { return int(n) }
+func (n NativeInt) ContentString() string       { return strconv.Itoa(int(n)) }
+func (n NativeInt) HandlesChildLabel() bool     { return false }
+func (n NativeInt) GetGNode() *GNode            { return nil }
+func (n NativeInt) Labels() []string            { return []string{} }
+func (n NativeInt) Captures() []Ast             { return []Ast{} }
+func (n NativeInt) Prepare()                    {}
+func (n NativeInt) Parse(ctx *ParseContext) Ast { panic("uncallable") }
 
 // no Native* object must walk through children: see node.coffee:78 `if ptr.child instanceof Node`
-func (n NativeInt) ForEachChild(f func(Astnode) Astnode) Astnode { return n }
+func (n NativeInt) ForEachChild(f func(Ast) Ast) Ast { return n }

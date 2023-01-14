@@ -1,10 +1,13 @@
 package ast
 
-import "regexp"
-import "grepsuzette/joeson/lambda"
-import . "grepsuzette/joeson/core"
-import . "grepsuzette/joeson/colors"
-import "strings"
+import (
+	. "grepsuzette/joeson/core"
+	"grepsuzette/joeson/lambda"
+	"regexp"
+
+	. "grepsuzette/joeson/colors"
+	"strings"
+)
 
 type Regex struct {
 	*GNode
@@ -22,10 +25,10 @@ func NewRegexFromString(sRegex string) *Regex {
 	}
 }
 
-func NewRegex(it Astnode) *Regex {
+func NewRegex(it Ast) *Regex {
 	return NewRegexFromString(joinNativeArrayOfNativeString(it))
 }
-func NewRegexCharClass(it Astnode) *Regex {
+func NewRegexCharClass(it Ast) *Regex {
 	return NewRegexFromString("[" + joinNativeArrayOfNativeString(it) + "]")
 }
 
@@ -37,9 +40,9 @@ func (re *Regex) ContentString() string {
 func (re *Regex) HandlesChildLabel() bool { return false }
 func (re *Regex) Prepare()                {}
 func (re *Regex) Labels() []string        { panic("z") }
-func (re *Regex) Captures() []Astnode     { panic("z") }
-func (re *Regex) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
+func (re *Regex) Captures() []Ast         { panic("z") }
+func (re *Regex) Parse(ctx *ParseContext) Ast {
+	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		if didMatch, sMatch := ctx.Code.MatchRegexp(re.re); !didMatch {
 			return nil
 		} else {
@@ -53,7 +56,7 @@ func joinstr(a []NativeString, join string) string {
 	return strings.Join(a2, join)
 }
 
-func joinNativeArrayOfNativeString(node Astnode) string {
+func joinNativeArrayOfNativeString(node Ast) string {
 	switch node.(type) {
 	case *NativeArray:
 		var b strings.Builder
@@ -70,7 +73,7 @@ func joinNativeArrayOfNativeString(node Astnode) string {
 		panic("expected a NativeArray containing NativeString elements")
 	}
 }
-func (re *Regex) ForEachChild(f func(Astnode) Astnode) Astnode {
+func (re *Regex) ForEachChild(f func(Ast) Ast) Ast {
 	// no children defined for Ref, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}

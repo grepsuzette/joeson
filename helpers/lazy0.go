@@ -36,13 +36,3 @@ func (k *Lazy0[T]) Get() T {
 }
 
 func (k *Lazy0[T]) SetLazy(f func() T) { k.f = f }
-
-// doubt it's useful
-// func (k *Lazy0[T]) GetOrSet(f func() T) T {
-// 	if k.val == nil {
-// 		k.f = f
-// 		v := f()
-// 		k.val = &v
-// 	}
-// 	return *k.val
-// }

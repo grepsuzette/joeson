@@ -9,15 +9,15 @@ import (
 
 type Choice struct {
 	*GNode
-	choices []Astnode
+	choices []Ast
 }
 
 func NewEmptyChoice() *Choice {
-	ch := &Choice{NewGNode(), []Astnode{}}
+	ch := &Choice{NewGNode(), []Ast{}}
 	ch.GNode.Node = ch
 	return ch
 }
-func NewChoice(it Astnode) *Choice {
+func NewChoice(it Ast) *Choice {
 	if a, ok := it.(*NativeArray); ok {
 		ch := &Choice{NewGNode(), a.Array}
 		ch.GNode.Node = ch
@@ -27,7 +27,7 @@ func NewChoice(it Astnode) *Choice {
 	}
 }
 
-func (ch *Choice) IsThereOnlyOneChoice() (bool, Astnode) {
+func (ch *Choice) IsThereOnlyOneChoice() (bool, Ast) {
 	if len(ch.choices) == 1 {
 		return true, ch.choices[0]
 	} else {
@@ -35,7 +35,7 @@ func (ch *Choice) IsThereOnlyOneChoice() (bool, Astnode) {
 	}
 }
 
-func (ch *Choice) Append(node Astnode)     { ch.choices = append(ch.choices, node) }
+func (ch *Choice) Append(node Ast)         { ch.choices = append(ch.choices, node) }
 func (ch *Choice) GetGNode() *GNode        { return ch.GNode }
 func (ch *Choice) HandlesChildLabel() bool { return false }
 
@@ -49,8 +49,8 @@ func (ch *Choice) Prepare() {
 	ch.GNode.Capture = true
 }
 
-func (ch *Choice) Parse(ctx *ParseContext) Astnode {
-	return Wrap(func(_ *ParseContext, _ Astnode) Astnode {
+func (ch *Choice) Parse(ctx *ParseContext) Ast {
+	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		for _, choice := range ch.choices {
 			pos := ctx.Code.Pos
 			result := choice.Parse(ctx)
@@ -67,7 +67,7 @@ func (ch *Choice) Parse(ctx *ParseContext) Astnode {
 func (ch *Choice) ContentString() string {
 	var b strings.Builder
 	b.WriteString(Blue("("))
-	a := lambda.Map(ch.choices, func(x Astnode) string {
+	a := lambda.Map(ch.choices, func(x Ast) string {
 		return Prefix(x) + x.ContentString()
 	})
 	b.WriteString(strings.Join(a, Blue(" | ")))
@@ -75,7 +75,7 @@ func (ch *Choice) ContentString() string {
 	return b.String()
 }
 
-func (ch *Choice) ForEachChild(f func(Astnode) Astnode) Astnode {
+func (ch *Choice) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}

@@ -9,15 +9,15 @@ import (
 )
 
 func eq_int(t *testing.T, a int, b int) {
+	t.Helper()
 	if a != b {
-		// t.Errorf("assert %d == %d", a, b)
-		panic("assertion failed: " + strconv.Itoa(a) + " == " + strconv.Itoa(b))
+		t.Errorf("assert %d == %d", a, b)
 	}
 }
 func eq_str(t *testing.T, a string, b string) {
+	t.Helper()
 	if a != b {
-		// t.Errorf("assertion failed: \"%s\" == \"%s\"", a, b)
-		panic(fmt.Sprintf("assertion failed: \"%s\" == \"%s\"", a, b))
+		t.Errorf("assertion failed: \"%s\" == \"%s\"", a, b)
 	}
 }
 

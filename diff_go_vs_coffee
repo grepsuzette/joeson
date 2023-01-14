@@ -2,8 +2,17 @@
 
 # To do: change location of coffeescript joeson below
 joePath=~/Work/GNO/JoeScript
-
 # no need to edit after this line
+
+# a vimdiff wrapper used to compare the outputs
+# of the golang and coffeescript implementations of joeson.
+# 
+# Requirements:
+# - vimdiff (shipped with vim) 
+# - coffeescript 
+# - JoeScript https://www.github.com/jaekwon/JoeScript
+# - [optional] the AnsiEsc plugin for vim to show ansi colors (with ":AnsiEsc")
+
 progName="$( basename "$0" )"
 version=0.0.1
 
@@ -16,6 +25,7 @@ BOLD="[37m"
 grepPattern="^${BOLD}[[:digit:]]"
 goTestFunc="^TestRaw"
 
+[[ ! -d "$joePath" ]] && die "joePath=$joePath was not found, please edit the $0 file"
 if ! command -v coffee >/dev/null; then echo "No command coffee (install coffeescript)" ; fi
 if ! command -v vimdiff >/dev/null; then echo "No command vimdiff (install vim?)" ; fi
 installationStatus() { if command -v "$1" >/dev/null; then echo -e "[32m✓[0m"; else echo -e "[31mmissing[0m"; fi; }
@@ -28,9 +38,6 @@ statusJoeScript="$(joescriptStatus $joePath/)"
 define helpString <<EOF
 $progName v$version - joeson go vs coffee vimdiff wrapper
 Syntax: $progName [OPTIONS]
-
-This tool is a vimdiff wrapper to compare the outputs
-of the golang and coffeescript implementations of joeson.
 
 Requirements:
 - vim $statusVim (with vimdiff $statusVimdiff) 
@@ -67,8 +74,6 @@ for i in "$@"; do
             ;;
     esac
 done
-
-# no need to edit below, 
 
 if [[ -f ./joeson_test.go ]]; then goPath=.
 elif [[ -f ../joeson_test.go ]]; then goPath=..

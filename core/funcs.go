@@ -3,18 +3,16 @@ package core
 import (
 	. "grepsuzette/joeson/colors"
 	"grepsuzette/joeson/helpers"
-	// "reflect"
 	"strconv"
 	"strings"
 )
 
-// The tricky part
-// it is ported as literally as possible from the coffeescript impl.
-
-// in coffeescript/js, the 2nd argument (`Astnode`) doesn't exist,
+// ported as literally as possible from the coffeescript impl.
+// In coffeescript/js, the 2nd argument (`Ast`) doesn't exist,
 // instead .bind(this) is used
-type ParseFunction2 func(*ParseContext, Astnode) Astnode
-type ParseFunction func(*ParseContext) Astnode
+
+type ParseFunction2 func(*ParseContext, Ast) Ast
+type ParseFunction func(*ParseContext) Ast
 
 // in joeson.coffee those functions were originally declared as
 // class method to GNode and had a $ prefix:
@@ -32,8 +30,8 @@ type ParseFunction func(*ParseContext) Astnode
 // - func Wrap(fparse2 ParseFunction2, node Astnode) ParseFunction
 //     notice this line in Wrap:  wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 
-func stack(fparse ParseFunction, x Astnode) ParseFunction {
-	return func(ctx *ParseContext) Astnode {
+func stack(fparse ParseFunction, x Ast) ParseFunction {
+	return func(ctx *ParseContext) Ast {
 		ctx.StackPush(x)
 		if TimeStart != nil {
 			TimeStart(x.GetGNode().Name)
@@ -47,14 +45,13 @@ func stack(fparse ParseFunction, x Astnode) ParseFunction {
 	}
 }
 
-func loopify(fparse ParseFunction, x Astnode) ParseFunction {
-	return func(ctx *ParseContext) Astnode {
+func loopify(fparse ParseFunction, x Ast) ParseFunction {
+	return func(ctx *ParseContext) Ast {
 		log := func(s string) {}
 		if Trace.Stack {
 			log = func(s string) { ctx.log(s) }
 		}
 		log(Blue("*") + " " + Prefix(x) + x.ContentString() + " " + BoldBlack(strconv.Itoa(ctx.counter)))
-		// log(Blue("*") + " " + Prefix(x) + x.ContentString() + " " + reflect.TypeOf(x).String() + BoldBlack(strconv.Itoa(ctx.counter)))
 		if x.GetGNode().SkipCache {
 			result := fparse(ctx)
 			log(Cyan("`->:") + " " + helpers.Escape(result.ContentString()) + " " + BoldBlack(helpers.TypeOfToString(result)))
@@ -139,7 +136,7 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 					}
 					var bestStash *stash = nil
 					var bestEndPos int = 0
-					var bestResult Astnode = nil
+					var bestResult Ast = nil
 					for result != nil {
 						if frame.wipemask == nil {
 							panic("where's my wipemask")
@@ -214,15 +211,15 @@ func loopify(fparse ParseFunction, x Astnode) ParseFunction {
 // - handle labels for standalone nodes
 // - set GNode._origin
 // - call GNode.CbBuilder(result, ctx, caller), if CbBuilder != nil
-func prepareResult(fparse2 ParseFunction2, caller Astnode) ParseFunction {
-	return func(ctx *ParseContext) Astnode {
+func prepareResult(fparse2 ParseFunction2, caller Ast) ParseFunction {
+	return func(ctx *ParseContext) Ast {
 		ctx.counter++
 		result := fparse2(ctx, caller)
 		if result != nil {
 			// handle labels for standalone nodes
 			gn := caller.GetGNode()
 			if gn.Label != "" && gn.Parent != nil && !gn.Parent.HandlesChildLabel() {
-				result = NewNativeMap(map[string]Astnode{gn.Label: result})
+				result = NewNativeMap(map[string]Ast{gn.Label: result})
 			}
 			start := ctx.StackPeek(0).pos
 			end := ctx.Code.Pos
@@ -250,11 +247,11 @@ func prepareResult(fparse2 ParseFunction2, caller Astnode) ParseFunction {
 	}
 }
 
-func Wrap(fparse2 ParseFunction2, node Astnode) ParseFunction {
+func Wrap(fparse2 ParseFunction2, node Ast) ParseFunction {
 	wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 	wrapped2 := prepareResult(fparse2, node)
 	gn := node.GetGNode()
-	return func(ctx *ParseContext) Astnode {
+	return func(ctx *ParseContext) Ast {
 		if IsRule(node) {
 			return wrapped1(ctx)
 		} else if gn.Label != "" &&

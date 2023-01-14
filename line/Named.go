@@ -1,7 +1,9 @@
 package line
 
-import "fmt"
-import "grepsuzette/joeson/core"
+import (
+	"fmt"
+	"grepsuzette/joeson/core"
+)
 
 // NamedRule satisfies Astnode
 type NamedRule struct {
@@ -24,7 +26,7 @@ func Named(name string, lineStringOrAstnode any) NamedRule {
 		return NamedRule{name, v}
 	case string:
 		return NamedRule{name, NewSLine(v)}
-	case core.Astnode:
+	case core.Ast:
 		return NamedRule{name, NewCLine(v)}
 	default:
 		msg := fmt.Sprintf("Invalid argument to Named(%s, %v)\n", name, lineStringOrAstnode)
@@ -32,12 +34,12 @@ func Named(name string, lineStringOrAstnode any) NamedRule {
 	}
 }
 
-func (nm NamedRule) Parse(ctx *core.ParseContext) core.Astnode { panic("precompiled") }
-func (nm NamedRule) ContentString() string                     { return "--Named--" }
-func (nm NamedRule) GetGNode() *core.GNode                     { panic("idk") }
-func (nm NamedRule) Prepare()                                  {}
-func (nm NamedRule) HandlesChildLabel() bool                   { return false }
-func (nm NamedRule) Labels() []string                          { return []string{} }
-func (nm NamedRule) Captures() []core.Astnode                  { return []core.Astnode{} }
+func (nm NamedRule) Parse(ctx *core.ParseContext) core.Ast { panic("precompiled") }
+func (nm NamedRule) ContentString() string                 { return "--Named--" }
+func (nm NamedRule) GetGNode() *core.GNode                 { panic("idk") }
+func (nm NamedRule) Prepare()                              {}
+func (nm NamedRule) HandlesChildLabel() bool               { return false }
+func (nm NamedRule) Labels() []string                      { return []string{} }
+func (nm NamedRule) Captures() []core.Ast                  { return []core.Ast{} }
 
-func (nm NamedRule) ForEachChild(f func(core.Astnode) core.Astnode) core.Astnode { return nm }
+func (nm NamedRule) ForEachChild(f func(core.Ast) core.Ast) core.Ast { return nm }
