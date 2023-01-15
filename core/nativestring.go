@@ -1,11 +1,8 @@
 package core
 
-// import . "grepsuzette/joeson/colors"
-
 // NativeInt and NativeString denote terminal nodes
 // and at the same time satisfy the `Ast` interface. Joeson.coffee used
 // Number or string directly.
-
 type NativeString struct {
 	Str string
 }
@@ -19,5 +16,4 @@ func (ns NativeString) Prepare()                    {}
 func (ns NativeString) ContentString() string       { return ns.Str }
 func (ns NativeString) Parse(ctx *ParseContext) Ast { panic("uncallable") }
 
-// no Native* object must walk through children: see node.coffee:78 `if ptr.child instanceof Node`
 func (n NativeString) ForEachChild(f func(Ast) Ast) Ast { return n }

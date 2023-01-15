@@ -1,5 +1,7 @@
 ✓ process all TODO
-- merge raw/ and handcompiled/ into grammars/ package
-- put all 4 code is deprecated in json in 1 func
-- clean up commented comments in imports
+✓ merge raw/ and handcompiled/ into grammars/ package
+✓ see if callbacks in grammars can be simplified further: yes but would need
+  reflection
+✓ put all 4 code is deprecated in json in 1 func
+✓ clean up commented comments in imports
 - a bash script "demo", to interactively launch tests with -v

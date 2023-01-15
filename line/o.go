@@ -1,20 +1,15 @@
 package line
 
 import (
-	// "fmt"
 	"grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/colors"
 	"grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
-
-	// "grepsuzette/joeson/lambda"
-	// "reflect"
 	"strconv"
-	// "strings"
 )
 
 type OLine struct {
-	name    string // can be empty, or provided by Named()
+	name    string // "" unless provided by Named()
 	content Line
 	attrs   core.ParseOptions
 }
@@ -52,20 +47,15 @@ func (ol OLine) StringIndent(nIndent int) string {
 }
 
 func (ol OLine) ToRule(grammar *ast.Grammar, parentRule core.Ast, by OLineByIndexOrName) core.Ast {
-	//fmt.Println("o.go OLine.ToRule, parentRule=" + parentRule.GetGNode().Name)
 	// figure out the name for this rule
-	var name string = ol.name
+	var name string
 	var content Line = ol.content
-	if ol.name != "" {
-		// A named rule
-		// fmt.Println("o.go Named rule: ol.name=" + ol.name)
-		//name = ol.name
+	if ol.name != "" { // A named rule
+		name = ol.name
 	} else if by.name != "" {
 		name = by.name
-		// fmt.Printf("o.go by=%v parentRule!=nil?%v by.index.IsSet?%v", by, parentRule != nil, by.index.IsSet)
 	} else if by.index.IsSet && parentRule != nil {
 		name = parentRule.GetGNode().Name + "[" + strconv.Itoa(by.index.Int) + "]"
-		// fmt.Printf("o.go by.name == '' && by.index.Int:%d && parentRule != nil --> %s\n", by.index.Int, name)
 	} else {
 		panic("assert")
 	}

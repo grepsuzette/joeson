@@ -5,7 +5,7 @@ import (
 	"grepsuzette/joeson/core"
 )
 
-// NamedRule satisfies Astnode
+// NamedRule satisfies Astnode. Otherwise, it just adds a Name to a Line
 type NamedRule struct {
 	Name string
 	Line Line // note can be OLine, ILine or ALine (array)

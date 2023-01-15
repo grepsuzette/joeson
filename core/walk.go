@@ -27,7 +27,7 @@ func Walk(ast Ast, parent Ast, prepost WalkPrepost) Ast {
 	return ast
 }
 
-// shortcut calling ForEachChild for members being []Ast
+// ForEachChild specialization for []Ast arrays
 func ForEachChild_Array(a []Ast, f func(Ast) Ast) []Ast {
 	anew := []Ast{}
 	for _, child := range a {
@@ -38,26 +38,8 @@ func ForEachChild_Array(a []Ast, f func(Ast) Ast) []Ast {
 	return anew
 }
 
-// shortcut calling ForEachChild for members being map[string]Ast
-// beware, maps are not ordered in golang. Use instead ForEachChild_InRules
-
-// func ForEachChild_MapString(h map[string]Ast, f func(Ast) Ast) map[string]Ast {
-// 	hnew := map[string]Ast{}
-// 	sortedKeys := []string{}
-// 	for k := range h {
-// 		sortedKeys = append(sortedKeys, k)
-// 	}
-// 	sort.Strings(sortedKeys)
-// 	for _, k := range sortedKeys {
-// 		if r := f(h[k]); r != nil {
-// 			hnew[k] = r
-// 		} // else, removed
-// 	}
-// 	return hnew
-// }
-
-// this is ordered, the new x.GetGNode().Rules is returned,
-// x.GetGNode().RulesK is used to get a consistent order
+// ForEachChild specialization for Ast's Rules
+// working with RulesK will guarantee they are processed in order
 func ForEachChild_InRules(x Ast, f func(Ast) Ast) map[string]Ast {
 	hnew := map[string]Ast{}
 	gn := x.GetGNode()
@@ -73,3 +55,21 @@ func ForEachChild_InRules(x Ast, f func(Ast) Ast) map[string]Ast {
 	}
 	return hnew
 }
+
+// Following is commented out, maps not being ordered in golang.
+// Use ForEachChild_InRules() above if possible
+
+// func ForEachChild_MapString(h map[string]Ast, f func(Ast) Ast) map[string]Ast {
+// 	hnew := map[string]Ast{}
+// 	sortedKeys := []string{}
+// 	for k := range h {
+// 		sortedKeys = append(sortedKeys, k)
+// 	}
+// 	sort.Strings(sortedKeys)
+// 	for _, k := range sortedKeys {
+// 		if r := f(h[k]); r != nil {
+// 			hnew[k] = r
+// 		} // else, removed
+// 	}
+// 	return hnew
+// }

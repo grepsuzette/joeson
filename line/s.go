@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-// SLine wraps a string, that is intended to be parsed
+// SLine wraps a string. That string is intended to be parsed
 type SLine struct {
 	Str string
 }

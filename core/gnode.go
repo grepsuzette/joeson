@@ -10,13 +10,13 @@ import "grepsuzette/joeson/helpers"
    node.name = name of the rule, if this is @rule.
 */
 type GNode struct {
-	Name      string                  // "" normally but rule name if IsRule()
-	Label     string                  // "" if no label
+	Name      string // rule name if IsRule(), empty otherwise
+	Label     string
 	Capture   bool                    // usually true, false for instance for Str
-	Labels_   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate original GNode behavior in coffee
-	Captures_ *helpers.Lazy[[]Ast]    // the lazy captures getter, idem.
+	Labels_   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate GNode behavior in the original coffeescript
+	Captures_ *helpers.Lazy[[]Ast]    // the lazy captures getter, ditto.
 	Rules     map[string]Ast          // Treelike. Grammar collects all rules in its post walk
-	RulesK    []string                // because in golang maps are unsorted, the insertion order can be stored in this array
+	RulesK    []string                // because golang maps are unsorted, this helps keeping the insertion order
 	Id        int                     // Numeric id of a Rule. It is incremented in Grammar. joeson.coffee:604: `node.id = @numRules++`
 	Index     int                     // joeson.coffee:1303
 	Rule      Ast                     // An Ast is a Rule when ast.GetGNode().Rule == ast. Set by Grammar.Postinit's walk into grammar nodes.
@@ -51,6 +51,8 @@ func NewGNode() *GNode {
 		Capture: true,
 		Rules:   map[string]Ast{},
 	}
+	// These callbacks can be redefined in Ast objects composing GNode.
+	// This helps getting a certain level of flexibiliy.
 	gn.Labels_ = helpers.NewLazy[[]string](func() []string {
 		if gn.Label != "" {
 			return []string{gn.Label}
@@ -74,16 +76,4 @@ func (gn *GNode) Include(name string, rule Ast) {
 	}
 	gn.RulesK = append(gn.RulesK, name)
 	gn.Rules[name] = rule
-}
-
-// find a parent in the ancestry chain that satisfies condition
-func (gn *GNode) FindParentHaving(fcond func(Ast) bool) Ast {
-	var x = gn.Parent
-	for {
-		if fcond(x) {
-			return x
-		} else {
-			x = x.GetGNode().Parent
-		}
-	}
 }

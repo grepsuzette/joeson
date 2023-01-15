@@ -1,11 +1,10 @@
 package ast
 
 import (
+	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/lambda"
 	"regexp"
-
-	. "grepsuzette/joeson/colors"
 	"strings"
 )
 

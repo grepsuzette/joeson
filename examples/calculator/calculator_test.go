@@ -3,14 +3,12 @@ package main
 import (
 	"fmt"
 	"grepsuzette/joeson/ast"
-	// . "grepsuzette/joeson/ast/handcompiled"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/grammars"
+	line "grepsuzette/joeson/line"
 	"strconv"
 	"strings"
-	// "grepsuzette/joeson/helpers"
-	line "grepsuzette/joeson/line"
 	"testing"
 )
 

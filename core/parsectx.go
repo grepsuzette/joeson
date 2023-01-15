@@ -14,21 +14,12 @@ type stash struct {
 	count  int
 }
 
-/*
-  Literal port from joeson.coffee
-  In the original joeson.coffee, it was named '$' and those functions names
-  were prefixed by a dollar ($stack, $loopify etc).
-  Indirectly passed to the following core/funcs.go:
-    - core.Wrap()
-    - core.stack()
-    - core.loopify()
-    - core.prepareResult()
-*/
+// ParseContext was named '$' in the original joeson.coffee
 type ParseContext struct {
-	grammar     GrammarRuleCounter // grammar (iface to break circular decl)
+	grammar     GrammarRuleCounter // interface used instead of Grammar to break circular dependencies
 	Code        *CodeStream
 	stack       [1024]*frame
-	Frames      [][]*frame // frames is 2d, dim is [filelen][grammar.NumRules]
+	Frames      [][]*frame
 	stackLength int
 	counter     int
 	SkipLog     bool
@@ -73,21 +64,14 @@ func (ctx *ParseContext) log(message string) {
 	}
 }
 
-func (ctx *ParseContext) StackPeek(skip int) *frame {
-	return ctx.stack[ctx.stackLength-1-skip]
-}
+func (ctx *ParseContext) loopStackPush(name string) { ctx.loopStack = append(ctx.loopStack, name) }
+func (ctx *ParseContext) loopStackPop()             { ctx.loopStack = ctx.loopStack[:len(ctx.loopStack)-1] }
+func (ctx *ParseContext) StackPeek(skip int) *frame { return ctx.stack[ctx.stackLength-1-skip] }
 func (ctx *ParseContext) StackPush(x Ast) {
 	ctx.stack[ctx.stackLength] = ctx.getFrame(x)
 	ctx.stackLength++
 }
 func (ctx *ParseContext) StackPop() { ctx.stackLength-- }
-
-func (ctx *ParseContext) loopStackPush(name string) {
-	ctx.loopStack = append(ctx.loopStack, name)
-}
-func (ctx *ParseContext) loopStackPop() {
-	ctx.loopStack = ctx.loopStack[:len(ctx.loopStack)-1]
-}
 
 func (ctx *ParseContext) getFrame(x Ast) *frame {
 	id := x.GetGNode().Id

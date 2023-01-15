@@ -1,10 +1,9 @@
 package ast
 
 import (
+	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
-
-	. "grepsuzette/joeson/colors"
 )
 
 // Str does not represent a native string

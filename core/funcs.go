@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-// ported as literally as possible from the coffeescript impl.
+// as faithful as possible port from the coffeescript impl.
 // In coffeescript/js, the 2nd argument (`Ast`) doesn't exist,
-// instead .bind(this) is used
+// instead .bind(this) was used
 
 type ParseFunction2 func(*ParseContext, Ast) Ast
 type ParseFunction func(*ParseContext) Ast

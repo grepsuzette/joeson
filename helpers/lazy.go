@@ -2,10 +2,6 @@ package helpers
 
 // niladic lazy varcache, i.e. the callback has no argument
 
-// The difference with varcache is that
-// when !IsCacheSet(), GetCache() calls the
-// Lazy.f callback if not nil.
-
 type Lazy[T any] struct {
 	val *T
 	f   func() T // lazy evaluator

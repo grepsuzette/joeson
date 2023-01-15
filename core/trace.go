@@ -1,7 +1,7 @@
 package core
 
 // direct port from original coffeescript impl.
-// probably should rewrite
+// probably should rewrite soon
 
 // debugging variables and callbacks
 // trace.filterLine<0 means disabled.

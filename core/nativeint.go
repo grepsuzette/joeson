@@ -48,5 +48,4 @@ func (n NativeInt) GetGNode() *GNode            { return nil }
 func (n NativeInt) Prepare()                    {}
 func (n NativeInt) Parse(ctx *ParseContext) Ast { panic("uncallable") }
 
-// no Native* object must walk through children: see node.coffee:78 `if ptr.child instanceof Node`
 func (n NativeInt) ForEachChild(f func(Ast) Ast) Ast { return n }
