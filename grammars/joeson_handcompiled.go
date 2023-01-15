@@ -1,4 +1,4 @@
-package ast
+package grammars
 
 import (
 	. "grepsuzette/joeson/ast"
@@ -8,8 +8,15 @@ import (
 )
 
 // Use NewJoeson() to instantiate a new joeson grammar
-// This is the hand-compiled joeson grammar
-// it comes from the original joeson.coffee
+// This is the hand-compiled joeson grammar, the one
+// that is used to parse all joeson grammars.
+func NewJoeson() *Grammar {
+	return NewGrammarFromLines(
+		JOESON_GRAMMAR_NAME,
+		JOESON_GRAMMAR_RULES(),
+		NewEmptyGrammar(),
+	)
+}
 
 func C(a ...Ast) Ast               { return NewChoice(NewNativeArray(a)) }
 func E(it Ast) Ast                 { return NewExistential(it) }
@@ -37,10 +44,6 @@ func P(value, join Ast, minmax ...int) *Pattern {
 	return p
 }
 
-func o(a ...any) OLine          { return O(a...) }
-func i(a ...any) ILine          { return I(a...) }
-func rules(lines ...Line) ALine { return NewALine(lines) }
-
 func StringFromNativeArray(it Ast) string {
 	var b strings.Builder
 	na := it.(*NativeArray)
@@ -52,14 +55,6 @@ func StringFromNativeArray(it Ast) string {
 
 const JoesonNbRules int = 35
 const JOESON_GRAMMAR_NAME = "__grammar__"
-
-func NewJoeson() *Grammar {
-	return NewGrammarFromLines(
-		JOESON_GRAMMAR_NAME,
-		JOESON_GRAMMAR_RULES(),
-		NewEmptyGrammarNamed("empty grammar"),
-	)
-}
 
 func JOESON_GRAMMAR_RULES() Lines {
 	return []Line{
@@ -96,22 +91,8 @@ func JOESON_GRAMMAR_RULES() Lines {
 									return NewRef(NewNativeArray([]Ast{na.Get(1), na.Get(3)}))
 								}),
 								o(R("WORD"), func(it Ast) Ast { return NewRef(it) }),
-								o(S(St("("), L("inlineLabel", E(S(R("WORD"), St(": ")))), L("expr", R("EXPR")), St(")"), E(S(R("_"), St("->"), R("_"), L("code", R("CODE"))))), func(it Ast) Ast {
-									// deprecated code in joeson
-									h := it.(NativeMap)
-									if !h.IsUndefined("code") {
-										panic("code in joeson is obsolete")
-									}
-									return h.GetOrPanic("expr")
-								}),
-								i(Named("CODE", o(S(St("{"), P(S(N(St("}")), C(R("ESC1"), R("."))), nil, -1, -1), St("}")))), func(it Ast) Ast {
-									// deprecated code in joeson
-									h := it.(NativeMap)
-									if !h.IsUndefined("code") {
-										panic("code in joeson is obsolete")
-									}
-									return h.GetOrPanic("expr")
-								}),
+								o(S(St("("), L("inlineLabel", E(S(R("WORD"), St(": ")))), L("expr", R("EXPR")), St(")"), E(S(R("_"), St("->"), R("_"), L("code", R("CODE"))))), fCode),
+								i(Named("CODE", o(S(St("{"), P(S(N(St("}")), C(R("ESC1"), R("."))), nil, -1, -1), St("}")))), fCode),
 								o(S(St("'"), P(S(N(St("'")), C(R("ESC1"), R("."))), nil), St("'")), func(it Ast) Ast { return NewStr(StringFromNativeArray(it)) }),
 								o(S(St("/"), P(S(N(St("/")), C(R("ESC2"), R("."))), nil), St("/")), func(it Ast) Ast { return NewRegexFromString(StringFromNativeArray(it)) }),
 								o(S(St("["), P(S(N(St("]")), C(R("ESC2"), R("."))), nil), St("]")), func(it Ast) Ast { return NewRegexFromString("[" + StringFromNativeArray(it) + "]") }),
@@ -130,12 +111,6 @@ func JOESON_GRAMMAR_RULES() Lines {
 		i(Named(".", Re("[\\s\\S]"))),
 		i(Named("ESC1", S(St("\\"), R(".")))),
 		i(Named("ESC2", S(St("\\"), R("."))), func(chr Ast) Ast { return NewNativeString("\\" + chr.(NativeString).Str) }),
-		// i(Named("EXAMPLE", "/regex/", ParseOptions{SkipLog: false, SkipCache: true},
-		// 	func(it Astnode, ctx *ParseContext) Astnode {
-		// 		// ctx.SkipLog is false
-		// 		// ctx.SkipCache is true
-		// 		// ctx.Debug is false
-		// 		return nil
-		// })),
+		// i(Named("EXAMPLE", "/regex/", ParseOptions{SkipLog: false, SkipCache: true}, func(it Astnode, ctx *ParseContext) Astnode { return it })),
 	}
 }

@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
-	. "grepsuzette/joeson/ast/handcompiled"
-	. "grepsuzette/joeson/ast/raw"
+	// . "grepsuzette/joeson/ast/handcompiled"
+	// . "grepsuzette/joeson/ast/raw"
+	// . "grepsuzette/joeson/ast/handcompiled"
+	// . "grepsuzette/joeson/ast/raw"
 	. "grepsuzette/joeson/core"
+	"grepsuzette/joeson/grammars"
 	line "grepsuzette/joeson/line"
 	"testing"
 	"time"
@@ -19,12 +22,12 @@ func Named(name string, lineStringOrAstnode any) line.NamedRule {
 
 // NewJoeson() is the native, manually compiled joeson grammar defined in handcompiled.go
 func TestHandcompiled(t *testing.T) {
-	gm := NewJoeson()
-	if gm.GetGNode().Name != JOESON_GRAMMAR_NAME {
+	gm := grammars.NewJoeson()
+	if gm.GetGNode().Name != grammars.JOESON_GRAMMAR_NAME {
 		t.Fail()
 	}
-	if gm.CountRules() != gm.NumRules || gm.CountRules() != JoesonNbRules {
-		t.Errorf("Expected %d rules, got %d\n", JoesonNbRules, gm.CountRules())
+	if gm.CountRules() != gm.NumRules || gm.CountRules() != grammars.JoesonNbRules {
+		t.Errorf("Expected %d rules, got %d\n", grammars.JoesonNbRules, gm.CountRules())
 	}
 	if !gm.IsReady() {
 		t.Fail()
@@ -36,8 +39,8 @@ func TestHandcompiled(t *testing.T) {
 func TestRaw(t *testing.T) {
 	raw := line.NewGrammarFromLines(
 		"bootstrapped grammar",
-		RAW_GRAMMAR(),
-		NewJoeson(),
+		grammars.RAW_GRAMMAR(),
+		grammars.NewJoeson(),
 	)
 	if !raw.IsReady() {
 		t.Fail()
@@ -50,7 +53,7 @@ func Test100Times(t *testing.T) {
 	iter := 100
 	for i := 0; i < iter; i++ {
 		// testGrammar(line.NewALine(RAW_GRAMMAR()), 0, "")
-		fmt.Println(line.NewALine(RAW_GRAMMAR()).StringIndent(0))
+		fmt.Println(line.NewALine(grammars.RAW_GRAMMAR()).StringIndent(0))
 		fmt.Println("-------------")
 	}
 	fmt.Printf("Duration for %d iterations: %d ms\n", iter, time.Now().Sub(start).Milliseconds())
@@ -64,7 +67,7 @@ func TestDebugLabel(t *testing.T) {
 			o(Named("In", "l:Br")),
 			i(Named("Br", "'Toy' | 'BZ'")),
 		},
-		NewJoeson(),
+		grammars.NewJoeson(),
 	)
 	debuglabel.PrintRules()
 	if x, error := debuglabel.ParseString("Toy"); error == nil {

@@ -1,6 +1,7 @@
 package line
 
 import (
+	// "fmt"
 	"grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/core"
 	"reflect"
@@ -39,15 +40,16 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 				attrs.CbBuilder = func(x Ast, _ *ParseContext, _ Ast) Ast {
 					return v(x)
 				}
-			case func(_ Ast, _ *ParseContext) Ast:
+			case func(Ast, *ParseContext) Ast:
 				attrs.CbBuilder = func(x Ast, ctx *ParseContext, _ Ast) Ast {
 					return v(x, ctx)
 				}
-			case func(_ Ast, _ *ParseContext, _ Ast) Ast:
+			case func(Ast, *ParseContext, Ast) Ast:
 				attrs.CbBuilder = v
 			case ParseOptions:
 				attrs = v
 			default:
+				// fmt.Printf("%s", reflect.TypeOf(v).String())
 				panic("assert")
 			}
 		}

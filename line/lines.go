@@ -26,9 +26,8 @@ func NewRankFromLines(rankname string, lines []Line, grammar *ast.Grammar) *ast.
 	return rank
 }
 
-// The returned grammar is a new one, while arg `grammar` is the
-//  grammar used to parse this new grammar (usually this would be
-//  the one in ast/handcompiled)
+// Instanciate a new grammar called `name` with rules from `lines`.
+// TODO clarify argument `grammar`
 func NewGrammarFromLines(name string, lines []Line, grammar *ast.Grammar) *ast.Grammar {
 	rank := NewRankFromLines(name, lines, grammar)
 	newgm := ast.NewEmptyGrammarNamed(name)

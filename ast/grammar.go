@@ -16,21 +16,13 @@ import (
 
 type Grammar struct {
 	*GNode
-	rank Ast // can be a *Rank or a Ref to a rank
-
-	// each ast node can have rules, recursively.
-	// in the Postinit below, Grammar will however
-	// collect all children rules in its own GNode.Rules
-	// and NumRules will be computed. Each rule node
-	// will be given one incremental int Id.
-	NumRules int
-
-	// id2Rule: slow lookup for debugging...
-	Id2Rule map[int]Ast // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
-
+	rank           Ast         // a *Rank or a Ref to a rank
+	NumRules       int         // Each Ast can have rules, recursively. This however i the total count in the grammar
+	Id2Rule        map[int]Ast // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
 	wasInitialized bool
 }
 
+func NewEmptyGrammar() *Grammar { return NewEmptyGrammarNamed("empty grammar") }
 func NewEmptyGrammarNamed(name string) *Grammar {
 	gm := &Grammar{NewGNode(), nil, 0, map[int]Ast{}, false}
 	gm.GNode.Name = name
