@@ -14,7 +14,7 @@ joePath=~/Work/GNO/JoeScript
 # - [optional] the AnsiEsc plugin for vim to show ansi colors (with ":AnsiEsc")
 
 progName="$( basename "$0" )"
-version=0.0.1
+version=0.1.0
 
 warn() { local fmt="$1"; shift; printf "$progName: $fmt\n" "$@" >&2; }
 die () { local st="$?"; warn "$@"; exit "$st"; } 
@@ -22,14 +22,17 @@ define(){ IFS='\n' read -r -d '' ${1} || true; }
 
 ESC="["
 BOLD="[37m"
+GREEN="[32m"
+RED="[31m"
+CLEAR="[0m"
 grepPattern="^${BOLD}[[:digit:]]"
 goTestFunc="^TestRaw"
 
 [[ ! -d "$joePath" ]] && die "joePath=$joePath was not found, please edit the $0 file"
 if ! command -v coffee >/dev/null; then echo "No command coffee (install coffeescript)" ; fi
 if ! command -v vimdiff >/dev/null; then echo "No command vimdiff (install vim?)" ; fi
-installationStatus() { if command -v "$1" >/dev/null; then echo -e "[32m✓[0m"; else echo -e "[31mmissing[0m"; fi; }
-joescriptStatus() { if [[ -e "${joePath/#~/$HOME}/src/joeson.coffee" ]]; then echo -e "[32m✓[0m"; else echo -e "[31mmissing[0m"; fi; }
+installationStatus() { if command -v "$1" >/dev/null; then echo -e "${GREEN}✓${CLEAR}"; else echo -e "${RED}missing${CLEAR}"; fi; }
+joescriptStatus() { if [[ -e "${joePath/#~/$HOME}/src/joeson.coffee" ]]; then echo -e "${GREEN}✓${CLEAR}"; else echo -e "${RED}missing${CLEAR}"; fi; }
 statusVim="$(installationStatus vim)"
 statusVimdiff="$(installationStatus vimdiff)"
 statusCoffeescript="$(installationStatus coffee)"
@@ -50,7 +53,7 @@ OPTIONS:
  --version -v        Show version and exit
  --grep -g <REGEX>   Use a different regex from default ("$grepPattern")
  --test -t <FUNC>    Use a different func for go test, i.e. "--run <FUNC>", default "^TestRaw"
- +<LINE>             Jump to line LINE
+ +<LINE>             Jump to line LINE directly, e.g. +34
 EOF
 
 line=0
@@ -82,25 +85,27 @@ else
     exit 1
 fi
 
-if ! command -v coffee >/dev/null; then echo "No command coffee (install coffeescript)" ; fi
+if ! command -v coffee >/dev/null; then echo "No command coffee (install coffeescript?)" ; fi
 if ! command -v vimdiff >/dev/null; then echo "No command vimdiff (install vim?)" ; fi
-
 
 run_js() { 
     coffee -c "$joePath/src/joeson.coffee" && coffee "$joePath/tests/joeson_test.coffee"
 }	
 run_go() {
+    # examples:
     # go test $goPath --run TestRaw -v
     # go test $goPath --run TestDebugLabel -v
     # go test $goPath --run TestHandcompiled -v
+    # Set them with -t instead
     go test $goPath --run "$goTestFunc" -v
 }
 
-run_go | grep -e "$grepPattern" >/tmp/go.ansi 2>&1
-run_js | grep -e "$grepPattern" >/tmp/js.ansi 2>&1
+tmp=${TMPDIR-/tmp}
+run_go | grep -e "$grepPattern" >$tmp/go.ansi 2>&1
+run_js | grep -e "$grepPattern" >$tmp/js.ansi 2>&1
 
 # to show ansi colors correctly in vimdiff you should use 
 # https://github.com/powerman/vim-plugin-AnsiEsc
 # then in vim config have `autocmd BufRead *.ansi AnsiEsc`
-vimdiff /tmp/go.ansi /tmp/js.ansi +$line
+vimdiff $tmp/go.ansi $tmp/js.ansi +$line
 
