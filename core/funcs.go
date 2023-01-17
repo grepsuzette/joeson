@@ -48,7 +48,8 @@ func stack(fparse ParseFunction, x Ast) ParseFunction {
 func loopify(fparse ParseFunction, x Ast) ParseFunction {
 	return func(ctx *ParseContext) Ast {
 		log := func(s string) {}
-		if Trace.Stack {
+		opts := ctx.grammar.Options()
+		if opts.Stack {
 			log = func(s string) { ctx.log(s) }
 		}
 		log(Blue("*") + " " + Prefix(x) + x.ContentString() + " " + BoldBlack(strconv.Itoa(ctx.counter)))
@@ -103,7 +104,7 @@ func loopify(fparse ParseFunction, x Ast) ParseFunction {
 					return result
 				} else {
 					frame.loopStage.Set(3)
-					if Trace.Loop && ((Trace.FilterLine < 0) || ctx.Code.Line() == Trace.FilterLine) {
+					if opts.Loop && ((opts.FilterLine < 0) || ctx.Code.Line() == opts.FilterLine) {
 						line := ctx.Code.Line()
 						ctx.loopStackPush(x.GetGNode().Name)
 						var paintInColor func(string) string = nil
@@ -155,7 +156,7 @@ func loopify(fparse ParseFunction, x Ast) ParseFunction {
 					if TimeEnd != nil {
 						TimeEnd("loopiteration")
 					}
-					if Trace.Loop {
+					if opts.Loop {
 						ctx.loopStackPop()
 					}
 					ctx.wipeWith(frame, false)

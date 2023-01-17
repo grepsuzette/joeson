@@ -94,7 +94,7 @@ func grammar() *ast.Grammar {
 		i(Named("Integer", "/^-?[0-9]+/"), func(it Ast) Ast { return NewNativeIntFrom(it) }),
 		i(Named("_", "[ \t]*")),
 	}
-	return line.NewGrammarFromLines("calc", CALC, joeson)
+	return line.GrammarFromLines("calc", CALC, joeson)
 }
 
 func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
@@ -115,13 +115,31 @@ func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
 	}
 }
 
-func Test_minus7(t *testing.T)         { assertResultIs(t, "-7", -7) }
 func Test_73_plus_4(t *testing.T)      { assertResultIs(t, "73 + 4", 77) }
+func Test_minus7(t *testing.T)         { assertResultIs(t, "-7", -7) }
 func Test_73_plus_minus4(t *testing.T) { assertResultIs(t, "73 +(-4)", 69) }
 func Test_36(t *testing.T)             { assertResultIs(t, "4  *( (2 +1 )*3 )", 36) }
 func Test_12(t *testing.T)             { assertResultIs(t, "-4 * ((-2+1) *3)", 12) }
 func Test_minus11849(t *testing.T)     { assertResultIs(t, "241+513* -24 +((1934-192*2)/7)+1", -11849) }
-func Test_many(t *testing.T) {
+func Test_failing(t *testing.T) {
+	gm := grammar()
+	var h = map[string]string{
+		"90 (6090)": "Error parsing at char:3",
+		"-(7)":      "Error parsing at char:0",
+	}
+	for s, sExpectedError := range h {
+		res, error := gm.ParseString(s)
+		if error == nil {
+			t.Error("expected error but got none, for: " + s + ". Res: " + res.ContentString())
+		} else if strings.Index(error.Error(), sExpectedError) == 0 {
+			// expected
+		} else {
+			t.Error("expected error " + sExpectedError + " for " + s + " but got " + error.Error() + " instead")
+		}
+	}
+}
+
+func Test_calc(t *testing.T) {
 	gm := grammar()
 	var h = map[string]int{
 		"60/6/5":                2,
@@ -140,24 +158,6 @@ func Test_many(t *testing.T) {
 			}
 		} else {
 			t.Error(error)
-		}
-	}
-}
-
-func Test_failing(t *testing.T) {
-	gm := grammar()
-	var h = map[string]string{
-		"90 (6090)": "Error parsing at char:3",
-		"-(7)":      "Error parsing at char:0",
-	}
-	for s, sExpectedError := range h {
-		res, error := gm.ParseString(s)
-		if error == nil {
-			t.Error("expected error but got none, for: " + s + ". Res: " + res.ContentString())
-		} else if strings.Index(error.Error(), sExpectedError) == 0 {
-			// expected
-		} else {
-			t.Error("expected error " + sExpectedError + " for " + s + " but got " + error.Error() + " instead")
 		}
 	}
 }

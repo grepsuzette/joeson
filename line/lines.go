@@ -2,6 +2,7 @@ package line
 
 import (
 	"grepsuzette/joeson/ast"
+	"grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
 	"reflect"
 	"strings"
@@ -25,11 +26,16 @@ func NewRankFromLines(rankname string, lines []Line, grammar *ast.Grammar) *ast.
 	return rank
 }
 
-// Instanciate a new grammar called `name` with rules from `lines`.
+// Instantiate a new grammar called `name` reading the rules from `lines`.
 // TODO clarify argument `grammar`
-func NewGrammarFromLines(name string, lines []Line, grammar *ast.Grammar) *ast.Grammar {
+func GrammarFromLines(name string, lines []Line, grammar *ast.Grammar) *ast.Grammar {
+	opts := core.DefaultTraceOptions()
+	return GrammarFromLinesWithOptions(name, lines, grammar, opts)
+}
+func GrammarFromLinesWithOptions(name string, lines []Line, grammar *ast.Grammar, opts core.TraceOptions) *ast.Grammar {
 	rank := NewRankFromLines(name, lines, grammar)
-	newgm := ast.NewEmptyGrammarNamed(name)
+	newgm := ast.NewEmptyGrammarWithOptions(opts)
+	newgm.GetGNode().Name = name
 	newgm.SetRankIfEmpty(rank)
 	newgm.Postinit()
 	return newgm

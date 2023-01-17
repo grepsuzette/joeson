@@ -19,12 +19,14 @@ type Grammar struct {
 	rank           Ast         // a *Rank or a Ref to a rank
 	NumRules       int         // Each Ast can have rules, recursively. This however i the total count in the grammar
 	Id2Rule        map[int]Ast // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
+	TraceOptions   TraceOptions
 	wasInitialized bool
 }
 
-func NewEmptyGrammar() *Grammar { return NewEmptyGrammarNamed("empty grammar") }
-func NewEmptyGrammarNamed(name string) *Grammar {
-	gm := &Grammar{NewGNode(), nil, 0, map[int]Ast{}, false}
+func NewEmptyGrammar() *Grammar { return NewEmptyGrammarWithOptions(DefaultTraceOptions()) }
+func NewEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
+	name := "empty grammar"
+	gm := &Grammar{NewGNode(), nil, 0, map[int]Ast{}, opts, false}
 	gm.GNode.Name = name
 	gm.GNode.Node = gm
 	return gm
@@ -58,11 +60,12 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 }
 
 func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error) {
-	var oldTrace TraceSettings
+	var oldTrace bool
+	var opts = gm.Options()
 	if ctx.Debug {
 		// temporarily enable stack tracing
-		oldTrace = Trace
-		Trace.Stack = true
+		oldTrace = opts.Stack
+		opts.Stack = true
 	}
 	if gm.rank == nil {
 		panic("Grammar.rank is nil")
@@ -70,7 +73,7 @@ func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error) {
 	result := gm.rank.Parse(ctx)
 	// undo temprary stack tracing
 	if ctx.Debug {
-		Trace = oldTrace
+		opts.Stack = oldTrace
 	}
 	// if parse is incomplete, compute error message
 	if ctx.Code.Pos != ctx.Code.Length() {
@@ -111,11 +114,12 @@ func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error) {
 func (gm *Grammar) Prepare()                {}
 func (gm *Grammar) HandlesChildLabel() bool { return false }
 func (gm *Grammar) ContentString() string {
-	return Magenta("GRAMMAR{") + helpers.TypeOfToString(gm.rank) + Prefix(gm.rank) + gm.rank.ContentString() + Magenta("}")
+	return Magenta("GRAMMAR{") /*+ helpers.TypeOfToString(gm.rank) */ + Prefix(gm.rank) + gm.rank.ContentString() + Magenta("}")
 }
 
-func (gm *Grammar) CountRules() int { return gm.NumRules }
-func (gm *Grammar) IsReady() bool   { return gm.rank != nil && gm.wasInitialized }
+func (gm *Grammar) CountRules() int       { return gm.NumRules }
+func (gm *Grammar) IsReady() bool         { return gm.rank != nil && gm.wasInitialized }
+func (gm *Grammar) Options() TraceOptions { return gm.TraceOptions }
 func (gm *Grammar) SetRankIfEmpty(rank Ast) {
 	if gm.rank != nil {
 		return
@@ -140,6 +144,7 @@ func (gm *Grammar) Postinit() {
 	if gm.rank == nil {
 		panic("You can only call grammar.Postinit() after some rank has been set")
 	}
+	opts := gm.Options()
 
 	// from joeson.coffee
 	// "TODO refactor into translation passes." <empty>
@@ -224,7 +229,7 @@ func (gm *Grammar) Postinit() {
 				gnode.Id = gm.NumRules
 				gm.NumRules++
 				gm.Id2Rule[gnode.Id] = node
-				if Trace.Loop { // print out id->rulename for convenience
+				if opts.Loop { // print out id->rulename for convenience
 					fmt.Println("Loop " + Red(strconv.Itoa(gnode.Id)) + ":\t" + Prefix(node) + node.ContentString())
 				}
 			}
@@ -274,6 +279,10 @@ func (gm *Grammar) Postinit() {
 		},
 	})
 	gm.wasInitialized = true
+
+	if opts.Grammar {
+		gm.PrintRules()
+	}
 }
 
 func (gm *Grammar) PrintRules() {

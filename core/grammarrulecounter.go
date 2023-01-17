@@ -5,4 +5,5 @@ package core
 type GrammarRuleCounter interface {
 	IsReady() bool
 	CountRules() int
+	Options() TraceOptions
 }

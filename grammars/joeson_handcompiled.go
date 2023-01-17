@@ -7,14 +7,19 @@ import (
 	"strings"
 )
 
-// Use NewJoeson() to instantiate a new joeson grammar
-// This is the hand-compiled joeson grammar, the one
-// that is used to parse all joeson grammars.
+// Instantiate a new joeson grammar.
+// It can be used to parse all joeson grammars.
 func NewJoeson() *Grammar {
-	return NewGrammarFromLines(
+	return NewJoesonWithOptions(DefaultTraceOptions())
+}
+
+func NewJoesonWithOptions(opts TraceOptions) *Grammar {
+	opts = CheckEnvironmentForTraceOptions(opts)
+	return GrammarFromLinesWithOptions(
 		JOESON_GRAMMAR_NAME,
 		JOESON_GRAMMAR_RULES(),
-		NewEmptyGrammar(),
+		NewEmptyGrammarWithOptions(opts),
+		opts,
 	)
 }
 

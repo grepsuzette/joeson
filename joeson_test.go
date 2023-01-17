@@ -2,10 +2,6 @@ package main
 
 import (
 	"fmt"
-	// . "grepsuzette/joeson/ast/handcompiled"
-	// . "grepsuzette/joeson/ast/raw"
-	// . "grepsuzette/joeson/ast/handcompiled"
-	// . "grepsuzette/joeson/ast/raw"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/grammars"
 	line "grepsuzette/joeson/line"
@@ -37,7 +33,7 @@ func TestHandcompiled(t *testing.T) {
 // bootstrapped grammar, using joeson to define itself,
 // similar to joeson_test.coffee
 func TestRaw(t *testing.T) {
-	raw := line.NewGrammarFromLines(
+	raw := line.GrammarFromLines(
 		"bootstrapped grammar",
 		grammars.RAW_GRAMMAR(),
 		grammars.NewJoeson(),
@@ -59,9 +55,9 @@ func Test100Times(t *testing.T) {
 	fmt.Printf("Duration for %d iterations: %d ms\n", iter, time.Now().Sub(start).Milliseconds())
 }
 
-// this short grammar was useful for debugging
+// this short grammar was useful for debugging and is kept for now
 func TestDebugLabel(t *testing.T) {
-	debuglabel := line.NewGrammarFromLines(
+	debuglabel := line.GrammarFromLines(
 		"gm_DebugLabel",
 		[]line.Line{
 			o(Named("In", "l:Br")),
