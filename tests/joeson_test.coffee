@@ -8,11 +8,11 @@ require './setup'
 # NOTE: keep this grammar in sync with src/joeson.coffee
 # Once we have a compiler, we'll just move this into src/joeson.coffee.
 
-{NODES, GRAMMAR, MACROS, Grammar, Choice, Sequence, Lookahead, Existential, Pattern, Not, Ref, Str, Regex} = require '../src/joeson'
+{@trace, NODES, GRAMMAR, MACROS, Grammar, Choice, Sequence, Lookahead, Existential, Pattern, Not, Ref, Str, Regex} = require '../src/joeson'
 {clazz, colors:{red, blue, cyan, magenta, green, normal, black, white, yellow}} = require('cardamom')
 {inspect} = require 'util'
 assert = require 'assert'
-{pad, escape} = require '../lib/helpers'
+{pad, escape, toAscii} = require '../lib/helpers'
 
 {o, i, t} = MACROS
 QUOTE = "'\\''"
@@ -68,6 +68,8 @@ RAW_GRAMMAR = [
   i ESC2:       "'\\\\' .", (chr) -> '\\'+chr
 ]
 
+@trace.stack = no
+
 PARSED_GRAMMAR = Grammar RAW_GRAMMAR
 
 testGrammar = (rule, indent=0, name=undefined) ->
@@ -89,8 +91,60 @@ testGrammar = (rule, indent=0, name=undefined) ->
     for name, r of rule
       testGrammar r, indent, name
 
-console.log blue "\n-= self-parse test =-"
-start = new Date()
-for i in [0..10]
-  testGrammar RAW_GRAMMAR
-console.log new Date() - start
+# console.log "------------ Test10Times ----------------------"
+# console.log blue "\n-= self-parse test =-"
+# start = new Date()
+# for t in [0..100]
+#   testGrammar RAW_GRAMMAR
+# console.log (new Date() - start) + "ms"
+
+# TODO put this in joeson_test2.coffee or joeson_test_aab
+# AAB = [
+# o({
+#   EXPR: "A EXPR | B"
+# }),
+# i({
+#   "A": "'A' | 'a'"
+# }),
+# i({
+#   "B": "'B' | 'b'"
+# })
+# ];
+
+# gm_aab = Grammar(AAB);
+
+# assert.equal(gm_aab.numRules, 3);
+
+
+# console.log "------------ calc ----------------------"
+# CALC = [
+#     o Input: "expr:Expression"
+#     i Expression: "_ first:Term rest:( _ AddOp _ Term )* _"
+#     i Term: "first:Factor rest:( _ MulOp _ Factor )*"
+#     i Factor: "'(' expr:Expression _ ')' | integer:Integer"
+#     i AddOp: "'+' | '-'"
+#     i MulOp: "'*' | '/'"
+#     # i Integer: "'-'? [0-9]{1,}"
+#     i Integer: "[0-9]{1,}"
+#     i "_": "[ \t]*"
+# ]
+# calc = Grammar(CALC)
+# console.log calc.contentString()
+# x = calc.parse "1 + 2 + 3 + 4"
+# console.log x
+# console.log typeof  x
+
+console.log "------------ TestDebugLabel ----------------------"
+@trace.stack = no
+@trace.stack = yes
+DEBUGLABEL = [
+    o In: "l:Br"
+    i Br: "'Toy' | 'BZ'"
+]
+debuglabel = Grammar(DEBUGLABEL)
+console.log debuglabel.contentString()
+debuglabel.printRules()
+# x = debuglabel.parse "Toy"
+# console.log x
+# console.log typeof  x
+

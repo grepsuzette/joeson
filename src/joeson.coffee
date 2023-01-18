@@ -149,9 +149,9 @@ showtype = (result) ->
             return "*ast.Ref" if result.ref?
             return "ast.Str" if result.str?
             return "*ast.Pattern" if result.value?
-            return "Regex" if result.reStr?
+            return "*ast.Regex" if result.reStr?
             return "*ast.Sequence" if result.sequence?
-            return "Rank" if result?.contentString?().indexOf(blue("Rank(")) == 0
+            return "*ast.Rank" if result?.contentString?().indexOf(blue("Rank(")) == 0
             return "*ast.Choice" if result.choices?
             return "Exis|Not" if result.it?
             return "Lookahead" if result.expr?
@@ -367,6 +367,8 @@ showcontent = (result) ->
         @parse = parse = fn.bind(this)
       return parse($)
 
+  # TODO this adds thousands of iterations when 
+  #  grammar is parsed, check it's necessary
   @defineChildren
     rules:      {type:{key:undefined,value:{type:GNode}}}
 
@@ -529,7 +531,7 @@ showcontent = (result) ->
   handlesChildLabel$: get: -> @parent?.handlesChildLabel
   init: (@it) ->
   prepare: ->
-    console.log "Existential.prepare " + @contentString() + " parent?parent?:" + @.parent?.parent?.contentString()
+    # console.log "Existential.prepare " + @contentString() + " parent?parent?:" + @.parent?.parent?.contentString()
     labels   = if @label? and @label not in ['@','&'] then [@label] else @it.labels
     @label   ?= '@' if labels.length > 0
     captures  = @it.captures
@@ -649,17 +651,17 @@ showcontent = (result) ->
     # TODO refactor into translation passes.
     # Merge Choices with just a single choice.
     # @walk
-    #   pre: ({child:node, parent, desc, key, index}) =>
-    #     if node instanceof Choice and node.choices.length is 1
-    #       # Merge label
-    #       node.choices[0].label ?= node.label
-    #       # Merge included rules
-    #       Object.merge (node.choices[0].rules?={}), node.rules if node.rules?
-    #       # Replace with grandchild
-    #       if index?
-    #         parent[key][index] = node.choices[0]
-    #       else
-    #         parent[key] = node.choices[0]
+    pre: ({child:node, parent, desc, key, index}) =>
+        if node instanceof Choice and node.choices.length is 1
+          # Merge label
+          node.choices[0].label ?= node.label
+          # Merge included rules
+          Object.merge (node.choices[0].rules?={}), node.rules if node.rules?
+          # Replace with grandchild
+          if index?
+            parent[key][index] = node.choices[0]
+          else
+            parent[key] = node.choices[0]
 
     # Connect all the nodes and collect dereferences into @rules
     @walk
@@ -667,7 +669,6 @@ showcontent = (result) ->
         # sanity check
         if node.parent? and node isnt node.rule
           throw Error 'Grammar tree should be a DAG, nodes should not be referenced more than once.'
-        console.log " PRE connect nodes, parent:" + parent?.contentString() + " node: " + node.rule + " " + node.contentString() + " type:" + showtype(node)
         node.grammar = this
         node.parent = parent
         # inline rules are special
@@ -687,10 +688,25 @@ showcontent = (result) ->
           if trace.loop # print out id->rulename for convenience
             console.log "Loop #{red node.id}:\t#{node}"
 
-    @walk pre: ({child:node, parent}) -> console.log "grammar PRE node:" + node.contentString() + "/" + showtype(node) + " parent:" + parent?.contentString()
+    # just show the tree (very low level debug)
+    # @walk pre: ({child:node, parent}) -> console.log "grammar PRE node:" + node.contentString() + "/" + showtype(node) + " parent:" + parent?.contentString()
 
+    # @walk pre: ({child:node, parent}) ->
+    #     depth = (x) ->
+    #         deep = 0
+    #         parent = node.parent
+    #         while parent? && parent != x
+    #             deep++
+    #             x = parent
+    #             parent = x.parent
+    #         deep
+    #     sParentName = "parent: " + if parent? then parent.name else "-"
+    #     console.log "DEEP " + pad(left:34, sParentName) + depth(node) + " Node " + (node + "")
+            
+            
     # Prepare all the nodes, child first.
-    @walk post: ({child:node, parent}) -> node.prepare()
+    @walk post: ({child:node, parent}) ->
+        node.prepare()
 
   # MAIN GRAMMAR PARSE FUNCTION
   parse$: (code, opts = {}) ->
@@ -744,26 +760,25 @@ showcontent = (result) ->
 
   contentString: -> magenta('GRAMMAR{')+showtype(@rank)+" "+@rank+magenta('}')
 
-  debug: ->
-    console.log "+ -- Grammar.debug() --------"
+  printRules: ->
+    console.log "+--------------- Grammar.printRules() ----------------------------------"
     console.log "| name         : " + @.name
-    console.log "| label        : " + @.label
     console.log "| contentString: " + @.contentString()
     console.log "| rules        : " + @.numRules
     console.log "| "
     console.log "| ",
-        pad(left:10, "key"),
+        pad(left:14, "key"),
         pad(left:3, "id"),
         pad(left:13, "type"),
         pad(left:3, "cap"),
         pad(left:7, "label"),
-        pad(left:9, "labels()"),
+        pad(left:21, "labels()"),
         pad(left:16, "parent.name"),
         pad(left:30, "contentString"),
     console.log "|   -------------------------------------------------------------------------------------"
     for k,v of @rules
         console.log "|  ",
-            pad(left:10, k),
+            pad(left:14, k),
             pad(left:3, v.id),
             pad(left:13, showtype(v)),
             pad(left:3,
@@ -774,7 +789,7 @@ showcontent = (result) ->
             pad(left:7, if v.label?
                 v.label
             else ""),
-            pad(left:9, v.labels),
+            pad(left:21, v.labels.join ","),
             pad(left:16, v.parent?.name),
             pad(left:30, v.contentString())
     console.log "| "
@@ -885,16 +900,65 @@ OLine = clazz 'OLine', Line, ->
   # Helper for clazz construction in callbacks
   make: (clazz, options=undefined) -> (it, $) -> new clazz it, options
 
-C  = -> Choice (x for x in arguments)
+C  = ->
+    r = Choice (x for x in arguments)
+    s = ""
+    for k in arguments
+        s += k + ","
+    console.log "ohm Choice in=" + s + " out=" + r.contentString()
+    return r
 E  = -> Existential arguments...
-L  = (label, node) -> node.label = label; node
-La = -> Lookahead arguments...
-N  = -> Not arguments...
-P  = (value, join, min, max) -> Pattern value:value, join:join, min:min, max:max
-R  = -> Ref arguments...
+L  = (label, node) ->
+    console.log "ohm " + showtype(node) + " -  " + label
+    node.label = label; node
+La = ->
+    r = Lookahead arguments...
+    # s = ""
+    # first = yes
+    # for k in arguments
+    #     s += "," if !first
+    #     s += k
+    #     first = no
+    console.log "ohm " + s + " out=" + r.contentString()
+    return r
+N  = ->
+    s = ""
+    first = yes
+    for k in arguments
+        s += k + " "
+    console.log "ohm Not it=" + s
+    Not arguments...
+P  = (value, join, min, max) ->
+    # console.log "ohm Pattern " + value + " " + join + " " + min + " " + max
+    Pattern value:value, join:join, min:min, max:max
+R  = ->
+    r = Ref arguments...
+    # s = ""
+    # first = yes
+    # for k in arguments
+    #     if !first then s += ","
+    #     s += escape(k)
+    #     first = no
+    # console.log "ohm Ref in=" + s + " out=" + r.contentString()
+    return r
 Re = -> Regex arguments...
-S  = -> Sequence (x for x in arguments)
-St = -> Str arguments...
+S  = ->
+    r = Sequence (x for x in arguments)
+    s = ""
+    for v in arguments
+        s += v + ","
+    console.log "ohm Sequence in=" + s + " out=" + r.contentString()
+    return r
+St = ->
+    r = Str arguments...
+    # s = ""
+    # first = yes
+    # for k in arguments
+    #     if !first then s += ","
+    #     s += escape k
+    #     first = no
+    # console.log "ohm Str in='" + s + "' out=" + r.contentString()
+    return r
 {o, i, tokens}  = MACROS
 
 # Don't worry, this is just the intermediate hand-compiled form of the grammar you can actually understand,
