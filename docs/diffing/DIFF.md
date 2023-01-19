@@ -38,10 +38,23 @@ Before using it:
 
 * You may want this line in your vimfile `autocmd BufRead *.ansi AnsiEsc` to auto-enable AnsiEsc on files with an `.ansi` extension
 
+## Default options
+
+TODO Improve this.
+
+Some work is still required here, but in the meantime it's worth a note.
+
+The default grep pattern is set to `grepPattern="^${BOLD}[[:digit:]]"` where `${BOLD}` is "\e[1m", which means it will filters only the Stack traces. 
+
+To show and diff everything, use `-g ""`.
+
+The default function pattern is `goTestFunc="^TestRaw"`.
+
 ## Useful keys in vimdiff
 
 * `<Esc>:AnsiEsc<CR>` :: toggle ansi colors
 * `h`, `j`, `k`, `l` :: move around (in normal mode)
+* `<Ctrl-w> + w` :: jump to the opposite split window
 * `zo`, `zc` :: open fold, close fold
 * `<Esc>:q<CR>` :: quit
 

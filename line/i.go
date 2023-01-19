@@ -46,6 +46,6 @@ func (il ILine) StringIndent(nIndent int) string {
 	return s
 }
 
-func (il ILine) ToRule(grammar *ast.Grammar, parentRule Ast) (name string, rule Ast) {
-	return il.name, getRule(grammar, il.name, il.content, parentRule, il.attrs)
+func (il ILine) toRule(rank *ast.Rank, parentRule Ast, opts core.TraceOptions, lazyGrammar *helpers.Lazy[*ast.Grammar]) (name string, rule Ast) {
+	return il.name, getRule(rank, il.name, il.content, parentRule, il.attrs, opts, lazyGrammar)
 }

@@ -3,7 +3,7 @@ package ast
 import (
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
-	"grepsuzette/joeson/lambda"
+	"grepsuzette/joeson/helpers"
 	"regexp"
 	"strings"
 )
@@ -49,7 +49,7 @@ func (re *Regex) Parse(ctx *ParseContext) Ast {
 }
 
 func joinstr(a []NativeString, join string) string {
-	a2 := lambda.Map(a, func(ns NativeString) string { return ns.Str })
+	a2 := helpers.AMap(a, func(ns NativeString) string { return ns.Str })
 	return strings.Join(a2, join)
 }
 

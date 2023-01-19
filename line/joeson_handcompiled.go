@@ -1,27 +1,32 @@
-package grammars
+package line
 
 import (
 	. "grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/core"
-	. "grepsuzette/joeson/line"
-	"strings"
 )
 
-// Instantiate a new joeson grammar.
-// It can be used to parse all joeson grammars.
+// To make a new instance of the root grammar.
+// In most cases you should use GrammarFromLines().
 func NewJoeson() *Grammar {
 	return NewJoesonWithOptions(DefaultTraceOptions())
 }
 
 func NewJoesonWithOptions(opts TraceOptions) *Grammar {
-	opts = CheckEnvironmentForTraceOptions(opts)
-	return GrammarFromLinesWithOptions(
-		JOESON_GRAMMAR_NAME,
-		JOESON_GRAMMAR_RULES(),
-		NewEmptyGrammarWithOptions(opts),
-		opts,
+	gm := GrammarFromLines(
+		JoesonRules(),
+		JoesonGrammarName,
+		GrammarOptions{
+			TraceOptions: CheckEnvironmentForTraceOptions(opts),
+			LazyGrammar:  nil,
+		},
 	)
+	// gm.GNode.Name = "__joeson__"
+	return gm
 }
+
+// the following ought to be private
+// but lowercase makes the handcompiled hard to read,
+// which we don't want.
 
 func C(a ...Ast) Ast               { return NewChoice(NewNativeArray(a)) }
 func E(it Ast) Ast                 { return NewExistential(it) }
@@ -49,19 +54,11 @@ func P(value, join Ast, minmax ...int) *Pattern {
 	return p
 }
 
-func StringFromNativeArray(it Ast) string {
-	var b strings.Builder
-	na := it.(*NativeArray)
-	for _, ns := range na.Array {
-		b.WriteString(ns.(NativeString).Str)
-	}
-	return b.String()
-}
-
 const JoesonNbRules int = 35
-const JOESON_GRAMMAR_NAME = "__grammar__"
+const JoesonGrammarName = "__joeson__"
 
-func JOESON_GRAMMAR_RULES() Lines {
+// provides the Lines of the joeson grammar
+func JoesonRules() []Line {
 	return []Line{
 		o(Named("EXPR", rules(
 			o(S(R("CHOICE"), R("_"))),
@@ -98,9 +95,9 @@ func JOESON_GRAMMAR_RULES() Lines {
 								o(R("WORD"), func(it Ast) Ast { return NewRef(it) }),
 								o(S(St("("), L("inlineLabel", E(S(R("WORD"), St(": ")))), L("expr", R("EXPR")), St(")"), E(S(R("_"), St("->"), R("_"), L("code", R("CODE"))))), fCode),
 								i(Named("CODE", o(S(St("{"), P(S(N(St("}")), C(R("ESC1"), R("."))), nil, -1, -1), St("}")))), fCode),
-								o(S(St("'"), P(S(N(St("'")), C(R("ESC1"), R("."))), nil), St("'")), func(it Ast) Ast { return NewStr(StringFromNativeArray(it)) }),
-								o(S(St("/"), P(S(N(St("/")), C(R("ESC2"), R("."))), nil), St("/")), func(it Ast) Ast { return NewRegexFromString(StringFromNativeArray(it)) }),
-								o(S(St("["), P(S(N(St("]")), C(R("ESC2"), R("."))), nil), St("]")), func(it Ast) Ast { return NewRegexFromString("[" + StringFromNativeArray(it) + "]") }),
+								o(S(St("'"), P(S(N(St("'")), C(R("ESC1"), R("."))), nil), St("'")), func(it Ast) Ast { return NewStr(stringFromNativeArray(it)) }),
+								o(S(St("/"), P(S(N(St("/")), C(R("ESC2"), R("."))), nil), St("/")), func(it Ast) Ast { return NewRegexFromString(stringFromNativeArray(it)) }),
+								o(S(St("["), P(S(N(St("]")), C(R("ESC2"), R("."))), nil), St("]")), func(it Ast) Ast { return NewRegexFromString("[" + stringFromNativeArray(it) + "]") }),
 							))),
 						))),
 					))),

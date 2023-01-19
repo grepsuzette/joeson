@@ -48,11 +48,11 @@ func stack(fparse ParseFunction, x Ast) ParseFunction {
 func loopify(fparse ParseFunction, x Ast) ParseFunction {
 	return func(ctx *ParseContext) Ast {
 		log := func(s string) {}
-		opts := ctx.grammar.Options()
+		opts := ctx.TraceOptions
 		if opts.Stack {
-			log = func(s string) { ctx.log(s) }
+			log = func(s string) { ctx.log(s, opts) }
 		}
-		log(Blue("*") + " " + Prefix(x) + x.ContentString() + " " + BoldBlack(strconv.Itoa(ctx.counter)))
+		log(Blue("*") + " " + String(x) + " " + BoldBlack(strconv.Itoa(ctx.Counter)))
 		if x.GetGNode().SkipCache {
 			result := fparse(ctx)
 			log(Cyan("`->:") + " " + helpers.Escape(result.ContentString()) + " " + BoldBlack(helpers.TypeOfToString(result)))
@@ -180,7 +180,7 @@ func loopify(fparse ParseFunction, x Ast) ParseFunction {
 			// Step 1: Collect wipemask so we can wipe the frames later.
 			log(Yellow("`-base: ") + helpers.Escape(frame.Result.ContentString()) + " " + BoldBlack(helpers.TypeOfToString(frame.Result)))
 			if frame.wipemask == nil {
-				frame.wipemask = make([]bool, ctx.grammar.CountRules())
+				frame.wipemask = make([]bool, ctx.numRules)
 				for i := ctx.stackLength - 2; i >= 0; i-- {
 					i_frame := ctx.stack[i]
 					if i_frame.pos > startPos {
@@ -210,11 +210,11 @@ func loopify(fparse ParseFunction, x Ast) ParseFunction {
 // prepares the following postparsing operations:
 // - increment ctx.counter (used for debugging and to prevent infinite recursion)
 // - handle labels for standalone nodes
-// - set GNode._origin
+// - set GNode.Origin
 // - call GNode.CbBuilder(result, ctx, caller), if CbBuilder != nil
 func prepareResult(fparse2 ParseFunction2, caller Ast) ParseFunction {
 	return func(ctx *ParseContext) Ast {
-		ctx.counter++
+		ctx.Counter++
 		result := fparse2(ctx, caller)
 		if result != nil {
 			// handle labels for standalone nodes
@@ -239,7 +239,7 @@ func prepareResult(fparse2 ParseFunction2, caller Ast) ParseFunction {
 			}
 			if gn.CbBuilder != nil {
 				if result.GetGNode() != nil {
-					result.GetGNode()._origin = origin
+					result.GetGNode().Origin = origin
 				}
 				result = gn.CbBuilder(result, ctx, caller)
 			}

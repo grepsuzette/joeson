@@ -5,7 +5,6 @@ import (
 	"grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
-	"grepsuzette/joeson/grammars"
 	line "grepsuzette/joeson/line"
 	"strconv"
 	"strings"
@@ -14,6 +13,35 @@ import (
 
 // this example is the typical example with a calculator
 // and is inspired from the mna-pigeon example
+
+func o(a ...any) line.OLine { return line.O(a...) }
+func i(a ...any) line.ILine { return line.I(a...) }
+
+func xx(it Ast) Ast { return eval(it.(NativeMap).Get("first"), it.(NativeMap).Get("rest")) }
+func named(name string, lineStringOrAstnode any) line.NamedRule {
+	return line.Named(name, lineStringOrAstnode)
+}
+
+var linesCalc = []line.Line{
+	o(named("Input", "expr:Expression")),
+	i(named("Expression", "_ first:Term rest:( _ AddOp _ Term )* _"), xx),
+	i(named("Term", "first:Factor rest:( _ MulOp _ Factor )*"), xx),
+	i(named("Factor", "'(' expr:Expression ')' | integer:Integer"), func(it Ast) Ast {
+		// --- example of an alternation ------------
+		var nm NativeMap = it.(NativeMap)
+		if n, exists := nm.GetExists("integer"); exists {
+			return n
+		} else if expr, exists := nm.GetExists("expr"); exists {
+			return expr
+		} else {
+			panic("assert")
+		}
+	}),
+	i(named("AddOp", "'+' | '-'")),
+	i(named("MulOp", "'*' | '/'")),
+	i(named("Integer", "/^-?[0-9]+/"), func(it Ast) Ast { return NewNativeIntFrom(it) }),
+	i(named("_", "[ \t]*")),
+}
 
 var ops = map[string]func(int, int) int{
 	"+": add,
@@ -26,13 +54,6 @@ func add(a, b int) int { return a + b }
 func sub(a, b int) int { return a - b }
 func mul(a, b int) int { return a * b }
 func div(a, b int) int { return a / b }
-
-func o(a ...any) line.OLine               { return line.O(a...) }
-func i(a ...any) line.ILine               { return line.I(a...) }
-func Rules(lines ...line.Line) line.ALine { return line.NewALine(lines) }
-func Named(name string, lineStringOrAstnode any) line.NamedRule {
-	return line.Named(name, lineStringOrAstnode)
-}
 
 // extract the "expr" key from a result `x` to an int
 // or, failing to do that, call FailNow()
@@ -69,32 +90,7 @@ func eval(first Ast, rest Ast) Ast {
 // The ast nodes are special in that they will evaluate
 // the numerical expression to eventually respond with an int
 func grammar() *ast.Grammar {
-	joeson := grammars.NewJoeson()
-	CALC := []line.Line{
-		o(Named("Input", "expr:Expression")),
-		i(Named("Expression", "_ first:Term rest:( _ AddOp _ Term )* _"), func(it Ast) Ast {
-			return eval(it.(NativeMap).Get("first"), it.(NativeMap).Get("rest"))
-		}),
-		i(Named("Term", "first:Factor rest:( _ MulOp _ Factor )*"), func(it Ast) Ast {
-			return eval(it.(NativeMap).Get("first"), it.(NativeMap).Get("rest"))
-		}),
-		i(Named("Factor", "'(' expr:Expression ')' | integer:Integer"), func(it Ast) Ast {
-			// alternation example
-			var nm NativeMap = it.(NativeMap)
-			if n, exists := nm.GetExists("integer"); exists {
-				return n
-			} else if expr, exists := nm.GetExists("expr"); exists {
-				return expr
-			} else {
-				panic("assert")
-			}
-		}),
-		i(Named("AddOp", "'+' | '-'")),
-		i(Named("MulOp", "'*' | '/'")),
-		i(Named("Integer", "/^-?[0-9]+/"), func(it Ast) Ast { return NewNativeIntFrom(it) }),
-		i(Named("_", "[ \t]*")),
-	}
-	return line.GrammarFromLines("calc", CALC, joeson)
+	return line.GrammarFromLines(linesCalc, "calc")
 }
 
 func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {

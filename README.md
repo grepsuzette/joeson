@@ -8,7 +8,7 @@ The port is as literal as possible.
 
 # Usage
 
-Run all tests recursively (same as `make test`):
+Run all tests recursively:
 
 ```
 $ go test ./...
@@ -59,13 +59,14 @@ TRACE=loop,stack,line=4 go test . --run TestHandcompiled -v
 
 Here are the categories:
 
-| Name       | Behavior                                |
-| ---------- | --------------------------------------- |
-| none       | disable everything                      |
-| stack      | print detailed parsing steps            |
-| loop       | print all rules in the grammar          |
-| line='N'   | only the stack trace for the nth line   |
-| grammar    | print grammar information and all rules |
-| all        | print all that makes sense              |
+| Name       | Behavior                                          |
+| ---------- | ------------------------------------------------  |
+| none       | disable everything                                |
+| stack      | print detailed parsing steps                      |
+| loop       | print all rules in the grammar                    |
+| line='N'   | only the stack trace for the nth line of code (⁺) |
+| grammar    | print grammar information and all rules           |
+| skipsetup  | mute traces during joeson grammar setup           |
+| all        | print all that makes sense                        |
 
-
+* ⁺: doesn't work well, whereas in js or go: all lines of code with the line system are line 0. We should probably use parseContext.Counter instead (TODO)

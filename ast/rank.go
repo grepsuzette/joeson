@@ -3,7 +3,7 @@ package ast
 import (
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
-	"grepsuzette/joeson/lambda"
+	"grepsuzette/joeson/helpers"
 	"strings"
 )
 
@@ -11,7 +11,6 @@ type Rank struct {
 	*Choice
 }
 
-// See also line.NewRankFromLines()
 func NewEmptyRank(name string) *Rank {
 	rank := &Rank{NewEmptyChoice()}
 	rank.GetGNode().Name = name
@@ -31,7 +30,7 @@ func (rank *Rank) HandlesChildLabel() bool { return false }
 func (rank *Rank) ContentString() string {
 	var b strings.Builder
 	b.WriteString(Blue("Rank("))
-	a := lambda.Map(rank.Choice.choices, func(x Ast) string {
+	a := helpers.AMap(rank.Choice.choices, func(x Ast) string {
 		return Red(x.GetGNode().Name)
 	})
 	b.WriteString(strings.Join(a, Blue(",")))
@@ -42,7 +41,7 @@ func (rank *Rank) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}
-	ch := rank.Choice.ForEachChild(f)
+	ch := rank.Choice.ForEachChild(f) // see Choice.ForEachChild, which have the same @defineChildren
 	rank.Choice = ch.(*Choice)
 	return rank
 }

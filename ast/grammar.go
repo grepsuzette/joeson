@@ -16,7 +16,7 @@ import (
 
 type Grammar struct {
 	*GNode
-	rank           Ast         // a *Rank or a Ref to a rank
+	Rank           Ast         // a *Rank or a Ref to a rank
 	NumRules       int         // Each Ast can have rules, recursively. This however i the total count in the grammar
 	Id2Rule        map[int]Ast // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
 	TraceOptions   TraceOptions
@@ -25,14 +25,14 @@ type Grammar struct {
 
 func NewEmptyGrammar() *Grammar { return NewEmptyGrammarWithOptions(DefaultTraceOptions()) }
 func NewEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
-	name := "empty grammar"
+	name := "__empty__"
 	gm := &Grammar{NewGNode(), nil, 0, map[int]Ast{}, opts, false}
 	gm.GNode.Name = name
 	gm.GNode.Node = gm
 	return gm
 }
 
-// ♥ call this one (MAIN GRAMMAR PARSE FUNCTION)
+// Main grammar parse function
 func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) (Ast, error) {
 	if len(attrs) > 0 {
 		return gm.ParseCode(NewCodeStream(sCode), attrs[0])
@@ -42,38 +42,54 @@ func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) (Ast, error)
 }
 
 func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) (Ast, error) {
-	return gm.parseOrFail(NewParseContext(code, gm, attrs))
+	return gm.ParseOrFail(NewParseContext(code, gm.NumRules, attrs, gm.TraceOptions))
 }
 
 // -- after this are the lower level stuffs --
+
+// Destroy the grammar. Only tests should use this.
+func (gm *Grammar) Bomb() {
+	gm.Rank = NewEmptyRank("bombd")
+	gm.GNode = nil
+	gm.NumRules = 0
+	gm.Id2Rule = nil
+	gm.wasInitialized = false
+}
 
 func (gm *Grammar) GetGNode() *GNode { return gm.GNode }
 
 // this one conforms the interface, but you would normally call
 // grammar.ParseString() or grammar.ParseCode().
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
-	if ast, error := gm.parseOrFail(ctx); error == nil {
+	if ast, error := gm.ParseOrFail(ctx); error == nil {
 		return ast
 	} else {
 		panic(error)
 	}
 }
 
-func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error) {
+// This *public function* was originally a *private method*
+// like `func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error)`.
+// Because of the chicken or egg dilemma (namely grammar or rank) in line.go,
+// we let rank come first. The major consequence is parseOrFail must
+// become public, a function, and get additionnal args `rank` and `opts`.
+// The benefit is rank now can get created from lines without an empty dummy
+// grammar.
+// rank: it can not only be a Rank but also a Ref (to a Rank).
+func (gm *Grammar) ParseOrFail(ctx *ParseContext) (Ast, error) {
 	var oldTrace bool
-	var opts = gm.Options()
 	if ctx.Debug {
 		// temporarily enable stack tracing
-		oldTrace = opts.Stack
-		opts.Stack = true
+		oldTrace = gm.TraceOptions.Stack
+		gm.TraceOptions.Stack = true
 	}
-	if gm.rank == nil {
+	if gm.Rank == nil {
 		panic("Grammar.rank is nil")
 	}
-	result := gm.rank.Parse(ctx)
-	// undo temprary stack tracing
+	result := gm.Rank.Parse(ctx)
+	// undo temporary stack tracing
 	if ctx.Debug {
-		opts.Stack = oldTrace
+		gm.TraceOptions.Stack = oldTrace
 	}
 	// if parse is incomplete, compute error message
 	if ctx.Code.Pos != ctx.Code.Length() {
@@ -92,6 +108,7 @@ func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error) {
 				}
 			}
 		}
+		// TODO this is kept as original, but seems it was not finished
 		sErr := fmt.Sprintf("Error parsing at char:%d=(line:%d,col:%d).", maxSuccess, ctx.Code.PosToLine(maxSuccess), ctx.Code.PosToCol(maxSuccess))
 		sErr += "\n" + ctx.Code.Print()
 		sErr += "\nDetails:\n"
@@ -114,26 +131,29 @@ func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error) {
 func (gm *Grammar) Prepare()                {}
 func (gm *Grammar) HandlesChildLabel() bool { return false }
 func (gm *Grammar) ContentString() string {
-	return Magenta("GRAMMAR{") /*+ helpers.TypeOfToString(gm.rank) */ + Prefix(gm.rank) + gm.rank.ContentString() + Magenta("}")
+	if gm.Rank == nil {
+		// empty grammars
+		return Magenta("GRAMMAR{}")
+	} else {
+		return Magenta("GRAMMAR{") /*+ helpers.TypeOfToString(gm.rank) */ + String(gm.Rank) + Magenta("}")
+	}
 }
 
-func (gm *Grammar) CountRules() int       { return gm.NumRules }
-func (gm *Grammar) IsReady() bool         { return gm.rank != nil && gm.wasInitialized }
-func (gm *Grammar) Options() TraceOptions { return gm.TraceOptions }
+func (gm *Grammar) IsReady() bool { return gm.Rank != nil && gm.wasInitialized }
 func (gm *Grammar) SetRankIfEmpty(rank Ast) {
-	if gm.rank != nil {
+	if gm.Rank != nil {
 		return
 	}
 	if gm.IsReady() {
 		panic("Grammar is already defined and can not be changed on the fly at the moment")
 	}
-	gm.rank = rank
+	gm.Rank = rank
 }
 func (gm *Grammar) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren rank: {type:Rank}
 	gm.GetGNode().Rules = ForEachChild_InRules(gm, f)
-	if gm.rank != nil {
-		gm.rank = f(gm.rank)
+	if gm.Rank != nil {
+		gm.Rank = f(gm.Rank)
 	}
 	return gm
 }
@@ -141,10 +161,10 @@ func (gm *Grammar) ForEachChild(f func(Ast) Ast) Ast {
 // after Rank has already been set,
 // collect and collect rules, simplify the rule tree etc.
 func (gm *Grammar) Postinit() {
-	if gm.rank == nil {
+	if gm.Rank == nil {
 		panic("You can only call grammar.Postinit() after some rank has been set")
 	}
-	opts := gm.Options()
+	opts := gm.TraceOptions
 
 	// from joeson.coffee
 	// "TODO refactor into translation passes." <empty>
@@ -207,13 +227,11 @@ func (gm *Grammar) Postinit() {
 			} else {
 				// set node.rule, the root node for this rule
 				if gnode.Rule == nil {
-					var r Ast
 					if parent != nil {
-						r = parent.GetGNode().Rule
+						gnode.Rule = parent.GetGNode().Rule
 					} else {
-						r = NewNativeUndefined()
+						gnode.Rule = NewNativeUndefined()
 					}
-					gnode.Rule = r
 				}
 			}
 			return ""
@@ -230,48 +248,14 @@ func (gm *Grammar) Postinit() {
 				gm.NumRules++
 				gm.Id2Rule[gnode.Id] = node
 				if opts.Loop { // print out id->rulename for convenience
-					fmt.Println("Loop " + Red(strconv.Itoa(gnode.Id)) + ":\t" + Prefix(node) + node.ContentString())
+					fmt.Println("Loop " + Red(strconv.Itoa(gnode.Id)) + ":\t" + String(node))
 				}
 			}
 			return ""
 		},
 	})
 
-	// just show the tree (very low level debug)
-	// nbNodes := 0
-	// Walk(gm, nil, WalkPrepost{
-	// 	Pre: func(node Astnode, parent Astnode) string {
-	// 		s := "undefined"
-	// 		if parent != nil {
-	// 			s = parent.ContentString()
-	// 		}
-	// 		fmt.Println("grammar PRE node:" + node.ContentString() + "/" + helpers.TypeOfToString(node) + " parent:" + s)
-	// 		nbNodes++
-	// 		depth := func(ast Astnode) int {
-	// 			deep := 0
-	// 			var x Astnode = ast
-	// 			var parent = x.GetGNode().Parent
-	// 			for parent != nil && parent != x {
-	// 				deep++
-	// 				x = parent
-	// 				parent = x.GetGNode().Parent
-	// 			}
-	// 			return deep
-	// 		}
-	// 		sParentName := "parent: -"
-	// 		if parent != nil && parent.GetGNode() != nil {
-	// 			if parent.GetGNode().Name == "" {
-	// 				sParentName = "parent: undefined"
-	// 			} else {
-	// 				sParentName = "parent: " + parent.GetGNode().Name
-	// 			}
-	// 		}
-	// 		fmt.Println("DEEP " + helpers.PadLeft(sParentName, 34) + strconv.Itoa(depth(node)) + " Node " + Prefix(node) + node.ContentString())
-	// 		return ""
-	// 	},
-	// })
-
-	// Prepare all the nodes, child first.
+	// Prepare all the nodes, children first.
 	Walk(gm, nil, WalkPrepost{
 		Post: func(node Ast, parent Ast) string {
 			node.Prepare()
@@ -286,14 +270,16 @@ func (gm *Grammar) Postinit() {
 }
 
 func (gm *Grammar) PrintRules() {
-	fmt.Println("+ -- Grammar.Debug() --------")
-	fmt.Println("| name         : " + gm.GNode.Name)
-	fmt.Println("| label        : " + gm.GNode.Label)
+	fmt.Println("+--------------- Grammar.Debug() ----------------------------------")
+	fmt.Println("| name         : " + Bold(gm.GNode.Name))
 	fmt.Println("| contentString: " + gm.ContentString())
 	fmt.Println("| rules        : " + strconv.Itoa(gm.NumRules))
 	fmt.Println("| ")
+	if gm.NumRules <= 0 {
+		return
+	}
 	fmt.Println("| ",
-		helpers.PadLeft("key", 14),
+		helpers.PadLeft("key/name", 14),
 		helpers.PadLeft("id", 3),
 		helpers.PadLeft("type", 13),
 		helpers.PadLeft("cap", 3),

@@ -1,5 +1,8 @@
 package colors
 
+// in their own package so these colors can be imported with a dot
+//  not importing anything else
+
 const esc string = ""
 const reset string = esc + "[0m"
 
@@ -19,3 +22,5 @@ func BoldBlue(s string) string    { return esc + "[1;34m" + s + reset }
 func BoldMagenta(s string) string { return esc + "[1;35m" + s + reset }
 func BoldCyan(s string) string    { return esc + "[1;36m" + s + reset }
 func BoldWhite(s string) string   { return esc + "[1;37m" + s + reset }
+
+func Bold(s string) string { return esc + "[1m" + s + reset }

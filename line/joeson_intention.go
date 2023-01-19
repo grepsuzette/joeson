@@ -1,13 +1,15 @@
-package grammars
+package line
 
 import (
 	. "grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/core"
-	line "grepsuzette/joeson/line"
 )
 
-func RAW_GRAMMAR() line.Lines {
-	return []line.Line{
+// Lines of the intention grammar
+// their rules are SLine, thus the first time,
+// these rules require the handcompiled grammar to be compiled.
+func IntentionGrammarLines() []Line {
+	return []Line{
 		o(named("EXPR", rules(
 			o("CHOICE _"),
 			o(named("CHOICE", rules(
@@ -43,9 +45,9 @@ func RAW_GRAMMAR() line.Lines {
 								o("WORD", func(it Ast) Ast { return NewRef(it) }),
 								o("'(' inlineLabel:(WORD ': ')? expr:EXPR ')' ( _ '->' _ code:CODE )?", fCode),
 								i(named("CODE", "'{' (!'}' (ESC1 | .))* '}'"), fCode),
-								o("'\\'' (!'\\'' (ESC1 | .))* '\\''", func(it Ast) Ast { return NewStr(StringFromNativeArray(it)) }),
-								o("'/' (!'/' (ESC2 | .))* '/'", func(it Ast) Ast { return NewRegexFromString(StringFromNativeArray(it)) }),
-								o("'[' (!']' (ESC2 | .))* ']'", func(it Ast) Ast { return NewRegexFromString("[" + StringFromNativeArray(it) + "]") }),
+								o("'\\'' (!'\\'' (ESC1 | .))* '\\''", func(it Ast) Ast { return NewStr(stringFromNativeArray(it)) }),
+								o("'/' (!'/' (ESC2 | .))* '/'", func(it Ast) Ast { return NewRegexFromString(stringFromNativeArray(it)) }),
+								o("'[' (!']' (ESC2 | .))* ']'", func(it Ast) Ast { return NewRegexFromString("[" + stringFromNativeArray(it) + "]") }),
 							))),
 						))),
 					))),

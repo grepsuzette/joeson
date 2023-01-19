@@ -1,7 +1,14 @@
 ✓ process all TODO
 ✓ merge raw/ and handcompiled/ into grammars/ package
-✓ see if callbacks in grammars can be simplified further: yes but would need
-  reflection
+✓ see if callbacks in grammars can be simplified further: yes but would need reflection
 ✓ put all 4 code is deprecated in json in 1 func
 ✓ clean up commented comments in imports
-- a bash script "demo", to interactively launch tests with -v
+✓ NO it seems possible to get rid of the grammar arg in RankFromLines() and getRule()
+     It won't do because need to pass a rank in that case 
+✓ better way for Prefix(node) + node.ContentString(). Something like String(node)
+✓ clarify GrammarFromLines, the last argument `grammar`. See NewJoeson()
+✓ try putting lambda.go and colors.go in main package: won't do. lambda was moved to helpers/
+✓ improve and clarify joeson_test.go
+✓ parsectx review visibility of fields, e.g. SkipLog Debug Frames?
+- document and maybe add selective options to choose what log category to print in both go and js
+

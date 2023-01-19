@@ -22,7 +22,7 @@ func (look *Lookahead) Prepare()                {}
 func (look *Lookahead) GetGNode() *GNode        { return look.GNode }
 func (look *Lookahead) HandlesChildLabel() bool { return false }
 func (look *Lookahead) ContentString() string {
-	return Blue("(?") + Prefix(look.expr) + look.expr.ContentString() + Blue(")")
+	return Blue("(?") + String(look.expr) + Blue(")")
 }
 func (look *Lookahead) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(_ *ParseContext, _ Ast) Ast {

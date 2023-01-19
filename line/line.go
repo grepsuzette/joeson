@@ -3,25 +3,22 @@ package line
 import (
 	"grepsuzette/joeson/ast"
 	. "grepsuzette/joeson/core"
+	"grepsuzette/joeson/helpers"
 	"reflect"
 )
 
-// ALine are simply []Line
-// SLine are transitory, and when parsed become OLine
-// The OLine, as non-terminal, becomes a CLine (CLine wraps an Astnode) when parsed
-// The ILine, terminal, holds either OLine, or CLine (an Astnode, including Str which is an Astnode)
-
-// Line interface is just a way to have []Line really
-// These are a system to enter rules of a grammar
-// in a code-like fashion (as a tree, rather than linearly).
 type Line interface {
 	LineType() string                // i, o, a, s, c
 	Content() Line                   // Sline, OLine, ALine, CLine (containing an Astnode)...
 	StringIndent(nIndent int) string // indent with `nIdent` levels (for nested rules)
 }
 
-// common functions callable by both ILine nd OLine
+/* -- follow some common functions used by ILine & OLine -- */
 
+// The functions `I(a ...any)` and `O(a ...any)` both call `lineInit(a)`
+// to help destructuring `a` into a name, content (Line) and options. This
+// is where `Named()` gets cracked open, if it was used. This is also
+// where parsing callbacks make their way into ParseOptions.
 func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions) {
 	for i, arg := range origArgs {
 		if i == 0 {
@@ -56,24 +53,25 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 	return
 }
 
+// sanitize arbitrary content into a Line
 func rule2line(x any) Line {
 	switch v := x.(type) {
-	case ALine:
-		return v
 	case string:
 		return NewSLine(v)
-	case OLine:
-		return v
-	case Ast:
-		return NewCLine(v)
-	case CLine:
-		return v
 	case SLine:
 		return O(v.Str)
+	case Ast:
+		return NewCLine(v)
+	case ALine:
+		return v
+	case OLine:
+		return v
+	case CLine:
+		return v
 	case ILine:
 		panic("assert")
 	case []Line:
-		panic("assert") // should have been ALine // return NewALine(v)
+		panic("assert") // because it should have been ALine
 	default:
 		panic("assert")
 		// panic("impossible type in rule2line: " + reflect.TypeOf(x).String())
@@ -88,37 +86,55 @@ func rule2line(x any) Line {
 // parentRule: The actual parent Rule instance
 // attrs:      {cb,...}, extends the result
 // opts:       Parse time options
-func getRule(grammar *ast.Grammar, name string, line Line, parentRule Ast, attrs ParseOptions) Ast {
-	var ast Ast
-	// fmt.Println("getRule name=" + name + reflect.TypeOf(line).String())
+
+// see line/README.md # internals
+func getRule(rank *ast.Rank, name string, line Line, parentRule Ast, attrs ParseOptions, opts TraceOptions, lazyGrammar *helpers.Lazy[*ast.Grammar]) Ast {
+	var retAst Ast
+	// fmt.Println("getRule name=" + name + " eflect.TypeOf(line).String()):" + reflect.TypeOf(line).String())
 	switch v := line.(type) {
 	case ALine:
-		// fmt.Println("getRule ALine name=" + name)
-		ast = NewRankFromLines(name, v.Array, grammar)
+		retAst = rankFromLines(v.Array, name, GrammarOptions{TraceOptions: opts, LazyGrammar: lazyGrammar})
 	case CLine:
-		// fmt.Println("getRule CLine name=" + name)
-		ast = v.ast
-		ast.GetGNode().Name = name
+		retAst = v.ast
+		retAst.GetGNode().Name = name
 	case ILine:
-		panic("ILine is impossible here")
+		panic("assert") // ILine is impossible here
 	case OLine:
-		ast = v.ToRule(grammar, parentRule, OLineByIndexOrName{name: name})
-		if ast.GetGNode().Name == "" {
-			ast.GetGNode().Name = name
+		retAst = v.toRule(rank, parentRule, OLineByIndexOrName{name: name}, opts, lazyGrammar)
+		if retAst.GetGNode().Name == "" {
+			retAst.GetGNode().Name = name
 		}
 	case SLine:
-		var ctx *ParseContext
-		// may surround with halt trace instructions as in coffee impl
-		ctx = NewParseContext(NewCodeStream(v.Str), grammar, attrs)
-		ast = grammar.Parse(ctx)
+		// HACK: temporarily halt trace when SkipSetup
+		var skipSetup bool = opts.SkipSetup
+		var oldTrace TraceOptions
+		if skipSetup {
+			oldTrace = opts
+			opts = Mute()
+		}
+		// parse the string
+		// a grammar like joeson_handcompiled is needed for that,
+		gm := lazyGrammar.Get() // uses Lazy to get the grammar in cache or build it
+		if x, error := gm.ParseOrFail(
+			// TODO think NewParseContext was better with grammar
+			NewParseContext(NewCodeStream(v.Str), gm.NumRules, attrs, opts),
+		); error == nil {
+			retAst = x
+		} else {
+			panic(error)
+		}
+		retAst.GetGNode().Name = name
+		if skipSetup {
+			opts = oldTrace
+		}
 	default:
 		panic("unrecog type " + reflect.TypeOf(line).String())
 	}
-	rule := ast.GetGNode()
-	if rule.Rule != nil && !IsRule(ast) {
+	rule := retAst.GetGNode()
+	if rule.Rule != nil && !IsRule(retAst) {
 		panic("assert")
 	}
-	rule.Rule = ast
+	rule.Rule = retAst
 	if rule.Name != "" && rule.Name != name {
 		panic("assert")
 	}
@@ -126,5 +142,5 @@ func getRule(grammar *ast.Grammar, name string, line Line, parentRule Ast, attrs
 	rule.SkipLog = attrs.SkipLog
 	rule.CbBuilder = attrs.CbBuilder
 	rule.Debug = attrs.Debug
-	return ast
+	return retAst
 }

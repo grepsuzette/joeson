@@ -14,41 +14,46 @@ type stash struct {
 	count  int
 }
 
-// ParseContext was named '$' in the original joeson.coffee
+// One rule is parsed by a different ParseContext, with an increasing Counter.
+// Suppose a rule is defined like so: i(named("LABEL", "'&' | '@' | WORD")),
+// its Code will contain "'&' | '@' | WORD" and start at position 0.
 type ParseContext struct {
-	grammar     GrammarRuleCounter // interface used instead of Grammar to break circular dependencies
-	Code        *CodeStream
+	TraceOptions     // grammar.TraceOptions at the moment this context is created
+	ParseOptions     // Defined arbitrarily within a rule, e.g. I("INT", "/[0-9]+/", someCb, ParseOptions{SkipLog: false}), and then passed to the ParseContext.
+	Counter      int // the iteration counter that is shown in the stack trace, very useful when debugging
+	Code         *CodeStream
+
+	numRules    int        // grammar.numRules at the moment context is created. If no grammar (i.e. when joeson rules are parsed) pass 0.
+	Frames      [][]*frame // 2D. frames[len(code.text) + 1][grammar.numRules]frame. Though it's public only core.grammar should access it.
 	stack       [1024]*frame
-	Frames      [][]*frame
 	stackLength int
-	counter     int
-	SkipLog     bool
-	Debug       bool
 	loopStack   []string
 }
 
-func NewParseContext(code *CodeStream, grammar GrammarRuleCounter, attrs ParseOptions) *ParseContext {
+// numRules: grammar numRules at the moment context is created. If no grammar (i.e. when
+// joeson rules are parsed) pass 0.
+func NewParseContext(code *CodeStream, numRules int, attrs ParseOptions, opts TraceOptions) *ParseContext {
 	// frames is 2d
 	// frames[len(code.text) + 1][grammar.numRules]frame
 	//                         ^---- +1 is to include EOF
 	frames := make([][]*frame, len(code.text)+1)
 	for i := range frames {
-		frames[i] = make([]*frame, grammar.CountRules())
+		frames[i] = make([]*frame, numRules)
 	}
 	return &ParseContext{
-		Code:        code,
-		grammar:     grammar,
-		Frames:      frames,
-		stackLength: 0,
-		counter:     0,
-		SkipLog:     attrs.SkipLog,
+		Code:         code,
+		numRules:     numRules,
+		TraceOptions: opts,
+		ParseOptions: attrs,
+		Frames:       frames,
+		stackLength:  0,
+		Counter:      0,
 	}
 }
 
-func (ctx *ParseContext) log(message string) {
+func (ctx *ParseContext) log(message string, opts TraceOptions) {
 	if !ctx.SkipLog {
 		line := ctx.Code.Line()
-		opts := ctx.grammar.Options()
 		if opts.FilterLine == -1 || line == opts.FilterLine {
 			codeSgmnt := White(strconv.Itoa(line) + "," + strconv.Itoa(ctx.Code.Col()))
 			p := helpers.Escape(ctx.Code.Peek(NewPeek().BeforeChars(5)))
@@ -98,7 +103,7 @@ func (ctx *ParseContext) wipeWith(frame_ *frame, makeStash bool) *stash {
 	}
 	var stash_ []*frame
 	if makeStash {
-		stash_ = make([]*frame, ctx.grammar.CountRules())
+		stash_ = make([]*frame, ctx.numRules)
 	} else {
 		stash_ = nil
 	}

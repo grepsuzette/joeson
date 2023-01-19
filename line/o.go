@@ -19,6 +19,8 @@ type OLineByIndexOrName struct {
 	index helpers.NilableInt
 }
 
+// TODO fix that doc:
+
 /*
 O() is a variadic function, for example:
 - O(Named("EXPR", Rules(....)))  // First argument is string (a rule name) and goes to `name`, second is []Line (subrules)
@@ -46,11 +48,14 @@ func (ol OLine) StringIndent(nIndent int) string {
 	return s
 }
 
-func (ol OLine) ToRule(grammar *ast.Grammar, parentRule core.Ast, by OLineByIndexOrName) core.Ast {
+// You may provide a `grammar` to attempt to parse the rules with, or leave it nil
+// which will use the joeson_handcompiled grammar.
+func (ol OLine) toRule(rank *ast.Rank, parentRule core.Ast, by OLineByIndexOrName, opts core.TraceOptions, lazyGrammar *helpers.Lazy[*ast.Grammar]) core.Ast {
 	// figure out the name for this rule
 	var name string
 	var content Line = ol.content
-	if ol.name != "" { // A named rule
+	if ol.name != "" {
+		// a named rule, easy
 		name = ol.name
 	} else if by.name != "" {
 		name = by.name
@@ -59,7 +64,7 @@ func (ol OLine) ToRule(grammar *ast.Grammar, parentRule core.Ast, by OLineByInde
 	} else {
 		panic("assert")
 	}
-	rule := getRule(grammar, name, content, parentRule, ol.attrs)
+	rule := getRule(rank, name, content, parentRule, ol.attrs, opts, lazyGrammar)
 	rule.GetGNode().Parent = parentRule
 	rule.GetGNode().Index = by.index.Int // 0 by default is fine
 	return rule

@@ -36,7 +36,7 @@ func (not *Not) Parse(ctx *ParseContext) Ast {
 }
 
 func (not *Not) ContentString() string {
-	return Yellow("!") + Prefix(not.it) + not.it.ContentString()
+	return Yellow("!") + String(not.it)
 }
 func (not *Not) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren

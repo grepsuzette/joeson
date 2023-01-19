@@ -17,13 +17,13 @@ type GNode struct {
 	Captures_ *helpers.Lazy[[]Ast]    // the lazy captures getter, ditto.
 	Rules     map[string]Ast          // Treelike. Grammar collects all rules in its post walk
 	RulesK    []string                // because golang maps are unsorted, this helps keeping the insertion order
-	Id        int                     // Numeric id of a Rule. It is incremented in Grammar. joeson.coffee:604: `node.id = @numRules++`
+	Id        int                     // Numeric id of a Rule. Start on 0.
 	Index     int                     // joeson.coffee:1303
-	Rule      Ast                     // An Ast is a Rule when ast.GetGNode().Rule == ast. Set by Grammar.Postinit's walk into grammar nodes.
-	Parent    Ast                     // Grammar tree should be a DAG implying 1 Parent. Set by Grammar.Postinit's walk into grammar nodes.
-	Grammar   Ast                     // why Ast and not *ast.Grammar, because core package must not depend on ast package. joeson.coffee:592, joeson.coffee:532.
-	Node      Ast                     // Only used by GNode.Captures_ default implementation. The node containing this GNode.
-	_origin   Origin                  // automatically set by prepareResult when a node is being parsed (prepareResult is called by wrap). Unused ATM
+	Rule      Ast                     // What's the rule for the node with this gnode. When Rule == node, it means node is a rule of a grammar (in which case node.IsRule() is true)
+	Parent    Ast                     // Grammar must be a DAG, which implies 1 Parent at most (root.Parent being nil)
+	Grammar   Ast                     // More precisely an *ast.Grammar, but core can not depend upon the ast package. joeson.coffee:592, joeson.coffee:532.
+	Node      Ast                     // The node containing this GNode. Only used by GNode.Captures_ default implementation.
+	Origin    Origin                  // Where this node originates from.
 
 	/*
 	 `cbBuilder` represents optional callbacks declared within inlined rules.
@@ -40,7 +40,7 @@ type GNode struct {
 	 Third arg `Ast` is the caller Ast (see joeson.js:455
 	 or joeson.coffee:278) and represents the bounded `this` in javascript.
 	*/
-	CbBuilder func(nativeMapUsually Ast, ctx *ParseContext, caller Ast) Ast
+	CbBuilder func(nativeMapUsually Ast, ctx *ParseContext, caller Ast) Ast // see parseoptions.go
 	SkipCache bool
 	SkipLog   bool
 	Debug     bool
@@ -53,14 +53,14 @@ func NewGNode() *GNode {
 	}
 	// These callbacks can be redefined in Ast objects composing GNode.
 	// This helps getting a certain level of flexibiliy.
-	gn.Labels_ = helpers.NewLazy[[]string](func() []string {
+	gn.Labels_ = helpers.NewLazyFromFunc[[]string](func() []string {
 		if gn.Label != "" {
 			return []string{gn.Label}
 		} else {
 			return []string{}
 		}
 	})
-	gn.Captures_ = helpers.NewLazy[[]Ast](func() []Ast {
+	gn.Captures_ = helpers.NewLazyFromFunc[[]Ast](func() []Ast {
 		if gn.Capture {
 			return []Ast{gn.Node}
 		} else {

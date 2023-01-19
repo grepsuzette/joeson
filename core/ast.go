@@ -18,6 +18,7 @@ func IsRule(x Ast) bool {
 	return x != nil && x.GetGNode() != nil && x.GetGNode().Rule == x
 }
 
+// Show "<name>: " if `x` is a rule, or "<label>:", or empty string
 func Prefix(x Ast) string {
 	if IsRule(x) {
 		return Red(x.GetGNode().Name + ": ")
@@ -26,6 +27,11 @@ func Prefix(x Ast) string {
 	} else {
 		return ""
 	}
+}
+
+// This is Prefix(x) + x.ContentString(x)
+func String(x Ast) string {
+	return Prefix(x) + x.ContentString()
 }
 
 // This version is specialized for Astnode, and used instead of Object.merge()
@@ -63,28 +69,7 @@ func Merge(toExtend Ast, withPropertiesOf Ast) Ast {
 		return toExtend
 	} else if toExtend.GetGNode() == nil {
 		panic("dont know how until we have SetGNode. toExtend=" + toExtend.ContentString() + " \n withPropertiesOf=" + withPropertiesOf.ContentString())
-		// TestRaw makes a call with toExtend= NativeMap{join:<NativeUndefined>, value:_PIPE}
 	} else {
 		panic("Unhandled case in func (Astnode) Merge()")
 	}
-	// } else {
-	// 	gn := withPropertiesOf.GetGNode()
-	// 	toExtend.GetGNode().Capture = gn.Capture
-	// 	toExtend.GetGNode().CbBuilder = gn.CbBuilder
-	// 	toExtend.GetGNode().Debug = gn.Debug
-	// 	toExtend.GetGNode().Grammar = gn.Grammar
-	// 	toExtend.GetGNode().Id = gn.Id
-	// 	toExtend.GetGNode().Index = gn.Index
-	// 	toExtend.GetGNode().Label = gn.Label
-	// 	toExtend.GetGNode().Name = gn.Name
-	// 	toExtend.GetGNode().Parent = gn.Parent
-	// 	toExtend.GetGNode().Rule = gn.Rule
-	// 	toExtend.GetGNode().Rules = gn.Rules
-	// 	toExtend.GetGNode().RulesK = gn.RulesK
-	// 	toExtend.GetGNode().SkipCache = gn.SkipCache
-	// 	toExtend.GetGNode().SkipLog = gn.SkipLog
-	// 	toExtend.GetGNode().Labels_ = gn.Labels_
-	// 	toExtend.GetGNode().Captures_ = gn.Captures_
-	// 	return toExtend
-	// }
 }

@@ -51,7 +51,7 @@ func (ex *Existential) calculateLabels() []string {
 }
 
 func (ex *Existential) ContentString() string {
-	return Prefix(ex.it) + ex.it.ContentString() + Blue("?")
+	return String(ex.it) + Blue("?")
 }
 
 func (ex *Existential) Parse(ctx *ParseContext) Ast {

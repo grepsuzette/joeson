@@ -9,6 +9,12 @@ import (
 	"strings"
 )
 
+type Cursor struct {
+	line int
+	col  int
+	pos  int
+}
+
 // E.g. NewPeek().BeforeLines(2).AfterLines(4)
 type peekOper struct {
 	beforeChars int // they all use -1 for unspecified

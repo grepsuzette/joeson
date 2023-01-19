@@ -1,5 +1,4 @@
 This is the `Ast` interface implementers, 
-the building blocks to parse an arbitrary joeson 
-grammar.
+the building blocks to parse an arbitrary joeson grammar.
 
 

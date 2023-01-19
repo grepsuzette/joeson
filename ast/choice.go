@@ -3,7 +3,7 @@ package ast
 import (
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
-	"grepsuzette/joeson/lambda"
+	"grepsuzette/joeson/helpers"
 	"strings"
 )
 
@@ -60,9 +60,7 @@ func (ch *Choice) Parse(ctx *ParseContext) Ast {
 func (ch *Choice) ContentString() string {
 	var b strings.Builder
 	b.WriteString(Blue("("))
-	a := lambda.Map(ch.choices, func(x Ast) string {
-		return Prefix(x) + x.ContentString()
-	})
+	a := helpers.AMap(ch.choices, func(x Ast) string { return String(x) })
 	b.WriteString(strings.Join(a, Blue(" | ")))
 	b.WriteString(Blue(")"))
 	return b.String()

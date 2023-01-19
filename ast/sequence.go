@@ -5,7 +5,6 @@ import (
 	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
-	"grepsuzette/joeson/lambda"
 	"strings"
 )
 
@@ -33,9 +32,9 @@ func NewSequence(it Ast) *Sequence {
 		gn := NewGNode()
 		seq := &Sequence{GNode: gn, sequence: a.Array}
 		gn.Node = seq
-		gn.Labels_ = helpers.NewLazy[[]string](func() []string { return seq.calculateLabels() })
-		gn.Captures_ = helpers.NewLazy[[]Ast](func() []Ast { return seq.calculateCaptures() })
-		seq.type_ = helpers.NewLazy[sequenceRepr](func() sequenceRepr { return seq.calculateType() })
+		gn.Labels_ = helpers.NewLazyFromFunc[[]string](func() []string { return seq.calculateLabels() })
+		gn.Captures_ = helpers.NewLazyFromFunc[[]Ast](func() []Ast { return seq.calculateCaptures() })
+		seq.type_ = helpers.NewLazyFromFunc[sequenceRepr](func() sequenceRepr { return seq.calculateType() })
 		return seq
 	}
 }
@@ -80,7 +79,7 @@ func (seq *Sequence) calculateType() sequenceRepr {
 
 func (seq *Sequence) ContentString() string {
 	var b strings.Builder
-	as := lambda.Map(seq.sequence, func(x Ast) string { return Prefix(x) + x.ContentString() })
+	as := helpers.AMap(seq.sequence, func(x Ast) string { return String(x) })
 	b.WriteString(strings.Join(as, " "))
 	return Blue("(") + b.String() + Blue(")")
 }

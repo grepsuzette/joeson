@@ -1,7 +1,7 @@
 package core
 
 import (
-	"grepsuzette/joeson/lambda"
+	"grepsuzette/joeson/helpers"
 	"strings"
 )
 
@@ -23,7 +23,7 @@ func (na *NativeArray) GetGNode() *GNode        { return nil }
 func (na *NativeArray) HandlesChildLabel() bool { return false }
 func (na *NativeArray) Prepare()                {}
 func (na *NativeArray) ContentString() string {
-	return "[" + strings.Join(lambda.Map(na.Array, func(x Ast) string { return x.ContentString() }), ",") + "]"
+	return "[" + strings.Join(helpers.AMap(na.Array, func(x Ast) string { return x.ContentString() }), ",") + "]"
 }
 
 func (na *NativeArray) Parse(ctx *ParseContext) Ast      { panic("uncallable") }

@@ -106,10 +106,10 @@ func (patt *Pattern) HandlesChildLabel() bool { return false }
 func (patt *Pattern) Prepare()                {}
 func (patt *Pattern) ContentString() string {
 	var b strings.Builder
-	b.WriteString(Prefix(patt.Value) + patt.Value.ContentString())
+	b.WriteString(String(patt.Value))
 	b.WriteString(Cyan("*"))
 	if NotNilAndNotNativeUndefined(patt.Join) {
-		b.WriteString(Prefix(patt.Join) + patt.Join.ContentString())
+		b.WriteString(String(patt.Join))
 	}
 	if patt.Min < 0 && patt.Max < 0 {
 		// Cyan("") so output is identical to coffee
