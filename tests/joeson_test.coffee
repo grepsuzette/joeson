@@ -14,6 +14,41 @@ require './setup'
 assert = require 'assert'
 {pad, escape, toAscii} = require '../lib/helpers'
 
+# environment $TRACE (or $trace) must govern
+# trace options
+sTrace = process.env.TRACE || process.env.trace
+if sTrace?
+    aTrace = sTrace.split ","
+    for opt in aTrace
+        switch opt
+            when "none"
+                @trace.stack = no
+                @trace.loop = no
+                @trace.grammar = no
+                @trace.filterLine = -1
+            when "stack"
+                @trace.stack = yes
+            when "loop"
+                @trace.loop = yes
+            when "grammar"
+                @trace.grammar = yes
+            when "skipsetup"
+                @trace.skipSetup = true
+            when "all"
+                @trace.stack = yes
+                @trace.loop = yes
+                @trace.grammar = yes
+                @trace.filterLine = -1
+            else
+                if opt.indexOf "line=" == 0 || opt.indexOf "filterline=" == 0
+                    pos = opt.indexOf("=")
+                    if pos <= 0
+                        throw "TRACE option: " + opt + " requires an =<INT> suffix"
+                    else
+                        @trace.filterLine = opt.substr(pos+1)
+                else
+                    throw "unrecognized TRACE option: " + opt
+
 {o, i, t} = MACROS
 QUOTE = "'\\''"
 FSLSH = "'/'"
@@ -68,8 +103,6 @@ RAW_GRAMMAR = [
   i ESC2:       "'\\\\' .", (chr) -> '\\'+chr
 ]
 
-@trace.stack = no
-
 PARSED_GRAMMAR = Grammar RAW_GRAMMAR
 
 testGrammar = (rule, indent=0, name=undefined) ->
@@ -115,36 +148,44 @@ testGrammar = (rule, indent=0, name=undefined) ->
 
 # assert.equal(gm_aab.numRules, 3);
 
+if no
+    console.log "------------ calc ----------------------"
+    CALC = [
+        o Input: "expr:Expression"
+        i Expression: "_ first:Term rest:( _ AddOp _ Term )* _"
+        i Term: "first:Factor rest:( _ MulOp _ Factor )*"
+        i Factor: "'(' expr:Expression _ ')' | integer:Integer"
+        i AddOp: "'+' | '-'"
+        i MulOp: "'*' | '/'"
+        # i Integer: "'-'? [0-9]{1,}"
+        i Integer: "[0-9]{1,}"
+        i "_": "[ \t]*"
+    ]
+    calc = Grammar(CALC)
+    console.log calc.contentString()
+    x = calc.parse "1 + 2 + 3 + 4"
+    console.log x
+    console.log typeof  x
 
-# console.log "------------ calc ----------------------"
-# CALC = [
-#     o Input: "expr:Expression"
-#     i Expression: "_ first:Term rest:( _ AddOp _ Term )* _"
-#     i Term: "first:Factor rest:( _ MulOp _ Factor )*"
-#     i Factor: "'(' expr:Expression _ ')' | integer:Integer"
-#     i AddOp: "'+' | '-'"
-#     i MulOp: "'*' | '/'"
-#     # i Integer: "'-'? [0-9]{1,}"
-#     i Integer: "[0-9]{1,}"
-#     i "_": "[ \t]*"
-# ]
-# calc = Grammar(CALC)
-# console.log calc.contentString()
-# x = calc.parse "1 + 2 + 3 + 4"
-# console.log x
-# console.log typeof  x
+if yes
+    console.log "------------ TestDebugLabel ----------------------"
+    @trace.stack = no
+    @trace.stack = yes
+    @trace.filterLine = 1
+    DEBUGLABEL = [
+        o In: "l:Br"
+        i Br: "'Toy' | 'BZ'"
+    ]
+    debuglabel = Grammar(DEBUGLABEL)
+    debuglabel.name = "gmDebugLabel"
+    # debuglabel.printRules()
+    # x = debuglabel.parse "Toy"
+    # console.log x
+    # console.log typeof  x
 
-console.log "------------ TestDebugLabel ----------------------"
-@trace.stack = no
-@trace.stack = yes
-DEBUGLABEL = [
-    o In: "l:Br"
-    i Br: "'Toy' | 'BZ'"
-]
-debuglabel = Grammar(DEBUGLABEL)
-console.log debuglabel.contentString()
-debuglabel.printRules()
-# x = debuglabel.parse "Toy"
-# console.log x
-# console.log typeof  x
+if no
+    console.log "---------- TestExperiment -----------"
+    @trace.loop = no
+    @trace.stack = yes
+    # GRAMMAR.printRules()
 

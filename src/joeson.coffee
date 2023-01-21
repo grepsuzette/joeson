@@ -18,13 +18,14 @@ just admit that the current implementation is imperfect, and limit grammar usage
 
 @trace = trace =
   #filterLine: 299
-  stack:      yes
-  loop:       yes
+  stack:      no
+  loop:       no
   skipSetup:  no
 
 {clazz, colors:{red, blue, cyan, magenta, green, normal, black, white, yellow}} = require('cardamom')
 
 boldblack = (s) -> black(s, yes)
+bold = (s) -> "[1m#{s}[0m"
 {inspect} = require 'util'
 assert = require 'assert'
 {CodeStream} = require './codestream'
@@ -88,6 +89,7 @@ cacheSet = (frame, result, endPos) ->
   log: (message) ->
     unless @skipLog
       line = @code.line
+      console.log "code line =" +line
       return if trace.filterLine? and line isnt trace.filterLine
       codeSgmnt = "#{ white ''+line+','+@code.col \
                 }\t#{ boldblack pad right:5, (p=escape(@code.peek beforeChars:5))[p.length-5...] \
@@ -428,10 +430,7 @@ showcontent = (result) ->
     rank = Rank name
     for line, idx in lines
       if line instanceof OLine
-        console.log "Rank fromLines OLine="
-        console.log line
         choice = line.toRule rank, index:rank.choices.length
-        console.log "Rank      -------> choice=" + choice + "typeofchoice=" + showtype(choice)
         rank.choices.push choice
       else if line instanceof ILine
         for own name, rule of line.toRules()
@@ -673,8 +672,7 @@ showcontent = (result) ->
         node.parent = parent
         # inline rules are special
         if node.inlineLabel?
-          console.log "ASSERT THIS IS NEVER CALLED, RIGHT?"
-          throw "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          throw "assert this is never called"
           node.rule = node
           parent.rule.include node.inlineLabel, node
         # set node.rule, the root node for this rule
@@ -688,25 +686,12 @@ showcontent = (result) ->
           if trace.loop # print out id->rulename for convenience
             console.log "Loop #{red node.id}:\t#{node}"
 
-    # just show the tree (very low level debug)
-    # @walk pre: ({child:node, parent}) -> console.log "grammar PRE node:" + node.contentString() + "/" + showtype(node) + " parent:" + parent?.contentString()
-
-    # @walk pre: ({child:node, parent}) ->
-    #     depth = (x) ->
-    #         deep = 0
-    #         parent = node.parent
-    #         while parent? && parent != x
-    #             deep++
-    #             x = parent
-    #             parent = x.parent
-    #         deep
-    #     sParentName = "parent: " + if parent? then parent.name else "-"
-    #     console.log "DEEP " + pad(left:34, sParentName) + depth(node) + " Node " + (node + "")
-            
-            
     # Prepare all the nodes, child first.
     @walk post: ({child:node, parent}) ->
         node.prepare()
+
+    if trace.grammar
+        @printRules()
 
   # MAIN GRAMMAR PARSE FUNCTION
   parse$: (code, opts = {}) ->
@@ -758,16 +743,16 @@ showcontent = (result) ->
     else
       return $.result
 
-  contentString: -> magenta('GRAMMAR{')+showtype(@rank)+" "+@rank+magenta('}')
+  contentString: -> magenta('GRAMMAR{') + @rank+magenta('}')
 
   printRules: ->
-    console.log "+--------------- Grammar.printRules() ----------------------------------"
-    console.log "| name         : " + @.name
+    console.log "+--------------- Grammar.Debug() ----------------------------------"
+    console.log "| name         : " + bold(@.name)
     console.log "| contentString: " + @.contentString()
     console.log "| rules        : " + @.numRules
     console.log "| "
     console.log "| ",
-        pad(left:14, "key"),
+        pad(left:14, "key/name"),
         pad(left:3, "id"),
         pad(left:13, "type"),
         pad(left:3, "cap"),
@@ -900,65 +885,16 @@ OLine = clazz 'OLine', Line, ->
   # Helper for clazz construction in callbacks
   make: (clazz, options=undefined) -> (it, $) -> new clazz it, options
 
-C  = ->
-    r = Choice (x for x in arguments)
-    s = ""
-    for k in arguments
-        s += k + ","
-    console.log "ohm Choice in=" + s + " out=" + r.contentString()
-    return r
+C  = -> Choice (x for x in arguments)
 E  = -> Existential arguments...
-L  = (label, node) ->
-    console.log "ohm " + showtype(node) + " -  " + label
-    node.label = label; node
-La = ->
-    r = Lookahead arguments...
-    # s = ""
-    # first = yes
-    # for k in arguments
-    #     s += "," if !first
-    #     s += k
-    #     first = no
-    console.log "ohm " + s + " out=" + r.contentString()
-    return r
-N  = ->
-    s = ""
-    first = yes
-    for k in arguments
-        s += k + " "
-    console.log "ohm Not it=" + s
-    Not arguments...
-P  = (value, join, min, max) ->
-    # console.log "ohm Pattern " + value + " " + join + " " + min + " " + max
-    Pattern value:value, join:join, min:min, max:max
-R  = ->
-    r = Ref arguments...
-    # s = ""
-    # first = yes
-    # for k in arguments
-    #     if !first then s += ","
-    #     s += escape(k)
-    #     first = no
-    # console.log "ohm Ref in=" + s + " out=" + r.contentString()
-    return r
+L  = (label, node) -> node.label = label; node
+La = -> Lookahead arguments...
+N  = -> Not arguments...
+P  = (value, join, min, max) -> Pattern value:value, join:join, min:min, max:max
+R  = -> Ref arguments...
 Re = -> Regex arguments...
-S  = ->
-    r = Sequence (x for x in arguments)
-    s = ""
-    for v in arguments
-        s += v + ","
-    console.log "ohm Sequence in=" + s + " out=" + r.contentString()
-    return r
-St = ->
-    r = Str arguments...
-    # s = ""
-    # first = yes
-    # for k in arguments
-    #     if !first then s += ","
-    #     s += escape k
-    #     first = no
-    # console.log "ohm Str in='" + s + "' out=" + r.contentString()
-    return r
+S  = -> Sequence (x for x in arguments)
+St = -> Str arguments...
 {o, i, tokens}  = MACROS
 
 # Don't worry, this is just the intermediate hand-compiled form of the grammar you can actually understand,
