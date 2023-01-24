@@ -7,30 +7,30 @@ import (
 	"strings"
 )
 
-// as faithful as possible port from the coffeescript impl.
-// In coffeescript/js, the 2nd argument (`Ast`) doesn't exist,
-// instead .bind(this) was used
+// These callback types derive from the direct port from the
+// coffeescript impl.  In coffeescript/js, the 2nd
+// argument (`Ast`) doesn't exist, instead .bind(this) was used
 
-type ParseFunction2 func(*ParseContext, Ast) Ast
-type ParseFunction func(*ParseContext) Ast
+type parseFun2 func(*ParseContext, Ast) Ast
+type parseFun func(*ParseContext) Ast
 
 // in joeson.coffee those functions were originally declared as
 // class method to GNode and had a $ prefix:
 // @GNode
-//   @$stack = (fn) -> ($) -> Astnode
-//   @$loopify = (fn) -> ($) -> Astnode
-//   @$prepareResult = (fn) -> ($) -> Astnode
-//   @$wrap = (fn) -> Astnode
+//   @$stack = (fn) -> ($) -> Ast
+//   @$loopify = (fn) -> ($) -> Ast
+//   @$prepareResult = (fn) -> ($) -> Ast
+//   @$wrap = (fn) -> Ast
 //
 // Here they are called stack, loopify, prepareResult and Wrap:
 //
-// - func stack(fparse ParseFunction, x Astnode) ParseFunction
-// - func loopify(fparse ParseFunction, x Astnode) ParseFunction
-// - func prepareResult(fparse2 ParseFunction2, caller Astnode) ParseFunction
-// - func Wrap(fparse2 ParseFunction2, node Astnode) ParseFunction
+// - func stack(fparse parseFun, x Ast) parseFun
+// - func loopify(fparse parseFun, x Ast) parseFun
+// - func prepareResult(fparse2 parseFun2, caller Ast) parseFun
+// - func Wrap(fparse2 parseFun2, node Ast) parseFun
 //     notice this line in Wrap:  wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 
-func stack(fparse ParseFunction, x Ast) ParseFunction {
+func stack(fparse parseFun, x Ast) parseFun {
 	return func(ctx *ParseContext) Ast {
 		ctx.StackPush(x)
 		if TimeStart != nil {
@@ -45,7 +45,7 @@ func stack(fparse ParseFunction, x Ast) ParseFunction {
 	}
 }
 
-func loopify(fparse ParseFunction, x Ast) ParseFunction {
+func loopify(fparse parseFun, x Ast) parseFun {
 	return func(ctx *ParseContext) Ast {
 		log := func(s string) {}
 		opts := ctx.TraceOptions
@@ -212,7 +212,7 @@ func loopify(fparse ParseFunction, x Ast) ParseFunction {
 // - handle labels for standalone nodes
 // - set GNode.Origin
 // - call GNode.CbBuilder(result, ctx, caller), if CbBuilder != nil
-func prepareResult(fparse2 ParseFunction2, caller Ast) ParseFunction {
+func prepareResult(fparse2 parseFun2, caller Ast) parseFun {
 	return func(ctx *ParseContext) Ast {
 		ctx.Counter++
 		result := fparse2(ctx, caller)
@@ -248,7 +248,7 @@ func prepareResult(fparse2 ParseFunction2, caller Ast) ParseFunction {
 	}
 }
 
-func Wrap(fparse2 ParseFunction2, node Ast) ParseFunction {
+func Wrap(fparse2 parseFun2, node Ast) parseFun {
 	wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 	wrapped2 := prepareResult(fparse2, node)
 	gn := node.GetGNode()

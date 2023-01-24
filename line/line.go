@@ -9,7 +9,8 @@ import (
 
 type Line interface {
 	LineType() string                // i, o, a, s, c
-	Content() Line                   // Sline, OLine, ALine, CLine (containing an Astnode)...
+	Name() string                    // Name or ""
+	Content() Line                   // Sline, OLine, ALine, CLine (containing an Ast)...
 	StringIndent(nIndent int) string // indent with `nIdent` levels (for nested rules)
 }
 
@@ -17,7 +18,7 @@ type Line interface {
 
 // The functions `I(a ...any)` and `O(a ...any)` both call `lineInit(a)`
 // to help destructuring `a` into a name, content (Line) and options. This
-// is where `Named()` gets cracked open, if it was used. This is also
+// is where `Named()` gets decomposed if it was used. This is also
 // where parsing callbacks make their way into ParseOptions.
 func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions) {
 	for i, arg := range origArgs {
@@ -95,7 +96,7 @@ func getRule(rank *ast.Rank, name string, line Line, parentRule Ast, attrs Parse
 	case ALine:
 		retAst = rankFromLines(v.Array, name, GrammarOptions{TraceOptions: opts, LazyGrammar: lazyGrammar})
 	case CLine:
-		retAst = v.ast
+		retAst = v.Ast
 		retAst.GetGNode().Name = name
 	case ILine:
 		panic("assert") // ILine is impossible here
@@ -116,7 +117,6 @@ func getRule(rank *ast.Rank, name string, line Line, parentRule Ast, attrs Parse
 		// a grammar like joeson_handcompiled is needed for that,
 		gm := lazyGrammar.Get() // uses Lazy to get the grammar in cache or build it
 		if x, error := gm.ParseOrFail(
-			// TODO think NewParseContext was better with grammar
 			NewParseContext(NewCodeStream(v.Str), gm.NumRules, attrs, opts),
 		); error == nil {
 			retAst = x

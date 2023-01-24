@@ -9,8 +9,8 @@ func o(a ...any) OLine { return O(a...) }
 func i(a ...any) ILine { return I(a...) }
 
 func rules(lines ...Line) ALine { return NewALine(lines) }
-func named(name string, lineStringOrAstnode any) NamedRule {
-	return Named(name, lineStringOrAstnode)
+func named(name string, lineStringOrAst any) NamedRule {
+	return Named(name, lineStringOrAst)
 }
 
 func fCode(it Ast) Ast {

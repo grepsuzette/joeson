@@ -10,6 +10,7 @@ type SLine struct {
 }
 
 func NewSLine(s string) SLine     { return SLine{s} }
+func (sl SLine) Name() string     { panic("uncallable") }
 func (sl SLine) Content() Line    { panic("uncallable") }
 func (sl SLine) LineType() string { return "s" }
 func (sl SLine) StringIndent(nIndent int) string {

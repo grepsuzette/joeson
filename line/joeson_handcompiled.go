@@ -75,8 +75,8 @@ func JoesonRules() []Line {
 								o(S(L("value", R("PRIMARY")), St("*"), L("join", E(S(N(R("__")), R("PRIMARY")))), L("@", E(R("RANGE")))), func(it Ast) Ast { return NewPattern(it) }),
 								o(S(L("value", R("PRIMARY")), St("+"), L("join", E(S(N(R("__")), R("PRIMARY"))))), func(it Ast) Ast {
 									h := it.(NativeMap)
-									h.Set("Min", NewNativeInt(1))
-									h.Set("Max", NewNativeInt(-1))
+									h.Set("min", NewNativeInt(1))
+									h.Set("max", NewNativeInt(-1))
 									return NewPattern(h)
 								}),
 								o(S(L("value", R("PRIMARY")), L("@", R("RANGE"))), func(it Ast) Ast { return NewPattern(it) }),
@@ -113,6 +113,6 @@ func JoesonRules() []Line {
 		i(Named(".", Re("[\\s\\S]"))),
 		i(Named("ESC1", S(St("\\"), R(".")))),
 		i(Named("ESC2", S(St("\\"), R("."))), func(chr Ast) Ast { return NewNativeString("\\" + chr.(NativeString).Str) }),
-		// i(Named("EXAMPLE", "/regex/", ParseOptions{SkipLog: false, SkipCache: true}, func(it Astnode, ctx *ParseContext) Astnode { return it })),
+		// i(Named("EXAMPLE", "/regex/", ParseOptions{SkipLog: false, SkipCache: true}, func(it Ast, ctx *ParseContext) Ast { return it })),
 	}
 }

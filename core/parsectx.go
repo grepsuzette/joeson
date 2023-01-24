@@ -20,18 +20,18 @@ type stash struct {
 type ParseContext struct {
 	TraceOptions     // grammar.TraceOptions at the moment this context is created
 	ParseOptions     // Defined arbitrarily within a rule, e.g. I("INT", "/[0-9]+/", someCb, ParseOptions{SkipLog: false}), and then passed to the ParseContext.
-	Counter      int // the iteration counter that is shown in the stack trace, very useful when debugging
+	Counter      int // the iteration counter that is shown in the stack trace, useful when debugging
 	Code         *CodeStream
 
-	numRules    int        // grammar.numRules at the moment context is created. If no grammar (i.e. when joeson rules are parsed) pass 0.
+	numRules    int        // grammar.numRules at the moment context is created. If no grammar (esp., when joeson rules are parsed the first time) pass 0.
 	Frames      [][]*frame // 2D. frames[len(code.text) + 1][grammar.numRules]frame. Though it's public only core.grammar should access it.
 	stack       [1024]*frame
 	stackLength int
 	loopStack   []string
 }
 
-// numRules: grammar numRules at the moment context is created. If no grammar (i.e. when
-// joeson rules are parsed) pass 0.
+// numRules: grammar numRules at the moment context is created. If no grammar (esp. when
+// joeson rules are parsed the very first time) pass 0.
 func NewParseContext(code *CodeStream, numRules int, attrs ParseOptions, opts TraceOptions) *ParseContext {
 	// frames is 2d
 	// frames[len(code.text) + 1][grammar.numRules]frame

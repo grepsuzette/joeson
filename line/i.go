@@ -17,9 +17,9 @@ type ILine struct {
 /*
 I() is a variadic function which allows a variety of declarations, for example:
 - I("INT", "/[0-9]+/")
-- I("INT", "/[0-9]+/", func(it Astnode) Astnode { return new NativeInt(it) })
-- I("INT", "/[0-9]+/", func(it Astnode, ctx *ParseContext) Astnode { return <...> })
-- I("INT", "/[0-9]+/", func(it Astnode) Astnode { return <...> }, core.ParseOptions{SkipLog: false, SkipCache: true})
+- I("INT", "/[0-9]+/", func(it Ast) Ast { return new NativeInt(it) })
+- I("INT", "/[0-9]+/", func(it Ast, ctx *ParseContext) Ast { return <...> })
+- I("INT", "/[0-9]+/", func(it Ast) Ast { return <...> }, core.ParseOptions{SkipLog: false, SkipCache: true})
 - I("RANGE", O(S(St("{"), R("_"), L("min",E(R("INT"))), R("_"), St(","), R("_"), L("max",E(R("INT"))), R("_"), St("}"))))
   This one is a handcompiled rule with an O which the joeson grammar is initially defined as in ast/handcompiled
 - I("LABEL", C(St('&'), St('@'), R("WORD"))),
@@ -34,6 +34,7 @@ func I(a ...any) ILine {
 }
 
 func (il ILine) LineType() string { return "i" }
+func (il ILine) Name() string     { return il.name }
 func (il ILine) Content() Line    { return il.content }
 func (il ILine) StringIndent(nIndent int) string {
 	s := helpers.Indent(nIndent)

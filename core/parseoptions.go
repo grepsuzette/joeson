@@ -1,8 +1,11 @@
 package core
 
-// These are the options for each ParseContext.
-// They usually come with the grammar, but can also be defined in rules
-// (in a totally optional way, see below).
+// Each ParseContext have ParseOptions.
+// They can originate from different places:
+// - grammar.ParseString("<text to parse>", <optionalParseOptions>))
+// - or from a rule:
+//    i(Named("EXAMPLE", "/regex/", ParseOptions{SkipLog: false, SkipCache: true}, func(it Ast, ctx *ParseContext) Ast { return it })),
+//    in which case they will be stored in GNode.ParseOptions
 type ParseOptions struct {
 	SkipLog   bool
 	SkipCache bool

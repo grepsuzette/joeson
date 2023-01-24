@@ -11,4 +11,5 @@
 ✓ improve and clarify joeson_test.go
 ✓ parsectx review visibility of fields, e.g. SkipLog Debug Frames?
 - document and maybe add selective options to choose what log category to print in both go and js
-
+✓ inquiry gnode line 44, do we still have this 3rd arg caller? if not remove: YES necessary
+✓ from GNode, remove CbBuilder, SkipCache, SkipLog and Debug and embed a ParseOptions instead

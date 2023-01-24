@@ -6,9 +6,10 @@ import (
 )
 
 // Lines of the intention grammar
-// their rules are SLine, thus the first time,
-// these rules require the handcompiled grammar to be compiled.
-func IntentionGrammarLines() []Line {
+// their rules are SLine, thus they will require the
+// handcompiled grammar to be compiled the first time
+// (after which this grammar can also parse other grammars).
+func IntentionRules() []Line {
 	return []Line{
 		o(named("EXPR", rules(
 			o("CHOICE _"),
@@ -25,14 +26,14 @@ func IntentionGrammarLines() []Line {
 								o("value:PRIMARY '*' join:(!__ PRIMARY)? @:RANGE?", func(it Ast) Ast { return NewPattern(it) }),
 								o("value:PRIMARY '+' join:(!__ PRIMARY)?", func(it Ast) Ast {
 									h := it.(NativeMap)
-									h.Set("Min", NewNativeInt(1))
-									h.Set("Max", NewNativeInt(-1))
+									h.Set("min", NewNativeInt(1))
+									h.Set("max", NewNativeInt(-1))
 									return NewPattern(h)
 								}),
 								o("value:PRIMARY @:RANGE", func(it Ast) Ast { return NewPattern(it) }),
 								o("'!' PRIMARY", func(it Ast) Ast { return NewNot(it) }),
 								o("'(?' expr:EXPR ')' | '?' expr:EXPR", func(it Ast) Ast { return NewLookahead(it) }),
-								i(named("RANGE", "'{' _ min:INT? _ ',' _ max:INT? _ '}'"), func(it Ast) Ast { return NewPattern(it) }),
+								i(named("RANGE", "'{' _ min:INT? _ ',' _ max:INT? _ '}'")),
 							))),
 							o(named("PRIMARY", rules(
 								o("WORD '(' EXPR ')'", func(it Ast) Ast {

@@ -10,7 +10,8 @@ import "grepsuzette/joeson/helpers"
    node.name = name of the rule, if this is @rule.
 */
 type GNode struct {
-	Name      string // rule name if IsRule(), empty otherwise
+	Name string // rule name if IsRule(), empty otherwise
+	ParseOptions
 	Label     string
 	Capture   bool                    // usually true, false for instance for Str
 	Labels_   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate GNode behavior in the original coffeescript
@@ -24,26 +25,6 @@ type GNode struct {
 	Grammar   Ast                     // More precisely an *ast.Grammar, but core can not depend upon the ast package. joeson.coffee:592, joeson.coffee:532.
 	Node      Ast                     // The node containing this GNode. Only used by GNode.Captures_ default implementation.
 	Origin    Origin                  // Where this node originates from.
-
-	/*
-	 `cbBuilder` represents optional callbacks declared within inlined rules.
-	 E.g. the func in `o("value:PRIMARY '*' join:(!__ PRIMARY)? @:RANGE?",
-	 		   func(result Ast) Ast { return ast.NewPattern(result) }),`
-
-	 Since this example have labels, `result` will be of type NativeMap (which
-	 implements Ast) with the 3 keys "value", "join" and "@". Otherwise
-	 it will be a NativeArray.
-
-	 Second arg `...*ParseContext` is rarely passed in practice,
-	 see a rare use in joescript.coffee:660.
-
-	 Third arg `Ast` is the caller Ast (see joeson.js:455
-	 or joeson.coffee:278) and represents the bounded `this` in javascript.
-	*/
-	CbBuilder func(nativeMapUsually Ast, ctx *ParseContext, caller Ast) Ast // see parseoptions.go
-	SkipCache bool
-	SkipLog   bool
-	Debug     bool
 }
 
 func NewGNode() *GNode {

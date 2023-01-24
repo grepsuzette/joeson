@@ -38,7 +38,7 @@ O("EXPR", rules(
 ```go
 type Line interface {
 	LineType() string                // i, o, a, s, c
-	Content() Line                   // Sline, OLine, ALine, CLine (containing an Astnode)...
+	Content() Line                   // Sline, OLine, ALine, CLine (containing an Ast)...
 	StringIndent(nIndent int) string // indent with `nIdent` levels (for nested rules)
 }
 ```

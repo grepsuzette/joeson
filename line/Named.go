@@ -5,7 +5,7 @@ import (
 	"grepsuzette/joeson/core"
 )
 
-// NamedRule satisfies Astnode. Otherwise, it just adds a Name to a Line
+// NamedRule satisfies Ast. Otherwise, it just adds a Name to a Line
 type NamedRule struct {
 	Name string
 	Line Line // note can be OLine, ILine or ALine (array)
@@ -20,8 +20,8 @@ type NamedRule struct {
 //
 // For i, it is necessary for len(lines) == 1
 //   this is to be enforcedby the caller.
-func Named(name string, lineStringOrAstnode any) NamedRule {
-	switch v := lineStringOrAstnode.(type) {
+func Named(name string, lineStringOrAst any) NamedRule {
+	switch v := lineStringOrAst.(type) {
 	case Line:
 		return NamedRule{name, v}
 	case string:
@@ -29,7 +29,7 @@ func Named(name string, lineStringOrAstnode any) NamedRule {
 	case core.Ast:
 		return NamedRule{name, NewCLine(v)}
 	default:
-		msg := fmt.Sprintf("Invalid argument to Named(%s, %v)\n", name, lineStringOrAstnode)
+		msg := fmt.Sprintf("Invalid argument to Named(%s, %v)\n", name, lineStringOrAst)
 		panic(msg)
 	}
 }

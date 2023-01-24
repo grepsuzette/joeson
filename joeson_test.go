@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"grepsuzette/joeson/ast"
+	. "grepsuzette/joeson/colors"
 	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
 	"grepsuzette/joeson/line"
@@ -37,7 +38,7 @@ func TestHandcompiled(t *testing.T) {
 // Parse joeson_intention using joeson_handcompiled
 // It's similar to joeson_test.coffee
 func TestParseIntention(t *testing.T) {
-	gmIntention := line.GrammarFromLines(line.IntentionGrammarLines(), "gmIntention")
+	gmIntention := line.GrammarFromLines(line.IntentionRules(), "gmIntention")
 	if !gmIntention.IsReady() || gmIntention.NumRules != line.JoesonNbRules {
 		t.Fail()
 	}
@@ -48,7 +49,7 @@ func TestParseIntention(t *testing.T) {
 func TestBootstrap(t *testing.T) {
 	gmJoeson := line.NewJoeson()
 	gmIntention := line.GrammarFromLines(
-		line.IntentionGrammarLines(),
+		line.IntentionRules(),
 		"gmIntention",
 		line.GrammarOptions{LazyGrammar: helpers.NewLazyFromValue[*ast.Grammar](gmJoeson)},
 	)
@@ -78,15 +79,59 @@ func TestBootstrap(t *testing.T) {
 }
 
 // TODO benchmarks later
-func Test100Times(t *testing.T) {
-	// this test comes directly from joeson_test.coffee
+func TestManyTimes(t *testing.T) {
+	// this test replicates joeson_test.coffee
 	start := time.Now()
-	iter := 100
-	for i := 0; i < iter; i++ {
-		fmt.Println(line.NewALine(line.IntentionGrammarLines()).StringIndent(0))
-		fmt.Println("-------------")
+	nbIter := 10
+	parsedGrammar := line.GrammarFromLines(line.IntentionRules(), "gmIntention", line.GrammarOptions{TraceOptions: Mute()})
+	var frecurse func(rule line.Line, indent int, name string)
+	frecurse = func(rule line.Line, indent int, name string) {
+		switch v := rule.(type) {
+		case line.ALine:
+			// fmt.Println("aLINE n=" + name)
+			if name != "" {
+				fmt.Printf("%s%s\n", helpers.Indent(indent), Red(name+":"))
+			}
+			for _, subline := range v.Array {
+				frecurse(subline, indent+1, "")
+			}
+		case line.OLine:
+			// fmt.Println("Oline: name=" + name + " VNAme:" + v.Name() + "  stringindent=" + v.StringIndent(indent))
+			if name == "" {
+				name = v.Name()
+			}
+			frecurse(v.Content(), indent, name)
+		case line.ILine:
+			// fmt.Println("Iline: " + v.Name() + "  " + v.StringIndent(indent))
+			frecurse(v.Content(), indent, v.Name())
+		case line.CLine:
+			// fmt.Println("CLINE")
+			fmt.Printf("%s%s\n", helpers.Indent(indent), String(v.Ast))
+		case line.SLine:
+			// fmt.Println("Sline: " + v.Str + " name= " + name)
+			// parse the rules of the intention grammar, one line at a time
+			if it, err := parsedGrammar.ParseString(v.Str, ParseOptions{Debug: false}); err != nil {
+				panic(err)
+			} else {
+				sName := ""
+				if name != "" {
+					sName = Red(helpers.PadLeft(name+":", 10-indent*2))
+				}
+				sResult := Red("null")
+				if it != nil {
+					sResult = Yellow(String(it))
+				}
+				fmt.Printf("%s%s%s\n", helpers.Indent(indent), sName, sResult)
+			}
+
+		default:
+			fmt.Printf("unknown -----%#v %T\n", v, v)
+		}
 	}
-	fmt.Printf("Duration for %d iterations: %d ms\n", iter, time.Now().Sub(start).Milliseconds())
+	for i := 0; i < nbIter; i++ {
+		frecurse(line.NewALine(line.IntentionRules()), 0, "")
+	}
+	fmt.Printf("Duration for %d iterations: %d ms\n", nbIter, time.Now().Sub(start).Milliseconds())
 }
 
 // short grammar was useful for debugging. Kept for the good memories
@@ -99,7 +144,6 @@ func TestDebugLabel(t *testing.T) {
 		},
 		"gmDebugLabel",
 	)
-	debuglabel.PrintRules()
 	if x, error := debuglabel.ParseString("Toy"); error == nil {
 		if nm, isNativeMap := x.(NativeMap); !isNativeMap {
 			t.Errorf("expected NativeMap, got %T. ContentString: %s\n", x, x.ContentString())

@@ -34,12 +34,9 @@ func String(x Ast) string {
 	return Prefix(x) + x.ContentString()
 }
 
-// This version is specialized for Astnode, and used instead of Object.merge()
+// Port of lib/helpers.js:extend() in a less general way (Ast-specific)
 // Extend a source object with the properties of another object (shallow copy).
-// Careful, even though we return an Astnode, it is in fact the modified
-// `toExtend` object that is returned.
-// In original coffee impl., it is called lib/helpers.js:extend()
-// (Object.extend)
+// The modified `toExtend` object is returned.
 func Merge(toExtend Ast, withPropertiesOf Ast) Ast {
 	// @extend = extend = (object, properties) ->
 	//   for key, val of properties
@@ -60,7 +57,7 @@ func Merge(toExtend Ast, withPropertiesOf Ast) Ast {
 				case "label":
 					toExtend.GetGNode().Label = v.(NativeString).Str
 				default:
-					panic("unhandled property " + k + " in func (Astnode) Merge(). toExtend=" + toExtend.ContentString() + " \n withPropertiesOf=" + withPropertiesOf.ContentString())
+					panic("unhandled property " + k + " in func (Ast) Merge(). toExtend=" + toExtend.ContentString() + " \n withPropertiesOf=" + withPropertiesOf.ContentString())
 				}
 			}
 		} else {
@@ -70,6 +67,6 @@ func Merge(toExtend Ast, withPropertiesOf Ast) Ast {
 	} else if toExtend.GetGNode() == nil {
 		panic("dont know how until we have SetGNode. toExtend=" + toExtend.ContentString() + " \n withPropertiesOf=" + withPropertiesOf.ContentString())
 	} else {
-		panic("Unhandled case in func (Astnode) Merge()")
+		panic("Unhandled case in func (Ast) Merge()")
 	}
 }

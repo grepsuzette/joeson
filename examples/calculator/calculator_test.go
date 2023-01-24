@@ -18,8 +18,8 @@ func o(a ...any) line.OLine { return line.O(a...) }
 func i(a ...any) line.ILine { return line.I(a...) }
 
 func xx(it Ast) Ast { return eval(it.(NativeMap).Get("first"), it.(NativeMap).Get("rest")) }
-func named(name string, lineStringOrAstnode any) line.NamedRule {
-	return line.Named(name, lineStringOrAstnode)
+func named(name string, lineStringOrAst any) line.NamedRule {
+	return line.Named(name, lineStringOrAst)
 }
 
 var linesCalc = []line.Line{

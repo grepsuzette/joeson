@@ -11,6 +11,7 @@ type ALine struct {
 }
 
 func NewALine(a []Line) ALine     { return ALine{a} }
+func (al ALine) Name() string     { panic("uncallable") }
 func (al ALine) Content() Line    { panic("uncallable") }
 func (al ALine) LineType() string { return "a" }
 func (al ALine) StringIndent(nIndent int) string {

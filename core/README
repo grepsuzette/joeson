@@ -2,7 +2,7 @@
 ===============
 
 Short of finding a better name, these types wrap int, string, map, array to 
-satisfy interface core.Astnode.
+satisfy interface core.Ast.
 
 There is also NativeUndefined (to represent javascript `undefined`, as nil
 can't be used).

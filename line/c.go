@@ -2,15 +2,16 @@ package line
 
 import . "grepsuzette/joeson/core"
 
-// CLine wraps an Astnode and therefore represents
+// CLine wraps an Ast and therefore represents
 // a rule which was already compiled in a Line tree.
 type CLine struct {
-	ast Ast
+	Ast
 }
 
 func NewCLine(x Ast) CLine        { return CLine{x} }
+func (cl CLine) Name() string     { panic("uncallable") }
 func (cl CLine) Content() Line    { panic("uncallable") }
 func (cl CLine) LineType() string { return "c" }
 func (cl CLine) StringIndent(nIndent int) string {
-	return cl.ast.ContentString()
+	return cl.Ast.ContentString()
 }

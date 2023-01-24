@@ -10,7 +10,7 @@ import (
 type Ref struct {
 	*GNode
 	ref   string // ref because joeson.coffee used @ref, because @name was reserved
-	param Ast    // thought it was `any`, see frame.go (`param` field) and joeson.coffee:67. But Astnode must be good
+	param Ast    // thought it was `any`, see frame.go (`param` field) and joeson.coffee:67. But Ast must be good
 }
 
 func NewRef(it Ast) *Ref {
