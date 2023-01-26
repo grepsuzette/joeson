@@ -1,27 +1,20 @@
-package main
+package joeson
 
 import (
 	"fmt"
-	"grepsuzette/joeson/ast"
-	. "grepsuzette/joeson/colors"
-	. "grepsuzette/joeson/core"
 	"grepsuzette/joeson/helpers"
-	"grepsuzette/joeson/line"
 	"testing"
 	"time"
 )
 
-func o(a ...any) line.OLine { return line.O(a...) }
-func i(a ...any) line.ILine { return line.I(a...) }
-
 // Basic test, doesn't do much
 func TestHandcompiled(t *testing.T) {
-	gm := line.NewJoeson()
-	if gm.GetGNode().Name != line.JoesonGrammarName {
+	gm := NewJoeson()
+	if gm.GetGNode().Name != JoesonGrammarName {
 		t.Fail()
 	}
-	if gm.NumRules != line.JoesonNbRules {
-		t.Errorf("Expected %d rules, got %d\n", line.JoesonNbRules, gm.NumRules)
+	if gm.NumRules != JoesonNbRules {
+		t.Errorf("Expected %d rules, got %d\n", JoesonNbRules, gm.NumRules)
 	}
 	if !gm.IsReady() {
 		t.Fail()
@@ -32,8 +25,8 @@ func TestHandcompiled(t *testing.T) {
 // Parse joeson_intention using joeson_handcompiled
 // It's similar to joeson_test.coffee
 func TestParseIntention(t *testing.T) {
-	gmIntention := line.GrammarFromLines(line.IntentionRules(), "gmIntention")
-	if !gmIntention.IsReady() || gmIntention.NumRules != line.JoesonNbRules {
+	gmIntention := GrammarFromLines(IntentionRules(), "gmIntention")
+	if !gmIntention.IsReady() || gmIntention.NumRules != JoesonNbRules {
 		t.Fail()
 	}
 }
@@ -41,20 +34,20 @@ func TestParseIntention(t *testing.T) {
 // This test bootstraps the intention grammar:
 // __joeson__ -> __intention__ -> an arbitrary grammar -> parses a string
 func TestBootstrap(t *testing.T) {
-	gmJoeson := line.NewJoeson()
-	gmIntention := line.GrammarFromLines(
-		line.IntentionRules(),
+	gmJoeson := NewJoeson()
+	gmIntention := GrammarFromLines(
+		IntentionRules(),
 		"gmIntention",
-		line.GrammarOptions{LazyGrammar: helpers.NewLazyFromValue[*ast.Grammar](gmJoeson)},
+		GrammarOptions{LazyGrammar: helpers.NewLazyFromValue[*Grammar](gmJoeson)},
 	)
 	gmJoeson.Bomb() // destroy the grammar! to make sure it plays no part below
-	gmDebuglabel := line.GrammarFromLines(
-		[]line.Line{
-			o(line.Named("In", "l:Br")),
-			i(line.Named("Br", "'Toy' | 'BZ'")),
+	gmDebuglabel := GrammarFromLines(
+		[]Line{
+			o(Named("In", "l:Br")),
+			i(Named("Br", "'Toy' | 'BZ'")),
 		},
 		"dbglbl/bootst",
-		line.GrammarOptions{LazyGrammar: helpers.NewLazyFromValue[*ast.Grammar](gmIntention)},
+		GrammarOptions{LazyGrammar: helpers.NewLazyFromValue[*Grammar](gmIntention)},
 	)
 	gmDebuglabel.PrintRules()
 	if x, err := gmDebuglabel.ParseString("Toy"); err != nil {
@@ -76,38 +69,38 @@ func TestManyTimes(t *testing.T) {
 	// this test replicates joeson_test.coffee
 	start := time.Now()
 	nbIter := 10
-	parsedGrammar := line.GrammarFromLines(line.IntentionRules(), "gmIntention", line.GrammarOptions{TraceOptions: Mute()})
-	var frecurse func(rule line.Line, indent int, name string)
-	frecurse = func(rule line.Line, indent int, name string) {
+	parsedGrammar := GrammarFromLines(IntentionRules(), "gmIntention", GrammarOptions{TraceOptions: Mute()})
+	var frecurse func(rule Line, indent int, name string)
+	frecurse = func(rule Line, indent int, name string) {
 		switch v := rule.(type) {
-		case line.ALine:
+		case ALine:
 			if name != "" {
-				fmt.Printf("%s%s\n", helpers.Indent(indent), Red(name+":"))
+				fmt.Printf("%s%s\n", helpers.Indent(indent), red(name+":"))
 			}
 			for _, subline := range v.Array {
 				frecurse(subline, indent+1, "")
 			}
-		case line.OLine:
+		case OLine:
 			if name == "" {
 				name = v.Name()
 			}
 			frecurse(v.Content(), indent, name)
-		case line.ILine:
+		case ILine:
 			frecurse(v.Content(), indent, v.Name())
-		case line.CLine:
+		case CLine:
 			fmt.Printf("%s%s\n", helpers.Indent(indent), String(v.Ast))
-		case line.SLine:
+		case SLine:
 			// parse the rules of the intention grammar, one line at a time
 			if it, err := parsedGrammar.ParseString(v.Str, ParseOptions{Debug: false}); err != nil {
 				panic(err)
 			} else {
 				sName := ""
 				if name != "" {
-					sName = Red(helpers.PadLeft(name+":", 10-indent*2))
+					sName = red(helpers.PadLeft(name+":", 10-indent*2))
 				}
-				sResult := Red("null")
+				sResult := red("null")
 				if it != nil {
-					sResult = Yellow(String(it))
+					sResult = yellow(String(it))
 				}
 				fmt.Printf("%s%s%s\n", helpers.Indent(indent), sName, sResult)
 			}
@@ -117,7 +110,7 @@ func TestManyTimes(t *testing.T) {
 		}
 	}
 	for i := 0; i < nbIter; i++ {
-		frecurse(line.NewALine(line.IntentionRules()), 0, "")
+		frecurse(NewALine(IntentionRules()), 0, "")
 	}
 	fmt.Printf("Duration for %d iterations: %d ms\n", nbIter, time.Now().Sub(start).Milliseconds())
 }
@@ -125,10 +118,10 @@ func TestManyTimes(t *testing.T) {
 // short grammar was useful for debugging. Kept for the good memories
 // __joeson__ -> an arbitrary grammar -> parse a string
 func TestDebugLabel(t *testing.T) {
-	debuglabel := line.GrammarFromLines(
-		[]line.Line{
-			o(line.Named("In", "l:Br")),
-			i(line.Named("Br", "'Toy' | 'BZ'")),
+	debuglabel := GrammarFromLines(
+		[]Line{
+			o(Named("In", "l:Br")),
+			i(Named("Br", "'Toy' | 'BZ'")),
 		},
 		"gmDebugLabel",
 	)

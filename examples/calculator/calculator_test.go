@@ -2,10 +2,7 @@ package main
 
 import (
 	"fmt"
-	"grepsuzette/joeson/ast"
-	. "grepsuzette/joeson/colors"
-	. "grepsuzette/joeson/core"
-	line "grepsuzette/joeson/line"
+	"grepsuzette/joeson"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,21 +11,22 @@ import (
 // this example is the typical example with a calculator
 // and is inspired from the mna-pigeon example
 
-func o(a ...any) line.OLine { return line.O(a...) }
-func i(a ...any) line.ILine { return line.I(a...) }
-
-func xx(it Ast) Ast { return eval(it.(NativeMap).Get("first"), it.(NativeMap).Get("rest")) }
-func named(name string, lineStringOrAst any) line.NamedRule {
-	return line.Named(name, lineStringOrAst)
+func xx(it joeson.Ast) joeson.Ast {
+	return eval(it.(joeson.NativeMap).Get("first"), it.(joeson.NativeMap).Get("rest"))
+}
+func i(a ...any) joeson.ILine { return joeson.I(a...) }
+func o(a ...any) joeson.OLine { return joeson.O(a...) }
+func named(name string, lineStringOrAst any) joeson.NamedRule {
+	return joeson.Named(name, lineStringOrAst)
 }
 
-var linesCalc = []line.Line{
+var linesCalc = []joeson.Line{
 	o(named("Input", "expr:Expression")),
 	i(named("Expression", "_ first:Term rest:( _ AddOp _ Term )* _"), xx),
 	i(named("Term", "first:Factor rest:( _ MulOp _ Factor )*"), xx),
-	i(named("Factor", "'(' expr:Expression ')' | integer:Integer"), func(it Ast) Ast {
+	i(named("Factor", "'(' expr:Expression ')' | integer:Integer"), func(it joeson.Ast) joeson.Ast {
 		// --- example of an alternation ------------
-		var nm NativeMap = it.(NativeMap)
+		var nm joeson.NativeMap = it.(joeson.NativeMap)
 		if n, exists := nm.GetExists("integer"); exists {
 			return n
 		} else if expr, exists := nm.GetExists("expr"); exists {
@@ -39,7 +37,7 @@ var linesCalc = []line.Line{
 	}),
 	i(named("AddOp", "'+' | '-'")),
 	i(named("MulOp", "'*' | '/'")),
-	i(named("Integer", "/^-?[0-9]+/"), func(it Ast) Ast { return NewNativeIntFrom(it) }),
+	i(named("Integer", "/^-?[0-9]+/"), func(it joeson.Ast) joeson.Ast { return joeson.NewNativeIntFrom(it) }),
 	i(named("_", "[ \t]*")),
 }
 
@@ -57,9 +55,9 @@ func div(a, b int) int { return a / b }
 
 // extract the "expr" key from a result `x` to an int
 // or, failing to do that, call FailNow()
-func extractResult(t *testing.T, x Ast) int {
+func extractResult(t *testing.T, x joeson.Ast) int {
 	t.Helper()
-	if n, exists := x.(NativeMap).GetIntExists("expr"); exists {
+	if n, exists := x.(joeson.NativeMap).GetIntExists("expr"); exists {
 		return n
 	} else {
 		t.Errorf("Failed to find a result like NativeMap{expr:<INT>} in " + x.ContentString())
@@ -68,17 +66,17 @@ func extractResult(t *testing.T, x Ast) int {
 	return 0 // so it compiles
 }
 
-func eval(first Ast, rest Ast) Ast {
-	var lhs Ast = first.(NativeInt)
-	if a, isArray := rest.(*NativeArray); isArray {
+func eval(first joeson.Ast, rest joeson.Ast) joeson.Ast {
+	var lhs joeson.Ast = first.(joeson.NativeInt)
+	if a, isArray := rest.(*joeson.NativeArray); isArray {
 		for _, v := range a.Array {
-			aFirstRest := v.(*NativeArray)
+			aFirstRest := v.(*joeson.NativeArray)
 			if aFirstRest.Length() != 2 {
 				panic("assert")
 			}
-			rhs := aFirstRest.Get(1).(NativeInt)
-			op := aFirstRest.Get(0).(NativeString).Str
-			lhs = NewNativeInt(ops[op](lhs.(NativeInt).Int(), rhs.Int()))
+			rhs := aFirstRest.Get(1).(joeson.NativeInt)
+			op := aFirstRest.Get(0).(joeson.NativeString).Str
+			lhs = joeson.NewNativeInt(ops[op](lhs.(joeson.NativeInt).Int(), rhs.Int()))
 		}
 	} else {
 		panic("expected NativeArray, got " + rest.ContentString())
@@ -89,19 +87,26 @@ func eval(first Ast, rest Ast) Ast {
 // A working grammar for the calculator
 // The ast nodes are special in that they will evaluate
 // the numerical expression to eventually respond with an int
-func grammar() *ast.Grammar {
-	return line.GrammarFromLines(linesCalc, "calc")
+func grammar() *joeson.Grammar {
+	return joeson.GrammarFromLines(linesCalc, "calc")
 }
+
+const esc string = ""
+const reset string = esc + "[0m"
+
+func cyan(s string) string       { return esc + "[36m" + s + reset }
+func yellow(s string) string     { return esc + "[33m" + s + reset }
+func boldYellow(s string) string { return esc + "[1;33m" + s + reset }
 
 func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
 	t.Helper()
 	if res, error := grammar().ParseString(sExpression); error == nil {
 		fmt.Println(
-			Cyan(sExpression),
+			cyan(sExpression),
 			" --> ",
-			Yellow(res.ContentString()),
+			yellow(res.ContentString()),
 			" --> ",
-			BoldYellow(strconv.Itoa(extractResult(t, res))),
+			boldYellow(strconv.Itoa(extractResult(t, res))),
 		)
 		if extractResult(t, res) != nExpectedResult {
 			t.Fail()

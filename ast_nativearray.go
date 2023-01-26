@@ -1,0 +1,49 @@
+package joeson
+
+/*
+"Native*" types
+===============
+
+Short of finding a better name, these types wrap int, string, map, array to
+satisfy interface core.Ast.
+
+There is also NativeUndefined (to represent javascript `undefined`, as nil
+can't be used).
+
+These types are absent from the original coffeescript implementation, as js is
+a much more dynamic language.
+
+They are put here in a core/native package for 2 reasons:
+
+1. core.ParseContext depends upon it,
+2. it better separates the ast types from the original implementation in ast/
+*/
+
+import (
+	"grepsuzette/joeson/helpers"
+	"strings"
+)
+
+type NativeArray struct {
+	Array []Ast
+}
+
+func NewNativeArray(a []Ast) *NativeArray {
+	if a == nil {
+		return &NativeArray{[]Ast{}}
+	} else {
+		return &NativeArray{a}
+	}
+}
+
+func (na *NativeArray) Get(i int) Ast           { return na.Array[i] }
+func (na *NativeArray) Length() int             { return len(na.Array) }
+func (na *NativeArray) GetGNode() *GNode        { return nil }
+func (na *NativeArray) HandlesChildLabel() bool { return false }
+func (na *NativeArray) Prepare()                {}
+func (na *NativeArray) ContentString() string {
+	return "[" + strings.Join(helpers.AMap(na.Array, func(x Ast) string { return x.ContentString() }), ",") + "]"
+}
+
+func (na *NativeArray) Parse(ctx *ParseContext) Ast      { panic("uncallable") }
+func (na *NativeArray) ForEachChild(f func(Ast) Ast) Ast { return na }
