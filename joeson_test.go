@@ -11,14 +11,8 @@ import (
 	"time"
 )
 
-// useful aliases
 func o(a ...any) line.OLine { return line.O(a...) }
 func i(a ...any) line.ILine { return line.I(a...) }
-
-func Rules(lines ...line.Line) line.ALine { return line.NewALine(lines) }
-func Named(name string, lineStringOrAstnode any) line.NamedRule {
-	return line.Named(name, lineStringOrAstnode)
-}
 
 // Basic test, doesn't do much
 func TestHandcompiled(t *testing.T) {
@@ -56,8 +50,8 @@ func TestBootstrap(t *testing.T) {
 	gmJoeson.Bomb() // destroy the grammar! to make sure it plays no part below
 	gmDebuglabel := line.GrammarFromLines(
 		[]line.Line{
-			o(Named("In", "l:Br")),
-			i(Named("Br", "'Toy' | 'BZ'")),
+			o(line.Named("In", "l:Br")),
+			i(line.Named("Br", "'Toy' | 'BZ'")),
 		},
 		"dbglbl/bootst",
 		line.GrammarOptions{LazyGrammar: helpers.NewLazyFromValue[*ast.Grammar](gmIntention)},
@@ -78,7 +72,6 @@ func TestBootstrap(t *testing.T) {
 	}
 }
 
-// TODO benchmarks later
 func TestManyTimes(t *testing.T) {
 	// this test replicates joeson_test.coffee
 	start := time.Now()
@@ -88,7 +81,6 @@ func TestManyTimes(t *testing.T) {
 	frecurse = func(rule line.Line, indent int, name string) {
 		switch v := rule.(type) {
 		case line.ALine:
-			// fmt.Println("aLINE n=" + name)
 			if name != "" {
 				fmt.Printf("%s%s\n", helpers.Indent(indent), Red(name+":"))
 			}
@@ -96,19 +88,15 @@ func TestManyTimes(t *testing.T) {
 				frecurse(subline, indent+1, "")
 			}
 		case line.OLine:
-			// fmt.Println("Oline: name=" + name + " VNAme:" + v.Name() + "  stringindent=" + v.StringIndent(indent))
 			if name == "" {
 				name = v.Name()
 			}
 			frecurse(v.Content(), indent, name)
 		case line.ILine:
-			// fmt.Println("Iline: " + v.Name() + "  " + v.StringIndent(indent))
 			frecurse(v.Content(), indent, v.Name())
 		case line.CLine:
-			// fmt.Println("CLINE")
 			fmt.Printf("%s%s\n", helpers.Indent(indent), String(v.Ast))
 		case line.SLine:
-			// fmt.Println("Sline: " + v.Str + " name= " + name)
 			// parse the rules of the intention grammar, one line at a time
 			if it, err := parsedGrammar.ParseString(v.Str, ParseOptions{Debug: false}); err != nil {
 				panic(err)
@@ -139,8 +127,8 @@ func TestManyTimes(t *testing.T) {
 func TestDebugLabel(t *testing.T) {
 	debuglabel := line.GrammarFromLines(
 		[]line.Line{
-			o(Named("In", "l:Br")),
-			i(Named("Br", "'Toy' | 'BZ'")),
+			o(line.Named("In", "l:Br")),
+			i(line.Named("Br", "'Toy' | 'BZ'")),
 		},
 		"gmDebugLabel",
 	)

@@ -26,7 +26,6 @@ GREEN="[32m"
 RED="[31m"
 CLEAR="[0m"
 grepPattern="^${BOLD}[[:digit:]]"
-goTestFunc="^TestRaw"
 
 [[ ! -d "$joePath" ]] && die "joePath=$joePath was not found, please edit the $0 file"
 if ! command -v coffee >/dev/null; then echo "No command coffee (install coffeescript)" ; fi
@@ -52,7 +51,10 @@ OPTIONS:
  --help -h           Show help
  --version -v        Show version and exit
  --grep -g <REGEX>   Use a different regex from default ("$grepPattern")
- --test -t <FUNC>    Use a different func for go test, i.e. "--run <FUNC>", default "^TestRaw"
+ --test -t <FUNC>    Specify the test name. A list will be provided if missing
+                     Can also be specified as envvar as TEST=<FUNC> $progName
+                     Don't specify the Test prefix.
+ --only <go|coffee>  To debug. This only runs the go or coffee version with output, without vimdiff
  +<LINE>             Jump to line LINE directly, e.g. +34
 EOF
 
@@ -64,13 +66,16 @@ for i in "$@"; do
         --help | -h ) echo "$helpString"; exit 0 ;;
         --version | -v ) echo "$version"; exit 0 ;;
         --grep | -g ) nextRead=grepPattern ;;
-        --test | -t ) nextRead=goTestFunc ;;
+        --test | -t ) nextRead=testFunc ;;
+        --only ) nextRead=only ;;
         +* ) line="${i:1}" ;;
         -* ) echo "Unknown option: $1"; exit 1 ;;
         *) 
             case $nextRead in
                 grepPattern) grepPattern="$i" ;;
-                goTestFunc) goTestFunc="$i" ;;
+                testFunc) testFunc="$i" ;;
+                only) only="$i" ;;
+                "") ;;
                 *) die "unexpected nextRead=$nextRead" ;;
             esac
             unset nextRead
@@ -88,24 +93,62 @@ fi
 if ! command -v coffee >/dev/null; then echo "No command coffee (install coffeescript?)" ; fi
 if ! command -v vimdiff >/dev/null; then echo "No command vimdiff (install vim?)" ; fi
 
+[[ -z "$testFunc" && -n "$TEST" ]] && testFunc="$TEST"
+[[ -z "$testFunc" && -n "$test" ]] && testFunc="$test"
+if [[ -z "$testFunc" ]]; then
+    echo "The test to run must be specified with '--test <NAME>' or '-t <NAME>', tests below:"
+    grep "func Test" "$goPath/joeson_test.go" | sed 's/^ *func *Test\([A-z0-9_]*\)(.*/- \1/'
+    echo "(js tests:" $(TEST=-H coffee "$joePath/tests/joeson_test.coffee") ")"
+    exit 1
+else
+    # identify respective case sensitive names so the tool is easier to use
+    goTestName=$(grep --ignore-case --fixed-strings "func Test${testFunc}" "$goPath/joeson_test.go" | sed 's/^ *func *Test\([A-z0-9_]*\)(.*/\1/')
+    jsTestName=$(TEST=-h coffee "$joePath/tests/joeson_test.coffee" | grep --ignore-case --fixed-strings "$testFunc")
+    [[ -z $goTestName ]] && die "Couldn't find test $testFunc in $goPath/joeson_test.go"
+    [[ -z $jsTestName ]] && die "Couldn't find test $testFunc in $joePath/tests/joeson_test.coffee"
+fi
+
 run_js() { 
-    coffee -c "$joePath/src/joeson.coffee" && coffee "$joePath/tests/joeson_test.coffee"
+    if [[ ! "$jsTestName" =~ ^[a-zA-Z0-9_]+$ ]]; then
+        die "$jsTestName is an invalid test function for coffee"
+    else
+        # variable environment TEST contains the test to run for coffee version
+        coffee -c "$joePath/src/joeson.coffee" && TEST="$jsTestName" coffee "$joePath/tests/joeson_test.coffee"
+    fi
 }	
 run_go() {
-    # examples:
-    # go test $goPath --run TestRaw -v
-    # go test $goPath --run TestDebugLabel -v
-    # go test $goPath --run TestHandcompiled -v
-    # Set them with -t instead
-    go test $goPath --run "$goTestFunc" -v
+    if [[ ! "$goTestName" =~ ^[a-zA-Z0-9_]+$ ]]; then
+        die "$goTestName is an invalid test function for go"
+    else
+    # example: go test $goPath --run TestDebugLabel -v
+        go test $goPath --run "Test$goTestName" -v
+    fi
 }
 
 tmp=${TMPDIR-/tmp}
-run_go | grep -e "$grepPattern" >$tmp/go.ansi 2>&1
-run_js | grep -e "$grepPattern" >$tmp/js.ansi 2>&1
 
-# to show ansi colors correctly in vimdiff you should use 
-# https://github.com/powerman/vim-plugin-AnsiEsc
-# then in vim config have `autocmd BufRead *.ansi AnsiEsc`
-vimdiff $tmp/go.ansi $tmp/js.ansi +$line
+case $only in
+    "") 
+        # the regular case, 
+        # just use vimdiff
+        run_go | grep -e "$grepPattern" >$tmp/go.ansi 2>&1
+        run_js | grep -e "$grepPattern" >$tmp/js.ansi 2>&1
+
+        # to show ansi colors correctly in vimdiff you should use 
+        # https://github.com/powerman/vim-plugin-AnsiEsc
+        # then in vim config have `autocmd BufRead *.ansi AnsiEsc`
+        vimdiff $tmp/go.ansi $tmp/js.ansi +$line
+        ;;
+
+    "go" ) 
+        # to debug this script, you may try --only=go
+        run_go | grep -e "$grepPattern" ;; 
+
+    "coffee" | "coffeescript" | "js" | "javascript") 
+        # or --only=coffee
+        run_js | grep -e "$grepPattern" ;;
+
+    *) die "assert"
+esac
+
 

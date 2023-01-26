@@ -24,46 +24,8 @@ npm -i
 coffee -c src/joeson.coffee && coffee -c tests_joeson.coffee
 ```
 
-# vimdiff
+## vimdiff
 
-A bash script to use vimdiff is supplied (`./diff_go_vs_coffee --help`). 
-
-It's a 100 lines script, so feel free to read the code. Copy and modify it if you want to use a different tool (such as a plain `diff` if you want).
-
-Before using it:
-
-* Make sure to edit the "joePath=~/Work/GNO/JoeScript" in the file so it points to whereever you installed your JoeScript.
-
-* Install https://www.github.com/powerman/vim-plugin-AnsiEsc :: It will give a `:AnsiEsc` command that shows ansi colors in vim. Without this, you're better off using some `diff` variant because of escape sequences.
-
-* You may want this line in your vimfile `autocmd BufRead *.ansi AnsiEsc` to auto-enable AnsiEsc on files with an `.ansi` extension
-
-## Default options
-
-TODO Improve this.
-
-Some work is still required here, but in the meantime it's worth a note.
-
-The default grep pattern is set to `grepPattern="^${BOLD}[[:digit:]]"` where `${BOLD}` is "\e[1m", which means it will filters only the Stack traces. 
-
-To show and diff everything, use `-g ""`.
-
-The default function pattern is `goTestFunc="^TestRaw"`.
-
-## Useful keys in vimdiff
-
-* `<Esc>:AnsiEsc<CR>` :: toggle ansi colors
-* `h`, `j`, `k`, `l` :: move around (in normal mode)
-* `<Ctrl-w> + w` :: jump to the opposite split window
-* `zo`, `zc` :: open fold, close fold
-* `<Esc>:q<CR>` :: quit
-
-## Grep + diff
-
-This is probably the most useful option is `--grep <REGEX>`.
-Only the lines matching REGEX will be in both columns.
-
-For instance, to only diff the respective lines of the 2 programs beginning by "Loop":
-
-`./diff_go_vs_coffee -g "^Loop"`
+A bash script to use vimdiff is supplied.
+It's put in contrib/diff_go_vs_coffee (see also its [doc](../../contrib/diff_go_vs_coffee.md)).
 
