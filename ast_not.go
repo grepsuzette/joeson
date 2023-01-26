@@ -1,45 +1,45 @@
 package joeson
 
-type Not struct {
+type not struct {
 	*GNode
 	it Ast
 }
 
-func NewNot(it Ast) *Not {
+func newNot(it Ast) *not {
 	gn := NewGNode()
-	not := &Not{gn, it}
+	x := &not{gn, it}
 	gn.Capture = false
-	gn.Node = not
-	return not
+	gn.Node = x
+	return x
 }
 
-func (not *Not) GetGNode() *GNode        { return not.GNode }
-func (not *Not) Prepare()                {}
-func (not *Not) HandlesChildLabel() bool { return false }
+func (no *not) GetGNode() *GNode        { return no.GNode }
+func (no *not) Prepare()                {}
+func (no *not) HandlesChildLabel() bool { return false }
 
-func (not *Not) Parse(ctx *ParseContext) Ast {
+func (no *not) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		pos := ctx.Code.Pos
-		res := not.it.Parse(ctx)
+		res := no.it.Parse(ctx)
 		ctx.Code.Pos = pos
 		if res != nil {
 			return nil
 		} else {
 			return NewNativeUndefined()
 		}
-	}, not)(ctx)
+	}, no)(ctx)
 }
 
-func (not *Not) ContentString() string {
-	return yellow("!") + String(not.it)
+func (no *not) ContentString() string {
+	return yellow("!") + String(no.it)
 }
-func (not *Not) ForEachChild(f func(Ast) Ast) Ast {
+func (no *not) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}
-	not.GetGNode().Rules = ForEachChild_InRules(not, f)
-	if not.it != nil {
-		not.it = f(not.it)
+	no.GetGNode().Rules = ForEachChild_InRules(no, f)
+	if no.it != nil {
+		no.it = f(no.it)
 	}
-	return not
+	return no
 }

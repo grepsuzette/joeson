@@ -1,7 +1,7 @@
 package joeson
 
-// Depth-first walk
-
+// Depth-first Walk() function below accepts a WalkPrepost structure allowing optional walk callbacks during respectively
+// the initial descent (Pre) and the climbing back (Post).
 type WalkPrepost struct {
 	Pre  func(node Ast, parent Ast) string // called during 🡖  .  "__stop__" to interrupt
 	Post func(node Ast, parent Ast) string // called during 🡕 .

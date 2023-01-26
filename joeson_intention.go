@@ -9,25 +9,25 @@ func IntentionRules() []Line {
 		o(named("EXPR", rules(
 			o("CHOICE _"),
 			o(named("CHOICE", rules(
-				o("_PIPE* SEQUENCE*_PIPE{2,} _PIPE*", func(it Ast) Ast { return NewChoice(it) }),
+				o("_PIPE* SEQUENCE*_PIPE{2,} _PIPE*", func(it Ast) Ast { return newChoice(it) }),
 				o(named("SEQUENCE", rules(
-					o("UNIT{2,}", func(it Ast) Ast { return NewSequence(it) }),
+					o("UNIT{2,}", func(it Ast) Ast { return newSequence(it) }),
 					o(named("UNIT", rules(
 						o("_ LABELED"),
 						o(named("LABELED", rules(
 							o("(label:LABEL ':')? &:(DECORATED|PRIMARY)"),
 							o(named("DECORATED", rules(
-								o("PRIMARY '?'", func(it Ast) Ast { return NewExistential(it) }),
-								o("value:PRIMARY '*' join:(!__ PRIMARY)? @:RANGE?", func(it Ast) Ast { return NewPattern(it) }),
+								o("PRIMARY '?'", func(it Ast) Ast { return newExistential(it) }),
+								o("value:PRIMARY '*' join:(!__ PRIMARY)? @:RANGE?", func(it Ast) Ast { return newPattern(it) }),
 								o("value:PRIMARY '+' join:(!__ PRIMARY)?", func(it Ast) Ast {
 									h := it.(NativeMap)
 									h.Set("min", NewNativeInt(1))
 									h.Set("max", NewNativeInt(-1))
-									return NewPattern(h)
+									return newPattern(h)
 								}),
-								o("value:PRIMARY @:RANGE", func(it Ast) Ast { return NewPattern(it) }),
-								o("'!' PRIMARY", func(it Ast) Ast { return NewNot(it) }),
-								o("'(?' expr:EXPR ')' | '?' expr:EXPR", func(it Ast) Ast { return NewLookahead(it) }),
+								o("value:PRIMARY @:RANGE", func(it Ast) Ast { return newPattern(it) }),
+								o("'!' PRIMARY", func(it Ast) Ast { return newNot(it) }),
+								o("'(?' expr:EXPR ')' | '?' expr:EXPR", func(it Ast) Ast { return newLookahead(it) }),
 								i(named("RANGE", "'{' _ min:INT? _ ',' _ max:INT? _ '}'")),
 							))),
 							o(named("PRIMARY", rules(
@@ -36,14 +36,14 @@ func IntentionRules() []Line {
 									if na.Length() != 4 {
 										panic("logic")
 									}
-									return NewRef(NewNativeArray([]Ast{na.Get(1), na.Get(3)}))
+									return newRef(NewNativeArray([]Ast{na.Get(1), na.Get(3)}))
 								}),
-								o("WORD", func(it Ast) Ast { return NewRef(it) }),
+								o("WORD", func(it Ast) Ast { return newRef(it) }),
 								o("'(' inlineLabel:(WORD ': ')? expr:EXPR ')' ( _ '->' _ code:CODE )?", fCode),
 								i(named("CODE", "'{' (!'}' (ESC1 | .))* '}'"), fCode),
-								o("'\\'' (!'\\'' (ESC1 | .))* '\\''", func(it Ast) Ast { return NewStr(stringFromNativeArray(it)) }),
-								o("'/' (!'/' (ESC2 | .))* '/'", func(it Ast) Ast { return NewRegexFromString(stringFromNativeArray(it)) }),
-								o("'[' (!']' (ESC2 | .))* ']'", func(it Ast) Ast { return NewRegexFromString("[" + stringFromNativeArray(it) + "]") }),
+								o("'\\'' (!'\\'' (ESC1 | .))* '\\''", func(it Ast) Ast { return newStr(stringFromNativeArray(it)) }),
+								o("'/' (!'/' (ESC2 | .))* '/'", func(it Ast) Ast { return newRegexFromString(stringFromNativeArray(it)) }),
+								o("'[' (!']' (ESC2 | .))* ']'", func(it Ast) Ast { return newRegexFromString("[" + stringFromNativeArray(it) + "]") }),
 							))),
 						))),
 					))),

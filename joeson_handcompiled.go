@@ -1,7 +1,11 @@
 package joeson
 
-// To make a new instance of the root grammar.
-// In most cases you should use GrammarFromLines().
+import "strings"
+
+// NewJoeson() creates a new instance of the handcompiled grammar.
+// You may want to use this with NewGrammarFromLines(), though
+// with default options NewJoeson() is used anyway by default
+// (best example probably in TestBootstrap())
 func NewJoeson() *Grammar {
 	return NewJoesonWithOptions(DefaultTraceOptions())
 }
@@ -15,23 +19,18 @@ func NewJoesonWithOptions(opts TraceOptions) *Grammar {
 			LazyGrammar:  nil,
 		},
 	)
-	// gm.GNode.Name = "__joeson__"
 	return gm
 }
 
-// the following ought to be private
-// but lowercase makes the handcompiled hard to read,
-// which we don't want.
-
-func C(a ...Ast) Ast               { return NewChoice(NewNativeArray(a)) }
-func E(it Ast) Ast                 { return NewExistential(it) }
-func L(label string, node Ast) Ast { node.GetGNode().Label = label; return node }
-func N(it Ast) Ast                 { return NewNot(it) }
-func R(s string) *Ref              { return NewRef(NewNativeString(s)) }
-func Re(s string) *Regex           { return NewRegexFromString(s) }
-func S(a ...Ast) *Sequence         { return NewSequence(NewNativeArray(a)) }
-func St(s string) Str              { return NewStr(s) }
-func P(value, join Ast, minmax ...int) *Pattern {
+func c(a ...Ast) Ast               { return newChoice(NewNativeArray(a)) }
+func e(it Ast) Ast                 { return newExistential(it) }
+func l(label string, node Ast) Ast { node.GetGNode().Label = label; return node }
+func n(it Ast) Ast                 { return newNot(it) }
+func r(s string) *ref              { return newRef(NewNativeString(s)) }
+func re(s string) *regex           { return newRegexFromString(s) }
+func s(a ...Ast) *sequence         { return newSequence(NewNativeArray(a)) }
+func st(s string) str              { return newStr(s) }
+func p(value, join Ast, minmax ...int) *pattern {
 	min := -1
 	max := -1
 	if len(minmax) > 0 {
@@ -40,7 +39,7 @@ func P(value, join Ast, minmax ...int) *Pattern {
 			max = minmax[1]
 		}
 	}
-	p := NewPattern(NewNativeMap(map[string]Ast{
+	p := newPattern(NewNativeMap(map[string]Ast{
 		"value": value,
 		"join":  join,
 		"min":   NewNativeInt(min),
@@ -52,62 +51,87 @@ func P(value, join Ast, minmax ...int) *Pattern {
 const JoesonNbRules int = 35
 const JoesonGrammarName = "__joeson__"
 
-// provides the Lines of the joeson grammar
+func o(a ...any) OLine { return O(a...) }
+func i(a ...any) ILine { return I(a...) }
+
+func rules(lines ...Line) ALine { return NewALine(lines) }
+func named(name string, lineStringOrAst any) NamedRule {
+	return Named(name, lineStringOrAst)
+}
+
+func fCode(it Ast) Ast {
+	h := it.(NativeMap)
+	if !h.IsUndefined("code") {
+		panic("code in joeson is obsolete")
+	}
+	return h.GetOrPanic("expr")
+}
+
+func stringFromNativeArray(it Ast) string {
+	var b strings.Builder
+	na := it.(*NativeArray)
+	for _, ns := range na.Array {
+		b.WriteString(ns.(NativeString).Str)
+	}
+	return b.String()
+}
+
+// provide the Lines of the joeson grammar
 func JoesonRules() []Line {
 	return []Line{
 		o(Named("EXPR", rules(
-			o(S(R("CHOICE"), R("_"))),
+			o(s(r("CHOICE"), r("_"))),
 			o(Named("CHOICE", rules(
-				o(S(P(R("_PIPE"), nil), P(R("SEQUENCE"), R("_PIPE"), 2), P(R("_PIPE"), nil)), func(it Ast) Ast { return NewChoice(it) }),
+				o(s(p(r("_PIPE"), nil), p(r("SEQUENCE"), r("_PIPE"), 2), p(r("_PIPE"), nil)), func(it Ast) Ast { return newChoice(it) }),
 				o(Named("SEQUENCE", rules(
-					o(P(R("UNIT"), nil, 2), func(it Ast) Ast { return NewSequence(it) }),
+					o(p(r("UNIT"), nil, 2), func(it Ast) Ast { return newSequence(it) }),
 					o(Named("UNIT", rules(
-						o(S(R("_"), R("LABELED"))),
+						o(s(r("_"), r("LABELED"))),
 						o(Named("LABELED", rules(
-							o(S(E(S(L("label", R("LABEL")), St(":"))), L("&", C(R("DECORATED"), R("PRIMARY"))))),
+							o(s(e(s(l("label", r("LABEL")), st(":"))), l("&", c(r("DECORATED"), r("PRIMARY"))))),
 							o(Named("DECORATED", rules(
-								o(S(R("PRIMARY"), St("?")), func(it Ast) Ast { return NewExistential(it) }),
-								o(S(L("value", R("PRIMARY")), St("*"), L("join", E(S(N(R("__")), R("PRIMARY")))), L("@", E(R("RANGE")))), func(it Ast) Ast { return NewPattern(it) }),
-								o(S(L("value", R("PRIMARY")), St("+"), L("join", E(S(N(R("__")), R("PRIMARY"))))), func(it Ast) Ast {
+								o(s(r("PRIMARY"), st("?")), func(it Ast) Ast { return newExistential(it) }),
+								o(s(l("value", r("PRIMARY")), st("*"), l("join", e(s(n(r("__")), r("PRIMARY")))), l("@", e(r("RANGE")))), func(it Ast) Ast { return newPattern(it) }),
+								o(s(l("value", r("PRIMARY")), st("+"), l("join", e(s(n(r("__")), r("PRIMARY"))))), func(it Ast) Ast {
 									h := it.(NativeMap)
 									h.Set("min", NewNativeInt(1))
 									h.Set("max", NewNativeInt(-1))
-									return NewPattern(h)
+									return newPattern(h)
 								}),
-								o(S(L("value", R("PRIMARY")), L("@", R("RANGE"))), func(it Ast) Ast { return NewPattern(it) }),
-								o(S(St("!"), R("PRIMARY")), func(it Ast) Ast { return NewNot(it) }),
-								o(C(S(St("(?"), L("expr", R("EXPR")), St(")")), S(St("?"), L("expr", R("EXPR")))), func(it Ast) Ast { return NewLookahead(it) }),
-								i(Named("RANGE", o(S(St("{"), R("_"), L("min", E(R("INT"))), R("_"), St(","), R("_"), L("max", E(R("INT"))), R("_"), St("}"))))),
+								o(s(l("value", r("PRIMARY")), l("@", r("RANGE"))), func(it Ast) Ast { return newPattern(it) }),
+								o(s(st("!"), r("PRIMARY")), func(it Ast) Ast { return newNot(it) }),
+								o(c(s(st("(?"), l("expr", r("EXPR")), st(")")), s(st("?"), l("expr", r("EXPR")))), func(it Ast) Ast { return newLookahead(it) }),
+								i(Named("RANGE", o(s(st("{"), r("_"), l("min", e(r("INT"))), r("_"), st(","), r("_"), l("max", e(r("INT"))), r("_"), st("}"))))),
 							))),
 							o(Named("PRIMARY", rules(
-								o(S(R("WORD"), St("("), R("EXPR"), St(")")), func(it Ast) Ast {
+								o(s(r("WORD"), st("("), r("EXPR"), st(")")), func(it Ast) Ast {
 									na := it.(*NativeArray)
 									if na.Length() != 4 {
 										panic("assert")
 									}
-									return NewRef(NewNativeArray([]Ast{na.Get(1), na.Get(3)}))
+									return newRef(NewNativeArray([]Ast{na.Get(1), na.Get(3)}))
 								}),
-								o(R("WORD"), func(it Ast) Ast { return NewRef(it) }),
-								o(S(St("("), L("inlineLabel", E(S(R("WORD"), St(": ")))), L("expr", R("EXPR")), St(")"), E(S(R("_"), St("->"), R("_"), L("code", R("CODE"))))), fCode),
-								i(Named("CODE", o(S(St("{"), P(S(N(St("}")), C(R("ESC1"), R("."))), nil, -1, -1), St("}")))), fCode),
-								o(S(St("'"), P(S(N(St("'")), C(R("ESC1"), R("."))), nil), St("'")), func(it Ast) Ast { return NewStr(stringFromNativeArray(it)) }),
-								o(S(St("/"), P(S(N(St("/")), C(R("ESC2"), R("."))), nil), St("/")), func(it Ast) Ast { return NewRegexFromString(stringFromNativeArray(it)) }),
-								o(S(St("["), P(S(N(St("]")), C(R("ESC2"), R("."))), nil), St("]")), func(it Ast) Ast { return NewRegexFromString("[" + stringFromNativeArray(it) + "]") }),
+								o(r("WORD"), func(it Ast) Ast { return newRef(it) }),
+								o(s(st("("), l("inlineLabel", e(s(r("WORD"), st(": ")))), l("expr", r("EXPR")), st(")"), e(s(r("_"), st("->"), r("_"), l("code", r("CODE"))))), fCode),
+								i(Named("CODE", o(s(st("{"), p(s(n(st("}")), c(r("ESC1"), r("."))), nil, -1, -1), st("}")))), fCode),
+								o(s(st("'"), p(s(n(st("'")), c(r("ESC1"), r("."))), nil), st("'")), func(it Ast) Ast { return newStr(stringFromNativeArray(it)) }),
+								o(s(st("/"), p(s(n(st("/")), c(r("ESC2"), r("."))), nil), st("/")), func(it Ast) Ast { return newRegexFromString(stringFromNativeArray(it)) }),
+								o(s(st("["), p(s(n(st("]")), c(r("ESC2"), r("."))), nil), st("]")), func(it Ast) Ast { return newRegexFromString("[" + stringFromNativeArray(it) + "]") }),
 							))),
 						))),
 					))),
 				))),
 			))),
 		))),
-		i(Named("LABEL", C(St("&"), St("@"), R("WORD")))),
-		i(Named("WORD", Re("[a-zA-Z\\._][a-zA-Z\\._0-9]*"))),
-		i(Named("INT", Re("[0-9]+")), func(it Ast) Ast { return NewNativeIntFrom(it) }),
-		i(Named("_PIPE", S(R("_"), St("|")))),
-		i(Named("_", P(C(St(" "), St("\n")), nil))),
-		i(Named("__", P(C(St(" "), St("\n")), nil, 1))),
-		i(Named(".", Re("[\\s\\S]"))),
-		i(Named("ESC1", S(St("\\"), R(".")))),
-		i(Named("ESC2", S(St("\\"), R("."))), func(chr Ast) Ast { return NewNativeString("\\" + chr.(NativeString).Str) }),
+		i(Named("LABEL", c(st("&"), st("@"), r("WORD")))),
+		i(Named("WORD", re("[a-zA-Z\\._][a-zA-Z\\._0-9]*"))),
+		i(Named("INT", re("[0-9]+")), func(it Ast) Ast { return NewNativeIntFrom(it) }),
+		i(Named("_PIPE", s(r("_"), st("|")))),
+		i(Named("_", p(c(st(" "), st("\n")), nil))),
+		i(Named("__", p(c(st(" "), st("\n")), nil, 1))),
+		i(Named(".", re("[\\s\\S]"))),
+		i(Named("ESC1", s(st("\\"), r(".")))),
+		i(Named("ESC2", s(st("\\"), r("."))), func(chr Ast) Ast { return NewNativeString("\\" + chr.(NativeString).Str) }),
 		// i(Named("EXAMPLE", "/regex/", ParseOptions{SkipLog: false, SkipCache: true}, func(it Ast, ctx *ParseContext) Ast { return it })),
 	}
 }

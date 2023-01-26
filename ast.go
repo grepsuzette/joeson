@@ -1,8 +1,17 @@
 package joeson
 
+// Ast is the byproduct of a parsing.
+// It stands for Abstract Syntax Tree.
+// A parsing is the fruit of a grammar and a document ideally conforming to that grammar.
+// An Ast itself can be parsed.
+//
+// Grammar, the Native* types all satisfy Ast.
+// Also, the internal joeson ast types:
+// choice, rank, existential, lookahead, not, pattern, ref, regex, sequence,
+// str.
 type Ast interface {
-	// Parse() reads from ParseContext, updates context's position,
-	// returns nil to indicate parse failure.
+	// Parse() reads from a ParseContext, updates that context's position,
+	// returns an Ast. A return of nil indicates a parse failure.
 	Parse(ctx *ParseContext) Ast
 
 	ContentString() string // colorful representation of an AST node
@@ -17,7 +26,7 @@ func IsRule(x Ast) bool {
 }
 
 // Show "<name>: " if `x` is a rule, or "<label>:", or empty string
-func Prefix(x Ast) string {
+func prefix(x Ast) string {
 	if IsRule(x) {
 		return red(x.GetGNode().Name + ": ")
 	} else if x.GetGNode().Label != "" {
@@ -29,13 +38,13 @@ func Prefix(x Ast) string {
 
 // This is Prefix(x) + x.ContentString(x)
 func String(x Ast) string {
-	return Prefix(x) + x.ContentString()
+	return prefix(x) + x.ContentString()
 }
 
 // Port of lib/helpers.js:extend() in a less general way (Ast-specific)
 // Extend a source object with the properties of another object (shallow copy).
 // The modified `toExtend` object is returned.
-func Merge(toExtend Ast, withPropertiesOf Ast) Ast {
+func merge(toExtend Ast, withPropertiesOf Ast) Ast {
 	// @extend = extend = (object, properties) ->
 	//   for key, val of properties
 	//     object[key] = val

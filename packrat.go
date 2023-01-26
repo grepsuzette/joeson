@@ -6,12 +6,51 @@ import (
 	"strings"
 )
 
+// refer to the original joeson.coffee
+
+type frame struct {
+	Result    Ast
+	endPos    helpers.NilableInt // can be left undefined
+	loopStage helpers.NilableInt // can be left undefined
+	wipemask  []bool             // len = ctx.grammar.numRules
+	pos       int
+	id        int
+	Param     Ast // used in ref.go or joeson.coffee:536
+}
+
+func (f frame) toString() string {
+	return "N/A frame.toString"
+}
+
+func (fr *frame) cacheSet(result Ast, endPos int) {
+	fr.Result = result
+	if endPos < 0 {
+		fr.endPos.Unset()
+	} else {
+		fr.endPos.Set(endPos)
+	}
+}
+func newFrame(pos int, id int) *frame {
+	return &frame{
+		Result:   nil,
+		pos:      pos,
+		id:       id,
+		wipemask: nil,
+		Param:    nil,
+	}
+}
+
 // These callback types derive from the direct port from the
 // coffeescript impl.  In coffeescript/js, the 2nd
 // argument (`Ast`) doesn't exist, instead .bind(this) was used
 
 type parseFun2 func(*ParseContext, Ast) Ast
 type parseFun func(*ParseContext) Ast
+
+// debugging variables and callbacks
+// to rewrite soon in a more idiomatic way
+var TimeStart func(name string) = nil
+var TimeEnd func(name string) = nil
 
 // in joeson.coffee those functions were originally declared as
 // class method to GNode and had a $ prefix:
@@ -31,7 +70,7 @@ type parseFun func(*ParseContext) Ast
 
 func stack(fparse parseFun, x Ast) parseFun {
 	return func(ctx *ParseContext) Ast {
-		ctx.StackPush(x)
+		ctx.stackPush(x)
 		if TimeStart != nil {
 			TimeStart(x.GetGNode().Name)
 		}
@@ -39,7 +78,7 @@ func stack(fparse parseFun, x Ast) parseFun {
 		if TimeEnd != nil {
 			TimeEnd(x.GetGNode().Name)
 		}
-		ctx.StackPop()
+		ctx.stackPop()
 		return result
 	}
 }
@@ -221,7 +260,7 @@ func prepareResult(fparse2 parseFun2, caller Ast) parseFun {
 			if gn.Label != "" && gn.Parent != nil && !gn.Parent.HandlesChildLabel() {
 				result = NewNativeMap(map[string]Ast{gn.Label: result})
 			}
-			start := ctx.StackPeek(0).pos
+			start := ctx.stackPeek(0).pos
 			end := ctx.Code.Pos
 			origin := Origin{
 				code: ctx.Code.text,

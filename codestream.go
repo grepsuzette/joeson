@@ -14,6 +14,12 @@ type Cursor struct {
 	pos  int
 }
 
+type Origin struct {
+	code  string
+	start Cursor
+	end   Cursor
+}
+
 // E.g. NewPeek().BeforeLines(2).AfterLines(4)
 type peekOper struct {
 	beforeChars int // they all use -1 for unspecified

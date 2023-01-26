@@ -4,12 +4,8 @@ import (
 	"fmt"
 )
 
-// NamedRule satisfies Ast. Otherwise, it just adds a Name to a Line
-type NamedRule struct {
-	Name string
-	Line Line // note can be OLine, ILine or ALine (array)
-}
-
+// Named helps simplifying writing trees of rules.
+//
 // Examples:
 // o(Named("LABELED", o(<compiled>), o(Named("DECORATED", o(<compiled>, ..))))
 // o(Named("DECORATED", o(<compiled>), o(<compiled>), i(<compiled>)))
@@ -24,16 +20,24 @@ func Named(name string, lineStringOrAst any) NamedRule {
 	case Line:
 		return NamedRule{name, v}
 	case string:
-		return NamedRule{name, NewSLine(v)}
+		return NamedRule{name, newSLine(v)}
 	case Ast:
-		return NamedRule{name, NewCLine(v)}
+		return NamedRule{name, newCLine(v)}
 	default:
 		msg := fmt.Sprintf("Invalid argument to Named(%s, %v)\n", name, lineStringOrAst)
 		panic(msg)
 	}
 }
 
-func (nm NamedRule) Parse(ctx *ParseContext) Ast      { panic("precompiled") }
+// NamedRule is produced by Named().
+// Note NamedRule technically satisfies Ast.
+// There is no much reason to keep it public.
+type NamedRule struct {
+	name string
+	line Line // O, I or A
+}
+
+func (nm NamedRule) Parse(ctx *ParseContext) Ast      { panic("assert") }
 func (nm NamedRule) ContentString() string            { return "--Named--" }
 func (nm NamedRule) GetGNode() *GNode                 { panic("assert") }
 func (nm NamedRule) Prepare()                         {}

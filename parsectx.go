@@ -14,11 +14,11 @@ type stash struct {
 }
 
 // One rule is parsed by a different ParseContext, with an increasing Counter.
-// Suppose a rule is defined like so: i(named("LABEL", "'&' | '@' | WORD")),
+// Suppose a rule is defined like so: `i(named("LABEL", "'&' | '@' | WORD"))``,
 // its Code will contain "'&' | '@' | WORD" and start at position 0.
 type ParseContext struct {
 	TraceOptions     // grammar.TraceOptions at the moment this context is created
-	ParseOptions     // Defined arbitrarily within a rule, e.g. I("INT", "/[0-9]+/", someCb, ParseOptions{SkipLog: false}), and then passed to the ParseContext.
+	ParseOptions     // Defined arbitrarily within a rule, e.g. in I("INT", "/[0-9]+/", someCb, ParseOptions{SkipLog: false}), and then passed to the ParseContext.
 	Counter      int // the iteration counter that is shown in the stack trace, useful when debugging
 	Code         *CodeStream
 
@@ -29,9 +29,10 @@ type ParseContext struct {
 	loopStack   []string
 }
 
+// To create a ParseContext.
 // numRules: grammar numRules at the moment context is created. If no grammar (esp. when
 // joeson rules are parsed the very first time) pass 0.
-func NewParseContext(code *CodeStream, numRules int, attrs ParseOptions, opts TraceOptions) *ParseContext {
+func newParseContext(code *CodeStream, numRules int, attrs ParseOptions, opts TraceOptions) *ParseContext {
 	// frames is 2d
 	// frames[len(code.text) + 1][grammar.numRules]frame
 	//                         ^---- +1 is to include EOF
@@ -71,12 +72,12 @@ func (ctx *ParseContext) log(message string, opts TraceOptions) {
 
 func (ctx *ParseContext) loopStackPush(name string) { ctx.loopStack = append(ctx.loopStack, name) }
 func (ctx *ParseContext) loopStackPop()             { ctx.loopStack = ctx.loopStack[:len(ctx.loopStack)-1] }
-func (ctx *ParseContext) StackPeek(skip int) *frame { return ctx.stack[ctx.stackLength-1-skip] }
-func (ctx *ParseContext) StackPush(x Ast) {
+func (ctx *ParseContext) stackPeek(skip int) *frame { return ctx.stack[ctx.stackLength-1-skip] }
+func (ctx *ParseContext) stackPush(x Ast) {
 	ctx.stack[ctx.stackLength] = ctx.getFrame(x)
 	ctx.stackLength++
 }
-func (ctx *ParseContext) StackPop() { ctx.stackLength-- }
+func (ctx *ParseContext) stackPop() { ctx.stackLength-- }
 
 func (ctx *ParseContext) getFrame(x Ast) *frame {
 	id := x.GetGNode().Id

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// trace options. They produce various traces during parsing.
+// Trace options. They produce various traces during parsing.
 type TraceOptions struct {
 	Stack      bool // print detailed parsing steps
 	Loop       bool // print all rules
@@ -15,35 +15,40 @@ type TraceOptions struct {
 	SkipSetup  bool // mute traces during the setup of the joeson grammar
 }
 
-// The default TraceOptions. Use nvvar TRACE= with `go test`
+// The default TraceOptions. TODO It will read the environment variable $TRACE
 func DefaultTraceOptions() TraceOptions {
 	return Verbose()
 }
+
+// Mute() creates a TraceOptions with all traces disabled.
 func Mute() TraceOptions {
 	return TraceOptions{Stack: false, Loop: false, Grammar: false, FilterLine: -1, SkipSetup: false}
 }
+
+// Verbose() creates a TraceOptions with all traces enabled.
 func Verbose() TraceOptions {
 	return TraceOptions{Stack: true, Loop: true, Grammar: true, FilterLine: -1, SkipSetup: false}
 }
 
-// With this function, it's possible to extend `initial` with the envvar TRACE.
-// For instance `TRACE=all go test . --run TestRaw -v` could be used to force
-// all traces from the command-line without changing the code.
+// Given an initial set of trace options, this will attempt to read
+// the environment variable $TRACE to extend it if possible.
+// For instance `TRACE=loop,stack go test . --run TestHandcompiled -v`
+// will show all rules in the grammar and the parsing steps.
 //
-// Possible values (several are possible, comma-separated):
-//
-// | Name       | Behavior                                   |
-// | ---------- | ------------------------------------------ |
-// | none       | disable everything                         |
-// | stack      | print detailed parsing steps               |
-// | loop       | print all rules in the grammar             |
-// | line='N'   | only the stack trace for the nth line      |
-// | grammar    | print grammar information and all rules    |
-// | skipsetup  | mute traces during joeson grammar setup    |
-// | all        | print all that makes sense                 |
-//
-// For instance `TRACE=loop,stack,line=4 go test . --run TestHandcompiled -v`
+// See the code for the option details, as the array does not render
+// well in godoc.
 func CheckEnvironmentForTraceOptions(initial ...TraceOptions) TraceOptions {
+	// Possible values (several are possible, comma-separated):
+	//
+	// | Name       | Behavior                                   |
+	// | ---------- | ------------------------------------------ |
+	// | none       | disable everything                         |
+	// | stack      | print detailed parsing steps               |
+	// | loop       | print all rules in the grammar             |
+	// | line='N'   | only the stack trace for the nth line      |
+	// | grammar    | print grammar information and all rules    |
+	// | skipsetup  | mute traces during joeson grammar setup    |
+	// | all        | print all that makes sense                 |
 	var opt TraceOptions
 	if len(initial) > 0 {
 		opt = initial[0]

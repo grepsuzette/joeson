@@ -1,3 +1,7 @@
+/*
+Package joeson is a packrat left recursive parser in Go
+ported from https://github.com/jaekwon/JoeScript 's joeson.coffee
+*/
 package joeson
 
 import (
@@ -8,26 +12,49 @@ import (
 	"strings"
 )
 
-// Grammar is the one to use in this package.
 // See examples and tests to build a grammar.
 // Then just use ParseString().
-
+// Like in the original implementation, Grammar "is" a GNode.
 type Grammar struct {
 	*GNode
-	Rank           Ast         // a *Rank or a Ref to a rank
-	NumRules       int         // Each Ast can have rules, recursively. This however i the total count in the grammar
-	Id2Rule        map[int]Ast // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
-	TraceOptions   TraceOptions
+	rank     Ast         // a *Rank or a Ref to a rank
+	NumRules int         // Each Ast can have rules, recursively. This however i the total count in the grammar
+	id2Rule  map[int]Ast // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
+	TraceOptions
 	wasInitialized bool
 }
 
-func NewEmptyGrammar() *Grammar { return NewEmptyGrammarWithOptions(DefaultTraceOptions()) }
-func NewEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
-	name := "__empty__"
-	gm := &Grammar{NewGNode(), nil, 0, map[int]Ast{}, opts, false}
-	gm.GNode.Name = name
-	gm.GNode.Node = gm
-	return gm
+// General options to build a grammar
+type GrammarOptions struct {
+	// Those are the options governing what is traced or not during the initialization or the parsing
+	TraceOptions TraceOptions
+
+	// A Lazy of *Grammar specifying how to create or retrieve a grammar
+	//  from its cache, should the `lines` contain some string rules (SLine) needing to be compiled.
+	//  In general leave it nil to have the joeson_handcompiled grammar to be used automatically.
+	LazyGrammar *helpers.Lazy[*Grammar]
+}
+
+// Make a new grammar from the rules in `lines`.
+// A Rank will be internally created.
+// Options can be omitted.
+func GrammarFromLines(lines []Line, name string, options ...GrammarOptions) *Grammar {
+	var opts GrammarOptions
+	if len(options) > 0 {
+		opts = options[0]
+	} else {
+		opts = GrammarOptions{
+			TraceOptions: DefaultTraceOptions(),
+			LazyGrammar:  nil,
+		}
+	}
+	ranke := rankFromLines(lines, name, opts)
+	newgm := newEmptyGrammarWithOptions(opts.TraceOptions)
+	newgm.SetRankIfEmpty(ranke)
+	// The name is also set afterwards in the coffeescript version
+	newgm.GetGNode().Name = name
+	newgm.postinit()
+	return newgm
 }
 
 // Main grammar parse function
@@ -40,51 +67,53 @@ func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) (Ast, error)
 }
 
 func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) (Ast, error) {
-	return gm.ParseOrFail(NewParseContext(code, gm.NumRules, attrs, gm.TraceOptions))
+	return gm.parseOrFail(newParseContext(code, gm.NumRules, attrs, gm.TraceOptions))
 }
 
 // -- after this are the lower level stuffs --
 
+func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTraceOptions()) }
+func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
+	name := "__empty__"
+	gm := &Grammar{NewGNode(), nil, 0, map[int]Ast{}, opts, false}
+	gm.GNode.Name = name
+	gm.GNode.Node = gm
+	return gm
+}
+
 // Destroy the grammar. Only tests should use this.
 func (gm *Grammar) Bomb() {
-	gm.Rank = NewEmptyRank("bombd")
+	gm.rank = newEmptyRank("bombd")
 	gm.GNode = nil
 	gm.NumRules = 0
-	gm.Id2Rule = nil
+	gm.id2Rule = nil
 	gm.wasInitialized = false
 }
 
 func (gm *Grammar) GetGNode() *GNode { return gm.GNode }
 
-// this one conforms the interface, but you would normally call
-// grammar.ParseString() or grammar.ParseCode().
+// Parse() conforms to the Ast interface, but you would normally call
+// grammar.ParseString() or grammar.ParseCode(), to be able to get
+// errors without a panic.
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
-	if ast, error := gm.ParseOrFail(ctx); error == nil {
+	if ast, error := gm.parseOrFail(ctx); error == nil {
 		return ast
 	} else {
 		panic(error)
 	}
 }
 
-// This *public function* was originally a *private method*
-// like `func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error)`.
-// Because of the chicken or egg dilemma (namely grammar or rank) in line.go,
-// we let rank come first. The major consequence is parseOrFail must
-// become public, a function, and get additionnal args `rank` and `opts`.
-// The benefit is rank now can get created from lines without an empty dummy
-// grammar.
-// rank: it can not only be a Rank but also a Ref (to a Rank).
-func (gm *Grammar) ParseOrFail(ctx *ParseContext) (Ast, error) {
+func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error) {
 	var oldTrace bool
 	if ctx.Debug {
 		// temporarily enable stack tracing
 		oldTrace = gm.TraceOptions.Stack
 		gm.TraceOptions.Stack = true
 	}
-	if gm.Rank == nil {
+	if gm.rank == nil {
 		panic("Grammar.rank is nil")
 	}
-	result := gm.Rank.Parse(ctx)
+	result := gm.rank.Parse(ctx)
 	// undo temporary stack tracing
 	if ctx.Debug {
 		gm.TraceOptions.Stack = oldTrace
@@ -129,37 +158,37 @@ func (gm *Grammar) ParseOrFail(ctx *ParseContext) (Ast, error) {
 func (gm *Grammar) Prepare()                {}
 func (gm *Grammar) HandlesChildLabel() bool { return false }
 func (gm *Grammar) ContentString() string {
-	if gm.Rank == nil {
+	if gm.rank == nil {
 		// empty grammars
 		return magenta("GRAMMAR{}")
 	} else {
-		return magenta("GRAMMAR{") /*+ helpers.TypeOfToString(gm.rank) */ + String(gm.Rank) + magenta("}")
+		return magenta("GRAMMAR{") /*+ helpers.TypeOfToString(gm.rank) */ + String(gm.rank) + magenta("}")
 	}
 }
 
-func (gm *Grammar) IsReady() bool { return gm.Rank != nil && gm.wasInitialized }
-func (gm *Grammar) SetRankIfEmpty(rank Ast) {
-	if gm.Rank != nil {
+func (gm *Grammar) IsReady() bool { return gm.rank != nil && gm.wasInitialized }
+func (gm *Grammar) SetRankIfEmpty(ranke Ast) {
+	if gm.rank != nil {
 		return
 	}
 	if gm.IsReady() {
 		panic("Grammar is already defined and can not be changed on the fly at the moment")
 	}
-	gm.Rank = rank
+	gm.rank = ranke
 }
 func (gm *Grammar) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren rank: {type:Rank}
 	gm.GetGNode().Rules = ForEachChild_InRules(gm, f)
-	if gm.Rank != nil {
-		gm.Rank = f(gm.Rank)
+	if gm.rank != nil {
+		gm.rank = f(gm.rank)
 	}
 	return gm
 }
 
 // after Rank has already been set,
 // collect and collect rules, simplify the rule tree etc.
-func (gm *Grammar) Postinit() {
-	if gm.Rank == nil {
+func (gm *Grammar) postinit() {
+	if gm.rank == nil {
 		panic("You can only call grammar.Postinit() after some rank has been set")
 	}
 	opts := gm.TraceOptions
@@ -182,7 +211,7 @@ func (gm *Grammar) Postinit() {
 						   node below.unaffected
 		*/
 		node.ForEachChild(func(child Ast) Ast {
-			if choice, ok := child.(*Choice); ok && choice.IsMonoChoice() {
+			if choice, ok := child.(*choice); ok && choice.isMonoChoice() {
 				monochoice := choice.choices[0]
 				mono := monochoice.GetGNode()
 				// Merge label
@@ -244,7 +273,7 @@ func (gm *Grammar) Postinit() {
 				gm.GetGNode().Rules[gnode.Name] = node
 				gnode.Id = gm.NumRules
 				gm.NumRules++
-				gm.Id2Rule[gnode.Id] = node
+				gm.id2Rule[gnode.Id] = node
 				if opts.Loop { // print out id->rulename for convenience
 					fmt.Println("Loop " + red(strconv.Itoa(gnode.Id)) + ":\t" + String(node))
 				}
@@ -288,7 +317,7 @@ func (gm *Grammar) PrintRules() {
 	)
 	fmt.Println("|   -------------------------------------------------------------------------------------")
 	for i := 0; i < gm.NumRules; i++ {
-		v := gm.Id2Rule[i]
+		v := gm.id2Rule[i]
 		sParentName := "-"
 		if v.GetGNode().Parent != nil {
 			sParentName = v.GetGNode().Parent.GetGNode().Name

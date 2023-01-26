@@ -9,6 +9,9 @@ import "grepsuzette/joeson/helpers"
    node.rule = rule # sometimes true.
    node.name = name of the rule, if this is @rule.
 */
+
+// A grammar node. Ast that can be build by a grammar (this excludes the native*.go types) will
+// have a GNode, that replicates the GNode ancestry that there was in the original coffeescript implementation.
 type GNode struct {
 	Name string // rule name if IsRule(), empty otherwise
 	ParseOptions
@@ -34,14 +37,14 @@ func NewGNode() *GNode {
 	}
 	// These callbacks can be redefined in Ast objects composing GNode.
 	// This helps getting a certain level of flexibiliy.
-	gn.Labels_ = helpers.NewLazyFromFunc[[]string](func() []string {
+	gn.Labels_ = helpers.NewLazyFromFunc(func() []string {
 		if gn.Label != "" {
 			return []string{gn.Label}
 		} else {
 			return []string{}
 		}
 	})
-	gn.Captures_ = helpers.NewLazyFromFunc[[]Ast](func() []Ast {
+	gn.Captures_ = helpers.NewLazyFromFunc(func() []Ast {
 		if gn.Capture {
 			return []Ast{gn.Node}
 		} else {

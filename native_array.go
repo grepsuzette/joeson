@@ -24,6 +24,11 @@ import (
 	"strings"
 )
 
+// Native* types satisfy Ast, but their GetGNode() returns nil.
+// They are used to represent array[Ast], int, string, map[string]Ast and
+// the undefined value (a parsing function returns nil to indicate failure,
+// undefined is something else).
+
 type NativeArray struct {
 	Array []Ast
 }

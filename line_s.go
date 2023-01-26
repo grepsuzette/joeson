@@ -4,15 +4,15 @@ import (
 	"strings"
 )
 
-// SLine wraps a string. That string is intended to be parsed
-type SLine struct {
+// sLine wraps a string. That string is intended to be parsed
+// and represents a non-compiled rule. It is never entered directly
+// however, it's a transient state.
+type sLine struct {
 	Str string
 }
 
-func NewSLine(s string) SLine     { return SLine{s} }
-func (sl SLine) Name() string     { panic("uncallable") }
-func (sl SLine) Content() Line    { panic("uncallable") }
-func (sl SLine) LineType() string { return "s" }
-func (sl SLine) StringIndent(nIndent int) string {
+func newSLine(s string) sLine     { return sLine{s} }
+func (sl sLine) lineType() string { return "s" }
+func (sl sLine) stringIndent(nIndent int) string {
 	return strings.Replace(sl.Str, "\n", "\\n", -1)
 }

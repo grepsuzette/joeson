@@ -5,8 +5,8 @@ import (
 )
 
 func TestPattern(t *testing.T) {
-	var f = func(patt *Pattern, tcase string, expectedMin int, expectedMax int, expectedContent string) {
-		if patt.Value == nil || patt.Value.(Str).Str != "foo" {
+	var f = func(patt *pattern, tcase string, expectedMin int, expectedMax int, expectedContent string) {
+		if patt.Value == nil || patt.Value.(str).Str != "foo" {
 			t.Error(tcase + " patt.Value expected foo")
 		}
 		if int(patt.Min) != expectedMin {
@@ -20,45 +20,45 @@ func TestPattern(t *testing.T) {
 		}
 	}
 	tcase := "TestPattern case#1"
-	patt := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
+	patt := newPattern(NewNativeMap(map[string]Ast{
+		"value": newStr("foo"),
 		"min":   NewNativeInt(2),
 		"max":   NewNativeUndefined(),
 	}))
 	f(patt, tcase, 2, -1, green("'foo'")+cyan("*")+cyan("{2,}"))
 	tcase = "TestPattern case#2"
-	patt2 := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
+	patt2 := newPattern(NewNativeMap(map[string]Ast{
+		"value": newStr("foo"),
 		"min":   NewNativeInt(2),
 		"max":   NewNativeInt(4),
 	}))
 	f(patt2, tcase, 2, 4, green("'foo'")+cyan("*")+cyan("{2,4}"))
 	tcase = "TestPattern case#3"
-	patt3 := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
+	patt3 := newPattern(NewNativeMap(map[string]Ast{
+		"value": newStr("foo"),
 		"min":   NewNativeInt(-1),
 		"max":   NewNativeInt(-1),
 	}))
 	f(patt3, tcase, -1, -1, green("'foo'")+cyan("*")+cyan(""))
 	tcase = "TestPattern case#4"
-	patt4 := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
+	patt4 := newPattern(NewNativeMap(map[string]Ast{
+		"value": newStr("foo"),
 		"min":   NewNativeInt(2),
 		"max":   NewNativeUndefined(),
 	}))
 	f(patt4, tcase, 2, -1, green("'foo'")+cyan("*")+cyan("{2,}"))
 	tcase = "TestPattern case#5(non-nil join)"
-	patt5 := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
-		"join":  NewStr("bar"),
+	patt5 := newPattern(NewNativeMap(map[string]Ast{
+		"value": newStr("foo"),
+		"join":  newStr("bar"),
 		"min":   NewNativeInt(2),
 		"max":   NewNativeUndefined(),
 	}))
 	f(patt5, tcase, 2, -1, green("'foo'")+cyan("*")+green("'bar'")+cyan("{2,}"))
 	tcase = "TestPattern case#5(non-nil join)"
-	patt6 := NewPattern(NewNativeMap(map[string]Ast{
-		"value": NewStr("foo"),
-		"join":  NewStr("bar"),
+	patt6 := newPattern(NewNativeMap(map[string]Ast{
+		"value": newStr("foo"),
+		"join":  newStr("bar"),
 		"min":   NewNativeInt(-1),
 		"max":   NewNativeUndefined(),
 	}))

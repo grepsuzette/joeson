@@ -1,6 +1,6 @@
 package joeson
 
-const esc string = ""
+const esc string = "\x1b"
 const reset string = esc + "[0m"
 
 func black(s string) string       { return esc + "[30m" + s + reset }

@@ -31,7 +31,7 @@ func NewNativeIntFrom(x Ast) NativeInt {
 		}
 	case *NativeArray:
 		s := ""
-		for i, _ := range v.Array {
+		for i := range v.Array {
 			s += v.Array[i].(NativeString).Str
 		}
 		return NewNativeIntFromString(s)

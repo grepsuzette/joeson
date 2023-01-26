@@ -10,17 +10,17 @@ type sequenceRepr int
 
 const (
 	Single sequenceRepr = 0
-	Array               = 1
-	Object              = 2
+	Array  sequenceRepr = 1
+	Object sequenceRepr = 2
 )
 
-type Sequence struct {
+type sequence struct {
 	*GNode
 	sequence []Ast
 	type_    *helpers.Lazy[sequenceRepr] // internal cache for internalType()
 }
 
-func NewSequence(it Ast) *Sequence {
+func newSequence(it Ast) *sequence {
 	if a, ok := it.(*NativeArray); !ok {
 		panic("Sequence expected a NativeArray")
 	} else {
@@ -28,34 +28,30 @@ func NewSequence(it Ast) *Sequence {
 			panic("expecting non nil array")
 		}
 		gn := NewGNode()
-		seq := &Sequence{GNode: gn, sequence: a.Array}
+		seq := &sequence{GNode: gn, sequence: a.Array}
 		gn.Node = seq
-		gn.Labels_ = helpers.NewLazyFromFunc[[]string](func() []string { return seq.calculateLabels() })
-		gn.Captures_ = helpers.NewLazyFromFunc[[]Ast](func() []Ast { return seq.calculateCaptures() })
-		seq.type_ = helpers.NewLazyFromFunc[sequenceRepr](func() sequenceRepr { return seq.calculateType() })
+		gn.Labels_ = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
+		gn.Captures_ = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
+		seq.type_ = helpers.NewLazyFromFunc(func() sequenceRepr { return seq.calculateType() })
 		return seq
 	}
 }
 
-func (seq *Sequence) GetGNode() *GNode        { return seq.GNode }
-func (seq *Sequence) HandlesChildLabel() bool { return true }
-func (seq *Sequence) Prepare()                {}
+func (seq *sequence) GetGNode() *GNode        { return seq.GNode }
+func (seq *sequence) HandlesChildLabel() bool { return true }
+func (seq *sequence) Prepare()                {}
 
-func (seq *Sequence) calculateLabels() []string {
+func (seq *sequence) calculateLabels() []string {
 	a := []string{}
 	for _, child := range seq.sequence {
-		for _, label := range child.GetGNode().Labels_.Get() {
-			a = append(a, label)
-		}
+		a = append(a, child.GetGNode().Labels_.Get()...)
 	}
 	return a
 }
-func (seq *Sequence) calculateCaptures() []Ast {
+func (seq *sequence) calculateCaptures() []Ast {
 	a := []Ast{}
 	for _, child := range seq.sequence {
-		for _, captured := range child.GetGNode().Captures_.Get() {
-			a = append(a, captured)
-		}
+		a = append(a, child.GetGNode().Captures_.Get()...)
 	}
 	return a
 }
@@ -63,7 +59,7 @@ func (seq *Sequence) calculateCaptures() []Ast {
 // as soon as there is >=1 label, it is Object
 // otherwise, if at least 1 capture, it is Array
 // otherwise a Single
-func (seq *Sequence) calculateType() sequenceRepr {
+func (seq *sequence) calculateType() sequenceRepr {
 	if len(seq.GetGNode().Labels_.Get()) == 0 {
 		if len(seq.GetGNode().Captures_.Get()) > 1 {
 			return Array
@@ -75,14 +71,14 @@ func (seq *Sequence) calculateType() sequenceRepr {
 	}
 }
 
-func (seq *Sequence) ContentString() string {
+func (seq *sequence) ContentString() string {
 	var b strings.Builder
 	as := helpers.AMap(seq.sequence, func(x Ast) string { return String(x) })
 	b.WriteString(strings.Join(as, " "))
 	return blue("(") + b.String() + blue(")")
 }
 
-func (seq *Sequence) Parse(ctx *ParseContext) Ast {
+func (seq *sequence) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		switch seq.type_.Get() {
 		case Array:
@@ -98,11 +94,10 @@ func (seq *Sequence) Parse(ctx *ParseContext) Ast {
 		default:
 			panic(fmt.Sprintf("Unexpected type %x", seq.type_.Get()))
 		}
-		panic("assert")
 	}, seq)(ctx)
 }
 
-func (seq *Sequence) parseAsSingle(ctx *ParseContext) Ast {
+func (seq *sequence) parseAsSingle(ctx *ParseContext) Ast {
 	var result Ast = NewNativeUndefined()
 	for _, child := range seq.sequence {
 		res := child.Parse(ctx)
@@ -116,7 +111,7 @@ func (seq *Sequence) parseAsSingle(ctx *ParseContext) Ast {
 	return result
 }
 
-func (seq *Sequence) parseAsArray(ctx *ParseContext) Ast {
+func (seq *sequence) parseAsArray(ctx *ParseContext) Ast {
 	results := make([]Ast, 0)
 	for _, child := range seq.sequence {
 		res := child.Parse(ctx)
@@ -130,7 +125,7 @@ func (seq *Sequence) parseAsArray(ctx *ParseContext) Ast {
 	return NewNativeArray(results)
 }
 
-func (seq *Sequence) parseAsObject(ctx *ParseContext) Ast {
+func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 	var results Ast
 	results = NewNativeUndefined()
 	for _, child := range seq.sequence {
@@ -141,13 +136,13 @@ func (seq *Sequence) parseAsObject(ctx *ParseContext) Ast {
 		}
 		if child.GetGNode().Label == "&" {
 			if notNilAndNotNativeUndefined(results) {
-				results = Merge(res, results)
+				results = merge(res, results)
 			} else {
 				results = res
 			}
 		} else if child.GetGNode().Label == "@" {
 			if notNilAndNotNativeUndefined(results) {
-				results = Merge(results, res)
+				results = merge(results, res)
 			} else {
 				results = res
 			}
@@ -167,7 +162,7 @@ func (seq *Sequence) parseAsObject(ctx *ParseContext) Ast {
 	return results
 }
 
-func (seq *Sequence) ForEachChild(f func(Ast) Ast) Ast {
+func (seq *sequence) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   sequence:   {type:[type:GNode]}

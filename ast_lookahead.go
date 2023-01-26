@@ -1,25 +1,25 @@
 package joeson
 
-type Lookahead struct {
+type lookahead struct {
 	*GNode
 	expr Ast
 }
 
-func NewLookahead(it Ast) *Lookahead {
+func newLookahead(it Ast) *lookahead {
 	gn := NewGNode()
-	la := &Lookahead{gn, it}
+	la := &lookahead{gn, it}
 	gn.Capture = false
 	gn.Node = la
 	return la
 }
 
-func (look *Lookahead) Prepare()                {}
-func (look *Lookahead) GetGNode() *GNode        { return look.GNode }
-func (look *Lookahead) HandlesChildLabel() bool { return false }
-func (look *Lookahead) ContentString() string {
+func (look *lookahead) Prepare()                {}
+func (look *lookahead) GetGNode() *GNode        { return look.GNode }
+func (look *lookahead) HandlesChildLabel() bool { return false }
+func (look *lookahead) ContentString() string {
 	return blue("(?") + String(look.expr) + blue(")")
 }
-func (look *Lookahead) Parse(ctx *ParseContext) Ast {
+func (look *lookahead) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		pos := ctx.Code.Pos
 		result := look.expr.Parse(ctx) // check whether it parses...
@@ -27,7 +27,7 @@ func (look *Lookahead) Parse(ctx *ParseContext) Ast {
 		return result
 	}, look)(ctx)
 }
-func (look *Lookahead) ForEachChild(f func(Ast) Ast) Ast {
+func (look *lookahead) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   expr:       {type:GNode}

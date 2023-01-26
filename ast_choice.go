@@ -5,19 +5,19 @@ import (
 	"strings"
 )
 
-type Choice struct {
+type choice struct {
 	*GNode
 	choices []Ast
 }
 
-func NewEmptyChoice() *Choice {
-	ch := &Choice{NewGNode(), []Ast{}}
+func newEmptyChoice() *choice {
+	ch := &choice{NewGNode(), []Ast{}}
 	ch.GNode.Node = ch
 	return ch
 }
-func NewChoice(it Ast) *Choice {
+func newChoice(it Ast) *choice {
 	if a, ok := it.(*NativeArray); ok {
-		ch := &Choice{NewGNode(), a.Array}
+		ch := &choice{NewGNode(), a.Array}
 		ch.GNode.Node = ch
 		return ch
 	} else {
@@ -25,12 +25,12 @@ func NewChoice(it Ast) *Choice {
 	}
 }
 
-func (ch *Choice) IsMonoChoice() bool      { return len(ch.choices) == 1 }
-func (ch *Choice) Append(node Ast)         { ch.choices = append(ch.choices, node) }
-func (ch *Choice) GetGNode() *GNode        { return ch.GNode }
-func (ch *Choice) HandlesChildLabel() bool { return false }
+func (ch *choice) isMonoChoice() bool      { return len(ch.choices) == 1 }
+func (ch *choice) Append(node Ast)         { ch.choices = append(ch.choices, node) }
+func (ch *choice) GetGNode() *GNode        { return ch.GNode }
+func (ch *choice) HandlesChildLabel() bool { return false }
 
-func (ch *Choice) Prepare() {
+func (ch *choice) Prepare() {
 	for _, choice := range ch.choices {
 		if !choice.GetGNode().Capture {
 			ch.GNode.Capture = false
@@ -40,7 +40,7 @@ func (ch *Choice) Prepare() {
 	ch.GNode.Capture = true
 }
 
-func (ch *Choice) Parse(ctx *ParseContext) Ast {
+func (ch *choice) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		for _, choice := range ch.choices {
 			pos := ctx.Code.Pos
@@ -55,7 +55,7 @@ func (ch *Choice) Parse(ctx *ParseContext) Ast {
 	}, ch)(ctx)
 }
 
-func (ch *Choice) ContentString() string {
+func (ch *choice) ContentString() string {
 	var b strings.Builder
 	b.WriteString(blue("("))
 	a := helpers.AMap(ch.choices, func(x Ast) string { return String(x) })
@@ -64,7 +64,7 @@ func (ch *Choice) ContentString() string {
 	return b.String()
 }
 
-func (ch *Choice) ForEachChild(f func(Ast) Ast) Ast {
+func (ch *choice) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}

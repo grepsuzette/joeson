@@ -1,19 +1,19 @@
 package joeson
 
-type Existential struct {
+type existential struct {
 	*GNode
 	it Ast
 }
 
-func NewExistential(it Ast) *Existential {
-	ex := &Existential{GNode: NewGNode(), it: it}
+func newExistential(it Ast) *existential {
+	ex := &existential{GNode: NewGNode(), it: it}
 	ex.GNode.Node = ex
 	return ex
 }
 
 // TODO handlesChildLabel$: get: -> @parent?.handlesChildLabel
 // examine this case^
-func (ex *Existential) HandlesChildLabel() bool {
+func (ex *existential) HandlesChildLabel() bool {
 	if ex.GNode.Parent != nil {
 		return ex.GNode.Parent.HandlesChildLabel()
 	} else {
@@ -21,9 +21,9 @@ func (ex *Existential) HandlesChildLabel() bool {
 	}
 }
 
-func (ex *Existential) GetGNode() *GNode { return ex.GNode }
+func (ex *existential) GetGNode() *GNode { return ex.GNode }
 
-func (ex *Existential) Prepare() {
+func (ex *existential) Prepare() {
 	gn := ex.GetGNode()
 	var lbls = ex.calculateLabels()
 	gn.Labels_.Set(lbls)
@@ -35,7 +35,7 @@ func (ex *Existential) Prepare() {
 	gn.Capture = len(caps) > 0
 }
 
-func (ex *Existential) calculateLabels() []string {
+func (ex *existential) calculateLabels() []string {
 	gn := ex.GetGNode()
 	lbl := gn.Label
 	if lbl != "" && lbl != "@" && lbl != "&" {
@@ -45,11 +45,11 @@ func (ex *Existential) calculateLabels() []string {
 	}
 }
 
-func (ex *Existential) ContentString() string {
+func (ex *existential) ContentString() string {
 	return String(ex.it) + blue("?")
 }
 
-func (ex *Existential) Parse(ctx *ParseContext) Ast {
+func (ex *existential) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		pos := ctx.Code.Pos
 		result := ex.it.Parse(ctx)
@@ -61,7 +61,7 @@ func (ex *Existential) Parse(ctx *ParseContext) Ast {
 		}
 	}, ex)(ctx)
 }
-func (ex *Existential) ForEachChild(f func(Ast) Ast) Ast {
+func (ex *existential) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}

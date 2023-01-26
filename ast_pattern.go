@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type Pattern struct {
+type pattern struct {
 	*GNode
 	Value Ast
 	Join  Ast
@@ -14,8 +14,8 @@ type Pattern struct {
 }
 
 // `it` must be a NativeMap with keys like 'value', 'join', 'min', 'max'
-func NewPattern(it Ast) *Pattern {
-	patt := &Pattern{NewGNode(), nil, nil, -1, -1}
+func newPattern(it Ast) *pattern {
+	patt := &pattern{NewGNode(), nil, nil, -1, -1}
 	patt.Node = patt
 	if nativemap, ok := it.(NativeMap); !ok {
 		panic("Pattern expecting a map with value, join")
@@ -58,8 +58,8 @@ func NewPattern(it Ast) *Pattern {
 	}
 	return patt
 }
-func (patt *Pattern) GetGNode() *GNode { return patt.GNode }
-func (patt *Pattern) Parse(ctx *ParseContext) Ast {
+func (patt *pattern) GetGNode() *GNode { return patt.GNode }
+func (patt *pattern) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(_ *ParseContext, _ Ast) Ast {
 		pos := ctx.Code.Pos
 		resValue := patt.Value.Parse(ctx)
@@ -71,7 +71,7 @@ func (patt *Pattern) Parse(ctx *ParseContext) Ast {
 			return NewNativeArray([]Ast{})
 		}
 		var matches []Ast = []Ast{resValue}
-		for true {
+		for {
 			pos2 := ctx.Code.Pos
 			if notNilAndNotNativeUndefined(patt.Join) {
 				resJoin := patt.Join.Parse(ctx)
@@ -100,9 +100,9 @@ func (patt *Pattern) Parse(ctx *ParseContext) Ast {
 	}, patt)(ctx)
 }
 
-func (patt *Pattern) HandlesChildLabel() bool { return false }
-func (patt *Pattern) Prepare()                {}
-func (patt *Pattern) ContentString() string {
+func (patt *pattern) HandlesChildLabel() bool { return false }
+func (patt *pattern) Prepare()                {}
+func (patt *pattern) ContentString() string {
 	var b strings.Builder
 	b.WriteString(String(patt.Value))
 	b.WriteString(cyan("*"))
@@ -125,7 +125,7 @@ func (patt *Pattern) ContentString() string {
 		return b.String() + cyan(sCyan)
 	}
 }
-func (patt *Pattern) ForEachChild(f func(Ast) Ast) Ast {
+func (patt *pattern) ForEachChild(f func(Ast) Ast) Ast {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   value:      {type:GNode}

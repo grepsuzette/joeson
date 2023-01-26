@@ -6,10 +6,8 @@ import (
 )
 
 type Line interface {
-	LineType() string                // i, o, a, s, c
-	Name() string                    // Name or ""
-	Content() Line                   // Sline, OLine, ALine, CLine (containing an Ast)...
-	StringIndent(nIndent int) string // indent with `nIdent` levels (for nested rules)
+	lineType() string                // i, o, a, s, c
+	stringIndent(nIndent int) string // indent with `nIdent` levels (for nested rules)
 }
 
 /* -- follow some common functions used by ILine & OLine -- */
@@ -23,8 +21,8 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 		if i == 0 {
 			switch v := arg.(type) {
 			case NamedRule:
-				name = v.Name
-				lineContent = rule2line(v.Line)
+				name = v.name
+				lineContent = rule2line(v.line)
 			default:
 				name = ""
 				lineContent = rule2line(v)
@@ -56,16 +54,14 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 func rule2line(x any) Line {
 	switch v := x.(type) {
 	case string:
-		return NewSLine(v)
-	case SLine:
+		return newSLine(v)
+	case sLine:
 		return O(v.Str)
 	case Ast:
-		return NewCLine(v)
+		return newCLine(v)
 	case ALine:
 		return v
 	case OLine:
-		return v
-	case CLine:
 		return v
 	case ILine:
 		panic("assert")
@@ -87,23 +83,23 @@ func rule2line(x any) Line {
 // opts:       Parse time options
 
 // see line/README.md # internals
-func getRule(rank *Rank, name string, line Line, parentRule Ast, attrs ParseOptions, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Ast {
+func getRule(rank_ *rank, name string, line Line, parentRule Ast, attrs ParseOptions, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Ast {
 	var retAst Ast
 	// fmt.Println("getRule name=" + name + " eflect.TypeOf(line).String()):" + reflect.TypeOf(line).String())
 	switch v := line.(type) {
 	case ALine:
 		retAst = rankFromLines(v.Array, name, GrammarOptions{TraceOptions: opts, LazyGrammar: lazyGrammar})
-	case CLine:
+	case cLine:
 		retAst = v.Ast
 		retAst.GetGNode().Name = name
 	case ILine:
 		panic("assert") // ILine is impossible here
 	case OLine:
-		retAst = v.toRule(rank, parentRule, OLineByIndexOrName{name: name}, opts, lazyGrammar)
+		retAst = v.toRule(rank_, parentRule, oLineByIndexOrName{name: name}, opts, lazyGrammar)
 		if retAst.GetGNode().Name == "" {
 			retAst.GetGNode().Name = name
 		}
-	case SLine:
+	case sLine:
 		// HACK: temporarily halt trace when SkipSetup
 		var skipSetup bool = opts.SkipSetup
 		var oldTrace TraceOptions
@@ -114,8 +110,8 @@ func getRule(rank *Rank, name string, line Line, parentRule Ast, attrs ParseOpti
 		// parse the string
 		// a grammar like joeson_handcompiled is needed for that,
 		gm := lazyGrammar.Get() // uses Lazy to get the grammar in cache or build it
-		if x, error := gm.ParseOrFail(
-			NewParseContext(NewCodeStream(v.Str), gm.NumRules, attrs, opts),
+		if x, error := gm.parseOrFail(
+			newParseContext(NewCodeStream(v.Str), gm.NumRules, attrs, opts),
 		); error == nil {
 			retAst = x
 		} else {

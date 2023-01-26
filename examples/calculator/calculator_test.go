@@ -91,7 +91,7 @@ func grammar() *joeson.Grammar {
 	return joeson.GrammarFromLines(linesCalc, "calc")
 }
 
-const esc string = ""
+const esc string = "\x1b"
 const reset string = esc + "[0m"
 
 func cyan(s string) string       { return esc + "[36m" + s + reset }

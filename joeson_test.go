@@ -82,14 +82,14 @@ func TestManyTimes(t *testing.T) {
 			}
 		case OLine:
 			if name == "" {
-				name = v.Name()
+				name = v.name
 			}
-			frecurse(v.Content(), indent, name)
+			frecurse(v.content, indent, name)
 		case ILine:
-			frecurse(v.Content(), indent, v.Name())
-		case CLine:
+			frecurse(v.content, indent, v.name)
+		case cLine:
 			fmt.Printf("%s%s\n", helpers.Indent(indent), String(v.Ast))
-		case SLine:
+		case sLine:
 			// parse the rules of the intention grammar, one line at a time
 			if it, err := parsedGrammar.ParseString(v.Str, ParseOptions{Debug: false}); err != nil {
 				panic(err)
@@ -112,7 +112,7 @@ func TestManyTimes(t *testing.T) {
 	for i := 0; i < nbIter; i++ {
 		frecurse(NewALine(IntentionRules()), 0, "")
 	}
-	fmt.Printf("Duration for %d iterations: %d ms\n", nbIter, time.Now().Sub(start).Milliseconds())
+	fmt.Printf("Duration for %d iterations: %d ms\n", nbIter, time.Since(start).Milliseconds())
 }
 
 // short grammar was useful for debugging. Kept for the good memories
