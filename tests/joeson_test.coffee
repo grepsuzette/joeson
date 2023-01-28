@@ -8,7 +8,7 @@ require './setup'
 # NOTE: keep this grammar in sync with src/joeson.coffee
 # Once we have a compiler, we'll just move this into src/joeson.coffee.
 
-{@trace, setTrace, NODES, GRAMMAR, MACROS, Grammar, Choice, Sequence, Lookahead, Existential, Pattern, Not, Ref, Str, Regex} = require '../src/joeson'
+{@trace, setTrace, NODES, GRAMMAR, MACROS, Grammar, HandcompiledRules, Choice, Sequence, Lookahead, Existential, Pattern, Not, Ref, Str, Regex} = require '../src/joeson'
 {clazz, colors:{red, blue, cyan, magenta, green, normal, black, white, yellow}} = require('cardamom')
 {inspect} = require 'util'
 assert = require 'assert'
@@ -25,7 +25,7 @@ if sTrace?
         loop: no,
         grammar: no,
         filterLine: -1,
-        skipSetup: yes,
+        skipSetup: no,
     }
     for opt in aTrace
         switch opt.toLowerCase()
@@ -33,7 +33,7 @@ if sTrace?
                 localTrace.stack = no
                 localTrace.loop = no
                 localTrace.grammar = no
-                localTrace.skipSetup = yes
+                localTrace.skipSetup = no
                 localTrace.filterLine = -1
             when "stack"
                 localTrace.stack = yes
@@ -114,21 +114,16 @@ RAW_GRAMMAR = [
   i ESC2:       "'\\\\' .", (chr) -> '\\'+chr
 ]
 
-newJoeson = -> Grammar RAW_GRAMMAR
-PARSED_GRAMMAR = Grammar RAW_GRAMMAR
-
 trace = @trace
+gmIntention = -> Grammar RAW_GRAMMAR
 allFuncs =
-    Handcompiled: ->
-        gm = newJoeson()
-        if gm.numRules != 35
-            throw "test failed, name=#{gm.name} #{gm.numRules} rules"
+    ParseIntention: ->
+        console.log "TODO"
     DebugLabel: ->
-        rules = [
+        debuglabel = Grammar [
             o In: "l:Br"
             i Br: "'Toy' | 'BZ'"
         ]
-        debuglabel = Grammar(rules)
         x = debuglabel.parse "Toy"
         if !x.l?
             throw "assert label l"
@@ -138,7 +133,8 @@ allFuncs =
             console.log "Test DebugLabel is successful"
     ManyTimes: ->
         start = new Date()
-        nbIter = 10
+        nbIter = 1
+        PARSED_GRAMMAR = Grammar RAW_GRAMMAR
         frecurse = (rule, indent=0, name=undefined) ->
           if rule instanceof Array
             console.log "#{Array(indent*2+1).join ' '}#{red name+":"}" if name
@@ -160,6 +156,19 @@ allFuncs =
         for t in [0..nbIter-1]
             frecurse RAW_GRAMMAR
         console.log "Duration for #{nbIter} iterations: #{new Date() - start}ms"
+    Squareroot: ->
+        gm = Grammar [
+            o sqr: "w:word '(' n:int ')'"
+            i word: "[a-z]{1,}"
+            i "int": "/-?[0-9]{1,}/", (it) -> new Number it
+        ]
+        x = gm.parse "squareroot(-1)"
+        if !x.w? || x.w.join("") != "squareroot"
+            throw "expected w label to have value [s,q,u,a,r,e,r,o,o,t], not " + x.w
+        else if 0+x.n != -1
+            throw "expected n label to be -1, not " + x.n
+        else
+            console.log "Test Squareroot is successful"
 
 if sTest?
     if allFuncs[sTest]?

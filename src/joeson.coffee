@@ -902,7 +902,7 @@ St = -> Str arguments...
 
 # Don't worry, this is just the intermediate hand-compiled form of the grammar you can actually understand,
 # located currently in tests/joeson.coffee. Look at that instead, and keep the two in sync until they get merged later.
-@GRAMMAR = GRAMMAR = Grammar [
+@HandcompiledRules = HandcompiledRules = [
   o EXPR: [
     o S(R("CHOICE"), R("_"))
     o "CHOICE": [
@@ -948,6 +948,8 @@ St = -> Str arguments...
   i ESC1:     S(St('\\'), R("."))
   i ESC2:     S(St('\\'), R(".")), (chr) -> '\\'+chr
 ]
+
+@GRAMMAR = GRAMMAR = Grammar HandcompiledRules
 
 @NODES = {
   GNode, Yes, Choice, Rank, Sequence, Lookahead, Existential, Pattern, Not, Ref, Regex, Grammar
