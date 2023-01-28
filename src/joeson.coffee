@@ -16,14 +16,17 @@ just admit that the current implementation is imperfect, and limit grammar usage
 
 ###
 
+# to configure the trace for the tests, use $TRACE envvar, see joeson_test.coffee
 @trace = trace =
   #filterLine: 299
   stack:      no
   loop:       no
   skipSetup:  no
+  grammar:    no
 
 {clazz, colors:{red, blue, cyan, magenta, green, normal, black, white, yellow}} = require('cardamom')
 
+@setTrace = setTrace = (traceOptions) -> trace = traceOptions
 boldblack = (s) -> black(s, yes)
 bold = (s) -> "[1m#{s}[0m"
 {inspect} = require 'util'
@@ -89,8 +92,7 @@ cacheSet = (frame, result, endPos) ->
   log: (message) ->
     unless @skipLog
       line = @code.line
-      console.log "code line =" +line
-      return if trace.filterLine? and line isnt trace.filterLine
+      return if trace.filterLine? and trace.filterLine>-1 and line isnt trace.filterLine
       codeSgmnt = "#{ white ''+line+','+@code.col \
                 }\t#{ boldblack pad right:5, (p=escape(@code.peek beforeChars:5))[p.length-5...] \
                   }#{ green pad left:20, (p=escape(@code.peek afterChars:20))[0...20] \
@@ -145,20 +147,21 @@ toType = (obj) ->
 showtype = (result) ->
     if result?
         # if true # show as go types, for diff_go_vs_coffee
+            # feel free to edit if notice discrepancies
             return "<NativeUndefined>" if result is undefined
-            return "*core.NativeArray" if Array.isArray(result)
-            return "Grammar" if result.rank?
-            return "*ast.Ref" if result.ref?
-            return "ast.Str" if result.str?
-            return "*ast.Pattern" if result.value?
-            return "*ast.Regex" if result.reStr?
-            return "*ast.Sequence" if result.sequence?
-            return "*ast.Rank" if result?.contentString?().indexOf(blue("Rank(")) == 0
-            return "*ast.Choice" if result.choices?
+            return "*joeson.NativeArray" if Array.isArray(result)
+            return "joeson.Grammar" if result.rank?
+            return "*joeson.ref" if result.ref?
+            return "joeson.str" if result.str?
+            return "*joeson.pattern" if result.value?
+            return "*joeson.regex" if result.reStr?
+            return "*joeson.sequence" if result.sequence?
+            return "*joeson.rank" if result?.contentString?().indexOf(blue("Rank(")) == 0
+            return "*joeson.choice" if result.choices?
             return "Exis|Not" if result.it?
-            return "Lookahead" if result.expr?
-            return "core.NativeString" if toType(result) == "string"
-            return "core.NativeInt" if toType(result) is "number"
+            return "joeson.lookahead" if result.expr?
+            return "joeson.NativeString" if toType(result) == "string"
+            return "joeson.NativeInt" if toType(result) is "number"
             # return toType result
             if typeof result is "object"
                 s = ""
@@ -167,7 +170,7 @@ showtype = (result) ->
                     s += ", " if !first
                     s += key + ":" + if result[key] == undefined then "<NativeUndefined>" else result[key]
                     first = false
-                return "NativeMap{" + s + "} " + cyan "core.NativeMap"
+                return "NativeMap{" + s + "} " + cyan "joeson.NativeMap"
                 # return "object keys:{" + Object.keys(result) + "}"
             else
                 return "Unknown"
@@ -199,7 +202,7 @@ showcontent = (result) ->
     if result == null
         "nil"
     else
-        if Array.isArray(result) # weirdness so output is similar to golang
+        if Array.isArray(result) # so output is similar to golang
             return "[" + result + "] " + cyan showtype result
         else if (result + "") == "[object Object]" # ditto
             return (cyan showtype result).slice(5, -4) # strip outside ansi sequence for cyan
@@ -754,7 +757,7 @@ showcontent = (result) ->
     console.log "| ",
         pad(left:14, "key/name"),
         pad(left:3, "id"),
-        pad(left:13, "type"),
+        pad(left:20, "type"),
         pad(left:3, "cap"),
         pad(left:7, "label"),
         pad(left:21, "labels()"),
@@ -765,7 +768,7 @@ showcontent = (result) ->
         console.log "|  ",
             pad(left:14, k),
             pad(left:3, v.id),
-            pad(left:13, showtype(v)),
+            pad(left:20, showtype(v)),
             pad(left:3,
                 if v.capture == true
                     "y"
@@ -792,7 +795,7 @@ Line = clazz 'Line', ->
       try
         # HACK: temporarily halt trace
         oldTrace = trace
-        # trace = stack:no, loop:no if trace.skipSetup
+        trace = stack:no, loop:no if trace.skipSetup
         rule = GRAMMAR.parse rule
         trace = oldTrace
       catch err
