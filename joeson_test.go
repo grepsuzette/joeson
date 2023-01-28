@@ -7,23 +7,8 @@ import (
 	"time"
 )
 
-// Basic test, doesn't do much
-func TestHandcompiled(t *testing.T) {
-	gm := NewJoeson()
-	if gm.GetGNode().Name != JoesonGrammarName {
-		t.Fail()
-	}
-	if gm.NumRules != JoesonNbRules {
-		t.Errorf("Expected %d rules, got %d\n", JoesonNbRules, gm.NumRules)
-	}
-	if !gm.IsReady() {
-		t.Fail()
-	}
-}
-
-// Main test
-// Parse joeson_intention using joeson_handcompiled
-// It's similar to joeson_test.coffee
+// this allows tracing and diffing,
+// it does not do more than compiling the intention grammar
 func TestParseIntention(t *testing.T) {
 	gmIntention := GrammarFromLines(IntentionRules(), "gmIntention")
 	if !gmIntention.IsReady() || gmIntention.NumRules != JoesonNbRules {
@@ -40,13 +25,13 @@ func TestBootstrap(t *testing.T) {
 		"gmIntention",
 		GrammarOptions{LazyGrammar: helpers.NewLazyFromValue[*Grammar](gmJoeson)},
 	)
-	gmJoeson.Bomb() // destroy the grammar! to make sure it plays no part below
+	gmJoeson.Bomb() // destroy the grammar to make sure it plays no part below
 	gmDebuglabel := GrammarFromLines(
 		[]Line{
 			o(Named("In", "l:Br")),
 			i(Named("Br", "'Toy' | 'BZ'")),
 		},
-		"dbglbl/bootst",
+		"gmFoo",
 		GrammarOptions{LazyGrammar: helpers.NewLazyFromValue[*Grammar](gmIntention)},
 	)
 	gmDebuglabel.PrintRules()
@@ -66,10 +51,10 @@ func TestBootstrap(t *testing.T) {
 }
 
 func TestManyTimes(t *testing.T) {
-	// this test replicates joeson_test.coffee
+	// this test replicates the original joeson_test.coffee
 	start := time.Now()
 	nbIter := 10
-	parsedGrammar := GrammarFromLines(IntentionRules(), "gmIntention", GrammarOptions{TraceOptions: Mute()})
+	parsedGrammar := GrammarFromLines(IntentionRules(), "gmIntention")
 	var frecurse func(rule Line, indent int, name string)
 	frecurse = func(rule Line, indent int, name string) {
 		switch v := rule.(type) {
@@ -102,7 +87,7 @@ func TestManyTimes(t *testing.T) {
 				if it != nil {
 					sResult = yellow(String(it))
 				}
-				fmt.Printf("%s%s%s\n", helpers.Indent(indent), sName, sResult)
+				fmt.Printf("%s%s%s %s\n", helpers.Indent(indent), sName, sResult, white(""))
 			}
 
 		default:
@@ -142,5 +127,54 @@ func TestDebugLabel(t *testing.T) {
 		}
 	} else {
 		t.Error(error)
+	}
+}
+
+func TestSquareroot(t *testing.T) {
+	gm := GrammarFromLines(
+		[]Line{
+			o(Named("sqr", "w:word '(' n:int ')'")),
+			i(Named("word", "[a-z]{1,}")),
+			i(Named("int", "/-?[0-9]{1,}/"), func(it Ast) Ast { return NewNativeIntFrom(it) }),
+		},
+		"gmSqr",
+	)
+	if x, error := gm.ParseString("squareroot(-1)"); error != nil {
+		t.Error(error)
+	} else {
+		nmap := x.(NativeMap)
+		if w, exists := nmap.GetStringExists("w"); !exists || w != "squareroot" {
+			t.Error("was expecting w == squareroot")
+		} else if n, exists := nmap.GetIntExists("n"); !exists || n != -1 {
+			if !exists {
+				t.Error("label n not found")
+			} else {
+				t.Error(fmt.Sprintf("was expecting n == -1, but got %d\n", n))
+			}
+		}
+	}
+}
+
+func TestChoice2(t *testing.T) {
+	gm := GrammarFromLines(
+		[]Line{
+			// this is a meaningful test that will eventually go away
+			o(Named("CHOICE", rules(
+				o("_PIPE* SEQUENCE*_PIPE{2,} _PIPE*", func(it Ast) Ast {
+					fmt.Println(it.ContentString())
+					return it
+				}),
+				o(Named("SEQUENCE", "WORD _ '_'")),
+			))),
+			i(Named("_PIPE", "_ '|'")),
+			i(Named("WORD", "[A-Z]{1,}")),
+			i(Named("_", "(' ' | '\n')*")),
+		},
+		"gmChoice",
+	)
+	if x, error := gm.ParseString("CHOICE _"); error != nil {
+		t.Error(error)
+	} else {
+		fmt.Println(x.ContentString())
 	}
 }

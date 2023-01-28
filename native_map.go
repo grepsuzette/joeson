@@ -52,18 +52,28 @@ func (nm NativeMap) GetExists(k string) (Ast, bool) {
 	return v, exists
 }
 
-// specialized getter when value is known to be a NativeString
-// it panics otherwise
+// specialized getter when value is known to be a NativeString (or NativeArray
+// of NativeString).
+// It panics when it is NOT a NativeString. The returned bool is
+// false whenever the given string is not a key.
 func (nm NativeMap) GetStringExists(k string) (string, bool) {
-	if v, exists := nm[k]; exists {
-		return v.(NativeString).Str, true
+	if vv, exists := nm[k]; exists {
+		switch v := vv.(type) {
+		case NativeString:
+			return v.Str, true
+		case *NativeArray:
+			return stringFromNativeArray(v), true
+		default:
+			panic("unexpected type")
+		}
 	} else {
 		return "", false
 	}
 }
 
-// specialized getter when value is known to be a NativeInt
-// it panics otherwise
+// specialized getter when value is known to be a NativeInt.
+// It panics when it is NOT a NativeInt. The returned bool is
+// false whenever the given string is not a key.
 func (nm NativeMap) GetIntExists(k string) (int, bool) {
 	if v, exists := nm[k]; exists {
 		return int(v.(NativeInt)), true

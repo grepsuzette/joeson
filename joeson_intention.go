@@ -31,13 +31,7 @@ func IntentionRules() []Line {
 								i(named("RANGE", "'{' _ min:INT? _ ',' _ max:INT? _ '}'")),
 							))),
 							o(named("PRIMARY", rules(
-								o("WORD '(' EXPR ')'", func(it Ast) Ast {
-									na := it.(*NativeArray)
-									if na.Length() != 4 {
-										panic("logic")
-									}
-									return newRef(NewNativeArray([]Ast{na.Get(1), na.Get(3)}))
-								}),
+								o("WORD '(' EXPR ')'", func(it Ast) Ast { return newRef(it) }),
 								o("WORD", func(it Ast) Ast { return newRef(it) }),
 								o("'(' inlineLabel:(WORD ': ')? expr:EXPR ')' ( _ '->' _ code:CODE )?", fCode),
 								i(named("CODE", "'{' (!'}' (ESC1 | .))* '}'"), fCode),

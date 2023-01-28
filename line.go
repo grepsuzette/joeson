@@ -1,6 +1,7 @@
 package joeson
 
 import (
+	"fmt"
 	"grepsuzette/joeson/helpers"
 	"reflect"
 )
@@ -41,8 +42,15 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 				attrs.CbBuilder = v
 			case ParseOptions:
 				attrs = v
+			case string:
+				// TODO better error, because this will happen a lot to users.
+				panic(fmt.Sprintf(
+					"O (or I) called lineInit with %v\nSo the second parameter was a string: %s\nRight now this syntax is not supported\nPlease fix your grammar",
+					origArgs,
+					v,
+				))
 			default:
-				// fmt.Printf("%s", reflect.TypeOf(v).String())
+				fmt.Printf("%s", reflect.TypeOf(v).String())
 				panic("assert")
 			}
 		}
@@ -100,27 +108,23 @@ func getRule(rank_ *rank, name string, line Line, parentRule Ast, attrs ParseOpt
 			retAst.GetGNode().Name = name
 		}
 	case sLine:
-		// HACK: temporarily halt trace when SkipSetup
-		var skipSetup bool = opts.SkipSetup
-		var oldTrace TraceOptions
-		if skipSetup {
-			oldTrace = opts
-			opts = Mute()
+		// temporarily halt trace when SkipSetup
+		traceOptions := opts
+		if opts.SkipSetup {
+			traceOptions.Loop = false
+			traceOptions.Stack = false
 		}
 		// parse the string
 		// a grammar like joeson_handcompiled is needed for that,
 		gm := lazyGrammar.Get() // uses Lazy to get the grammar in cache or build it
 		if x, error := gm.parseOrFail(
-			newParseContext(NewCodeStream(v.Str), gm.NumRules, attrs, opts),
+			newParseContext(NewCodeStream(v.Str), gm.NumRules, attrs, traceOptions),
 		); error == nil {
 			retAst = x
 		} else {
 			panic(error)
 		}
 		retAst.GetGNode().Name = name
-		if skipSetup {
-			opts = oldTrace
-		}
 	default:
 		panic("unrecog type " + reflect.TypeOf(line).String())
 	}

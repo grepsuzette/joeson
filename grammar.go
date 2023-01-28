@@ -26,12 +26,13 @@ type Grammar struct {
 
 // General options to build a grammar
 type GrammarOptions struct {
-	// Those are the options governing what is traced or not during the initialization or the parsing
+	// Options governing what is traced or not during the initialization or the parsing
 	TraceOptions TraceOptions
 
-	// A Lazy of *Grammar specifying how to create or retrieve a grammar
-	//  from its cache, should the `lines` contain some string rules (SLine) needing to be compiled.
-	//  In general leave it nil to have the joeson_handcompiled grammar to be used automatically.
+	// Leave this nil unless you know. Nil specifies the joeson_handcompiled grammar.
+	// This lazy function must return the (compiled) grammar to use when some uncompiled
+	// string rules (sLine) are encountered. Once a grammar has been compiled, it can
+	// parse and therefore be used here.
 	LazyGrammar *helpers.Lazy[*Grammar]
 }
 
@@ -159,10 +160,9 @@ func (gm *Grammar) Prepare()                {}
 func (gm *Grammar) HandlesChildLabel() bool { return false }
 func (gm *Grammar) ContentString() string {
 	if gm.rank == nil {
-		// empty grammars
 		return magenta("GRAMMAR{}")
 	} else {
-		return magenta("GRAMMAR{") /*+ helpers.TypeOfToString(gm.rank) */ + String(gm.rank) + magenta("}")
+		return magenta("GRAMMAR{") + String(gm.rank) + magenta("}")
 	}
 }
 
@@ -197,7 +197,7 @@ func (gm *Grammar) postinit() {
 	// "TODO refactor into translation passes." <empty>
 
 	// Merge Choices with just a single choice.
-	walkOptimizeAwayMonochoice := WalkPrepost{Pre: nil}
+	walkOptimizeAwayMonochoice := WalkPrepost{Pre: nil} // predeclare, because cb will need to call itself just below
 	walkOptimizeAwayMonochoice.Pre = func(node Ast, parent Ast) string {
 		/*
 			BEFORE:	  somenode            ** foreach child, if one child is a mono choice, optimize it away
@@ -308,7 +308,7 @@ func (gm *Grammar) PrintRules() {
 	fmt.Println("| ",
 		helpers.PadLeft("key/name", 14),
 		helpers.PadLeft("id", 3),
-		helpers.PadLeft("type", 13),
+		helpers.PadLeft("type", 20),
 		helpers.PadLeft("cap", 3),
 		helpers.PadLeft("label", 7),
 		helpers.PadLeft("labels()", 21),
@@ -320,12 +320,29 @@ func (gm *Grammar) PrintRules() {
 		v := gm.id2Rule[i]
 		sParentName := "-"
 		if v.GetGNode().Parent != nil {
-			sParentName = v.GetGNode().Parent.GetGNode().Name
+			switch father := v.GetGNode().Parent.(type) {
+			// case *Grammar:
+			// 	sParentName = "__grammar__" // instead show name, use same as js for diffing
+			case *rank:
+				// 2 kind of ranks:
+				//   1. parent is a grammar
+				//   2. regular rank (subrank)
+				switch father.Parent.(type) {
+				case *Grammar:
+					sParentName = "__grammar__" // instead show name, use same as js for diffing
+				default:
+					sParentName = father.GetGNode().Name
+				}
+			default:
+				// sParentName = fmt.Sprintf("%T", v)
+				sParentName = v.GetGNode().Name
+			}
+			// sParentName = v.GetGNode().Parent.GetGNode().Name
 		}
 		fmt.Println("|  ",
 			helpers.PadLeft(v.GetGNode().Name, 14),
 			helpers.PadLeft(strconv.Itoa(v.GetGNode().Id), 3),
-			helpers.PadLeft(helpers.TypeOfToString(v), 13),
+			helpers.PadLeft(helpers.TypeOfToString(v), 20),
 			helpers.PadLeft(helpers.BoolToString(v.GetGNode().Capture), 3),
 			helpers.PadLeft(v.GetGNode().Label, 7),
 			helpers.PadLeft(strings.Join(v.GetGNode().Labels_.Get(), ","), 21),

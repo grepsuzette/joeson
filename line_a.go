@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// ALine embeds a []Line.
 type ALine struct {
 	Array []Line
 }

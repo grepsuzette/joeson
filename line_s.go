@@ -5,8 +5,8 @@ import (
 )
 
 // sLine wraps a string. That string is intended to be parsed
-// and represents a non-compiled rule. It is never entered directly
-// however, it's a transient state.
+// and represents a rule that has not been compiled yet.
+// It is never entered directly however, it's a transient state.
 type sLine struct {
 	Str string
 }

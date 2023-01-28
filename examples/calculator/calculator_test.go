@@ -10,10 +10,9 @@ import (
 
 // this example is the typical example with a calculator
 // and is inspired from the mna-pigeon example
+//
+// To understand more easily, start from the bottom, with Test_calc()
 
-func xx(it joeson.Ast) joeson.Ast {
-	return eval(it.(joeson.NativeMap).Get("first"), it.(joeson.NativeMap).Get("rest"))
-}
 func i(a ...any) joeson.ILine { return joeson.I(a...) }
 func o(a ...any) joeson.OLine { return joeson.O(a...) }
 func named(name string, lineStringOrAst any) joeson.NamedRule {
@@ -39,6 +38,10 @@ var linesCalc = []joeson.Line{
 	i(named("MulOp", "'*' | '/'")),
 	i(named("Integer", "/^-?[0-9]+/"), func(it joeson.Ast) joeson.Ast { return joeson.NewNativeIntFrom(it) }),
 	i(named("_", "[ \t]*")),
+}
+
+func xx(it joeson.Ast) joeson.Ast {
+	return eval(it.(joeson.NativeMap).Get("first"), it.(joeson.NativeMap).Get("rest"))
 }
 
 var ops = map[string]func(int, int) int{
@@ -84,46 +87,8 @@ func eval(first joeson.Ast, rest joeson.Ast) joeson.Ast {
 	return lhs
 }
 
-// A working grammar for the calculator
-// The ast nodes are special in that they will evaluate
-// the numerical expression to eventually respond with an int
-func grammar() *joeson.Grammar {
-	return joeson.GrammarFromLines(linesCalc, "calc")
-}
-
-const esc string = "\x1b"
-const reset string = esc + "[0m"
-
-func cyan(s string) string       { return esc + "[36m" + s + reset }
-func yellow(s string) string     { return esc + "[33m" + s + reset }
-func boldYellow(s string) string { return esc + "[1;33m" + s + reset }
-
-func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
-	t.Helper()
-	if res, error := grammar().ParseString(sExpression); error == nil {
-		fmt.Println(
-			cyan(sExpression),
-			" --> ",
-			yellow(res.ContentString()),
-			" --> ",
-			boldYellow(strconv.Itoa(extractResult(t, res))),
-		)
-		if extractResult(t, res) != nExpectedResult {
-			t.Fail()
-		}
-	} else {
-		t.Error(error)
-	}
-}
-
-func Test_73_plus_4(t *testing.T)      { assertResultIs(t, "73 + 4", 77) }
-func Test_minus7(t *testing.T)         { assertResultIs(t, "-7", -7) }
-func Test_73_plus_minus4(t *testing.T) { assertResultIs(t, "73 +(-4)", 69) }
-func Test_36(t *testing.T)             { assertResultIs(t, "4  *( (2 +1 )*3 )", 36) }
-func Test_12(t *testing.T)             { assertResultIs(t, "-4 * ((-2+1) *3)", 12) }
-func Test_minus11849(t *testing.T)     { assertResultIs(t, "241+513* -24 +((1934-192*2)/7)+1", -11849) }
 func Test_failing(t *testing.T) {
-	gm := grammar()
+	gm := joeson.GrammarFromLines(linesCalc, "calc")
 	var h = map[string]string{
 		"90 (6090)": "Error parsing at char:3",
 		"-(7)":      "Error parsing at char:0",
@@ -141,15 +106,21 @@ func Test_failing(t *testing.T) {
 }
 
 func Test_calc(t *testing.T) {
-	gm := grammar()
+	gm := joeson.GrammarFromLines(linesCalc, "calc")
 	var h = map[string]int{
-		"60/6/5":                2,
-		"1 + 2 + 3 + 4 + 5 + 6": 21,
-		"1 - 2 + 3 - 4 + 5 - 6": -3,
-		"0 + 1":                 1,
-		"0 - 1":                 -1,
-		"0 * 1":                 0,
-		"0 / 1":                 0,
+		"0 + 1":                            1,
+		"0 - 1":                            -1,
+		"0 * 1":                            0,
+		"0 / 1":                            0,
+		"-7":                               -7,
+		"73 + 4":                           77,
+		"73 +(-4)":                         69,
+		"-4 * ((-2+1) *3)":                 12,
+		"1 + 2 + 3 + 4 + 5 + 6":            21,
+		"1 - 2 + 3 - 4 + 5 - 6":            -3,
+		"241+513* -24 +((1934-192*2)/7)+1": -11849,
+		"60/6/5":                           2,
+		"4*((2+1) * 3 )":                   36,
 	}
 	for s, nExpectedResult := range h {
 		res, error := gm.ParseString(s)
@@ -160,5 +131,37 @@ func Test_calc(t *testing.T) {
 		} else {
 			t.Error(error)
 		}
+	}
+}
+
+// all this part may be deleted
+// this shows how to use assertResultIs. It was used for debugging
+// and is kept around until we are sure we don't need it.
+// Also it shows some coloring with `TRACE=none go test examples/calculator/calculator_test.go -v`
+// which can help to understand the first time
+func Test_12(t *testing.T) { assertResultIs(t, "-4 * ((-2+1) *3)", 12) }
+
+const esc string = "\x1b"
+const reset string = esc + "[0m"
+
+func cyan(s string) string       { return esc + "[36m" + s + reset }
+func yellow(s string) string     { return esc + "[33m" + s + reset }
+func boldYellow(s string) string { return esc + "[1;33m" + s + reset }
+
+func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
+	t.Helper()
+	if res, error := joeson.GrammarFromLines(linesCalc, "calc").ParseString(sExpression); error == nil {
+		fmt.Println(
+			cyan(sExpression),
+			" --> ",
+			yellow(res.ContentString()),
+			" --> ",
+			boldYellow(strconv.Itoa(extractResult(t, res))),
+		)
+		if extractResult(t, res) != nExpectedResult {
+			t.Fail()
+		}
+	} else {
+		t.Error(error)
 	}
 }

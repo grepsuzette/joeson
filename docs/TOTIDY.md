@@ -1,3 +1,7 @@
+When "uncompiled rules" are parsed ("compiled"), the
+	// byproduct is an AST of that grammar. A compiled grammar is an
+	// AST that does not contains uncompiled rules. Once a grammar is compiled
+	// it can parse.
 # Grammars
 
 First of all, the joeson grammars are in this package:

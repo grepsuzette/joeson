@@ -3,8 +3,7 @@
 ✓ see if callbacks in grammars can be simplified further: yes but would need reflection
 ✓ put all 4 code is deprecated in json in 1 func
 ✓ clean up commented comments in imports
-✓ NO it seems possible to get rid of the grammar arg in RankFromLines() and getRule()
-     It won't do because need to pass a rank in that case 
+✓ it seems possible to get rid of the grammar arg in RankFromLines() and getRule(): NO It won't do because need to pass a rank in that case 
 ✓ better way for Prefix(node) + node.ContentString(). Something like String(node)
 ✓ clarify GrammarFromLines, the last argument `grammar`. See NewJoeson()
 ✓ try putting lambda.go and colors.go in main package: won't do. lambda was moved to helpers/
@@ -13,3 +12,8 @@
 - document and maybe add selective options to choose what log category to print in both go and js
 ✓ inquiry gnode line 44, do we still have this 3rd arg caller? if not remove: YES necessary
 ✓ from GNode, remove CbBuilder, SkipCache, SkipLog and Debug and embed a ParseOptions instead
+✓ diff_go_vs_coffee must show the commandline used with --only
+✓ check joeson.coffee:371 and ast_str:42 ast_ref ast_regex with all our grammars, see if necessary: seems no problem
+- Document README
+- Maybe one more example
+- submit on github

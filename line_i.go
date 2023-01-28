@@ -12,19 +12,22 @@ type ILine struct {
 }
 
 /*
-I() is a helper to declare terminal lines of rules (aka ILine).
 They have a name (always), a content, an optional parse callback and an optional ParseOptions object.
-- I("INT", "/[0-9]+/")
-- I("INT", "/[0-9]+/", func(it Ast) Ast { return new NativeInt(it) })
-- I("INT", "/[0-9]+/", func(it Ast, ctx *ParseContext) Ast { return <...> })
-- I("INT", "/[0-9]+/", func(it Ast) Ast { return <...> }, ParseOptions{SkipLog: false, SkipCache: true})
-- I("RANGE", O(S(St("{"), R("_"), L("min",E(R("INT"))), R("_"), St(","), R("_"), L("max",E(R("INT"))), R("_"), St("}"))))
-  This one is a handcompiled rule with an O which the joeson grammar is initially defined as in ast/handcompiled
-- I("LABEL", C(St('&'), St('@'), R("WORD"))),
-That one is a handcompiled rule that doesn't use an O rule.
+- I(Named("INT", "/[0-9]+/")
+- I(Named("INT", "/[0-9]+/"), func(it Ast) Ast { return new NativeInt(it) })
+- I(Named("INT", "/[0-9]+/"), func(it Ast, ctx *ParseContext) Ast { return <...> })
+- I(Named("INT", "/[0-9]+/"), func(it Ast) Ast { return <...> }, ParseOptions{SkipLog: false, SkipCache: true})
+   \__ These are typical exemples
 
-It is better to refer to the readme, as it is too flexible to explain here.
+- I(Named("LABEL", c(st('&'), st('@'), r("WORD")))),
+   \__ This one is a handcompiled rule that therefore doesn't use a string
+       (that is not going to be useful outside of this lib)
 */
+
+// I() is a helper to declare terminal lines of rules (aka ILine).
+// Since ILine are always named, you are going to always call it like this:
+//   I(Named("hello", "'hi' | 'hello'"), <optionalCallback>)
+// It is better to refer to the readme, as it is too flexible to explain here.
 func I(a ...any) ILine {
 	name, content, attrs := lineInit(a)
 	if name == "" {

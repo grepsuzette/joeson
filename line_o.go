@@ -18,7 +18,7 @@ type oLineByIndexOrName struct {
 
 /*
 - O(Named("EXPR", Rules(....)))  // First argument is string (a rule name) and goes to `name`, second is []Line (subrules)
-- O("CHOICE _")  				 // "CHOICE _" here is considered a rule desc because there is no rules() array. `name` will be ""
+- O("CHOICE _")  // The argument here is considered a rule (sLine) because there is no rules() array. `name` will be ""
 - O("_PIPE* SEQUENCE*_PIPE{2,} _PIPE*", func(it Ast) Ast { return new Choice it}) // same as above, with a cb
 - ..... func(it Ast, ctx *ParseContext) Ast { return <...> }, ParseOptions{ SkipLog: true, SkipCache: false } // callbacks long form
 - O(S(St("{"), R("_"), L("min",E(R("INT"))), R("_"), St(","), R("_"), L("max",E(R("INT"))), R("_"), St("}")))

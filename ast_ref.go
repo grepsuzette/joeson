@@ -1,6 +1,7 @@
 package joeson
 
 import (
+	"fmt"
 	"grepsuzette/joeson/helpers"
 	"strconv"
 )
@@ -8,27 +9,32 @@ import (
 type ref struct {
 	*GNode
 	ref   string // ref because joeson.coffee used @ref, because @name was reserved
-	param Ast    // thought it was `any`, see frame.go (`param` field) and joeson.coffee:67. But Ast must be good
+	param Ast
 }
 
+// `it` can be a NativeString ("WORD")
+//      or NativeArray with 1 element (["WORD"])
+//      or NativeArray with 2 elements (["WORD", "EXPR"])
+//         That last case is built with
+// o(s(r("WORD"), st("("), r("EXPR"), st(")")), func(it Ast) Ast {
 func newRef(it Ast) *ref {
 	var name string
 	var param Ast = nil
 	switch v := it.(type) {
 	case NativeString:
-		var ns NativeString = v
-		name = ns.Str
+		name = v.Str
 	case *NativeArray:
 		var na *NativeArray = v
 		if na.Length() == 0 {
 			panic("assert")
 		}
-		name = na.Get(0).(*NativeString).Str
+		name = na.Get(0).(NativeString).Str
 		if na.Length() > 1 {
+			// fmt.Printf("ref param %s %T\n", na.Get(1).ContentString(), na.Get(1))
 			param = na.Get(1)
 		}
 	default:
-		panic("unexpected type for NewRef")
+		panic(fmt.Sprintf("unexpected type for NewRef: %T %v\n", it, it))
 	}
 	ref := &ref{GNode: NewGNode(), ref: name, param: param}
 	ref.GNode.Node = ref

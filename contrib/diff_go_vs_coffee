@@ -6,6 +6,7 @@ joePath=~/Work/GNO/JoeScript
 
 # a vimdiff wrapper used to compare the outputs
 # of the golang and coffeescript implementations of joeson.
+# This was only tested on Linux.
 # 
 # Requirements:
 # - vimdiff (shipped with vim) 
@@ -25,7 +26,7 @@ BOLD="[37m"
 GREEN="[32m"
 RED="[31m"
 CLEAR="[0m"
-grepPattern="^${BOLD}[[:digit:]]"
+grepPattern=""
 
 [[ ! -d "$joePath" ]] && die "joePath=$joePath was not found, please edit the $0 file"
 if ! command -v coffee >/dev/null; then echo "No command coffee (install coffeescript)" ; fi
@@ -46,16 +47,20 @@ Requirements:
 - coffeescript $statusCoffeescript
 - JoeScript $statusJoeScript https://www.github.com/jaekwon/JoeScript
 - [optional] the AnsiEsc plugin for vim to show ansi colors (with ":AnsiEsc")
+- has only been tested on Linux (must not be hard to make it work on Mac though)
 
 OPTIONS:
- --help -h           Show help
- --version -v        Show version and exit
- --grep -g <REGEX>   Use a different regex from default ("$grepPattern")
- --test -t <FUNC>    Specify the test name. A list will be provided if missing
-                     Can also be specified as envvar as TEST=<FUNC> $progName
-                     Don't specify the Test prefix.
- --only <go|coffee>  To debug. This only runs the go or coffee version with output, without vimdiff
- +<LINE>             Jump to line LINE directly, e.g. +34
+ --help -h             Show help
+ --version -v          Show version and exit
+ --test -t <FUNC>      Specify the test name. A list will be provided if missing
+                       Can also be specified as envvar as "TEST=<FUNC> $progName"
+                       Don't specify the Test prefix.
+ --trace <TRACEOPTS>   Comma separated trace options. These are directly passed to joeson,
+                       so refer to the doc.
+                       Can also be specified as envvar like "TRACE=<TRACEOPTS> $progName"
+ --only -o <go|coffee> To debug. This only runs the go or coffee version with output, without vimdiff
+ +<LINE>               Jump to line LINE directly, e.g. +34
+ --grep -g <REGEX>     Filter line against this REGEX (default "")
 EOF
 
 line=0
@@ -67,13 +72,15 @@ for i in "$@"; do
         --version | -v ) echo "$version"; exit 0 ;;
         --grep | -g ) nextRead=grepPattern ;;
         --test | -t ) nextRead=testFunc ;;
-        --only ) nextRead=only ;;
+        --trace ) nextRead=traceOpts ;;
+        --only | -o ) nextRead=only ;;
         +* ) line="${i:1}" ;;
         -* ) echo "Unknown option: $1"; exit 1 ;;
         *) 
             case $nextRead in
                 grepPattern) grepPattern="$i" ;;
                 testFunc) testFunc="$i" ;;
+                traceOpts) traceOpts="$i" ;;
                 only) only="$i" ;;
                 "") ;;
                 *) die "unexpected nextRead=$nextRead" ;;
@@ -95,6 +102,8 @@ if ! command -v vimdiff >/dev/null; then echo "No command vimdiff (install vim?)
 
 [[ -z "$testFunc" && -n "$TEST" ]] && testFunc="$TEST"
 [[ -z "$testFunc" && -n "$test" ]] && testFunc="$test"
+[[ -z "$traceOpts" && -n "$TRACE" ]] && traceOpts="$TRACE"
+[[ -z "$traceOpts" && -n "$trace" ]] && traceOpts="$trace"
 if [[ -z "$testFunc" ]]; then
     echo "The test to run must be specified with '--test <NAME>' or '-t <NAME>', tests below:"
     grep "func Test" "$goPath/joeson_test.go" | sed 's/^ *func *Test\([A-z0-9_]*\)(.*/- \1/'
@@ -102,10 +111,10 @@ if [[ -z "$testFunc" ]]; then
     exit 1
 else
     # identify respective case sensitive names so the tool is easier to use
-    goTestName=$(grep --ignore-case --fixed-strings "func Test${testFunc}" "$goPath/joeson_test.go" | sed 's/^ *func *Test\([A-z0-9_]*\)(.*/\1/')
-    jsTestName=$(TEST=-h coffee "$joePath/tests/joeson_test.coffee" | grep --ignore-case --fixed-strings "$testFunc")
-    [[ -z $goTestName ]] && die "Couldn't find test $testFunc in $goPath/joeson_test.go"
-    [[ -z $jsTestName ]] && die "Couldn't find test $testFunc in $joePath/tests/joeson_test.coffee"
+    goTestName=$(grep --ignore-case --fixed-strings "func Test${testFunc}" "$goPath/joeson_test.go" | sed 's/^ *func *Test\([A-z0-9_]*\)(.*/\1/' | sort | head -n1)
+    jsTestName=$(TEST=-h coffee "$joePath/tests/joeson_test.coffee" | grep --ignore-case --fixed-strings "$testFunc" | sort | head -n1)
+    [[ -z $goTestName ]] && die "Couldn't find test '$testFunc' in $goPath/joeson_test.go"
+    [[ -z $jsTestName ]] && die "Couldn't find test '$testFunc' in $joePath/tests/joeson_test.coffee"
 fi
 
 run_js() { 
@@ -113,27 +122,30 @@ run_js() {
         die "$jsTestName is an invalid test function for coffee"
     else
         # variable environment TEST contains the test to run for coffee version
-        coffee -c "$joePath/src/joeson.coffee" && TEST="$jsTestName" coffee "$joePath/tests/joeson_test.coffee"
+        [[ $1 = --show-cmdline ]] && set -x
+        coffee -c "$joePath/src/joeson.coffee" && TEST="$jsTestName" TRACE="$traceOpts" coffee "$joePath/tests/joeson_test.coffee"
+        { [[ $1 = --show-cmdline ]] && set +x; } 2>/dev/null
     fi
 }	
 run_go() {
     if [[ ! "$goTestName" =~ ^[a-zA-Z0-9_]+$ ]]; then
         die "$goTestName is an invalid test function for go"
     else
-    # example: go test $goPath --run TestDebugLabel -v
-        go test $goPath --run "Test$goTestName" -v
+        # example: go test $goPath --run TestDebugLabel -v
+        [[ $1 = --show-cmdline ]] && set -x
+        TRACE="$traceOpts" go test $goPath --run "Test$goTestName" -v
+        { [[ $1 = --show-cmdline ]] && set +x; } 2>/dev/null
     fi
 }
 
 tmp=${TMPDIR-/tmp}
 
 case $only in
-    "") 
+    "" | "two" | "2") 
         # the regular case, 
         # just use vimdiff
-        run_go | grep -e "$grepPattern" >$tmp/go.ansi 2>&1
-        run_js | grep -e "$grepPattern" >$tmp/js.ansi 2>&1
-
+        run_go >$tmp/go.ansi 2>&1 | grep -e "$grepPattern"
+        run_js  >$tmp/js.ansi 2>&1 | grep -e "$grepPattern"
         # to show ansi colors correctly in vimdiff you should use 
         # https://github.com/powerman/vim-plugin-AnsiEsc
         # then in vim config have `autocmd BufRead *.ansi AnsiEsc`
@@ -142,13 +154,14 @@ case $only in
 
     "go" ) 
         # to debug this script, you may try --only=go
-        run_go | grep -e "$grepPattern" ;; 
+        echo Only in go
+        run_go --show-cmdline | grep -e "$grepPattern" ;; 
 
     "coffee" | "coffeescript" | "js" | "javascript") 
-        # or --only=coffee
-        run_js | grep -e "$grepPattern" ;;
+        # to debug this script, you may try --only=coffee
+        run_js --show-cmdline | grep -e "$grepPattern" ;;
 
-    *) die "assert"
+    *) die "assert" ;;
 esac
 
 

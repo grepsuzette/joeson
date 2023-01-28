@@ -15,7 +15,7 @@ func NewJoesonWithOptions(opts TraceOptions) *Grammar {
 		JoesonRules(),
 		JoesonGrammarName,
 		GrammarOptions{
-			TraceOptions: CheckEnvironmentForTraceOptions(opts),
+			TraceOptions: opts,
 			LazyGrammar:  nil,
 		},
 	)
@@ -104,13 +104,7 @@ func JoesonRules() []Line {
 								i(Named("RANGE", o(s(st("{"), r("_"), l("min", e(r("INT"))), r("_"), st(","), r("_"), l("max", e(r("INT"))), r("_"), st("}"))))),
 							))),
 							o(Named("PRIMARY", rules(
-								o(s(r("WORD"), st("("), r("EXPR"), st(")")), func(it Ast) Ast {
-									na := it.(*NativeArray)
-									if na.Length() != 4 {
-										panic("assert")
-									}
-									return newRef(NewNativeArray([]Ast{na.Get(1), na.Get(3)}))
-								}),
+								o(s(r("WORD"), st("("), r("EXPR"), st(")")), func(it Ast) Ast { return newRef(it) }), // it is a NativeArray of [r("WORD"), r("EXPR")]
 								o(r("WORD"), func(it Ast) Ast { return newRef(it) }),
 								o(s(st("("), l("inlineLabel", e(s(r("WORD"), st(": ")))), l("expr", r("EXPR")), st(")"), e(s(r("_"), st("->"), r("_"), l("code", r("CODE"))))), fCode),
 								i(Named("CODE", o(s(st("{"), p(s(n(st("}")), c(r("ESC1"), r("."))), nil, -1, -1), st("}")))), fCode),

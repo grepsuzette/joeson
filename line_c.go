@@ -1,7 +1,7 @@
 package joeson
 
 // cLine wraps an Ast and therefore represents
-// a rule which was already compiled.
+// a rule which has already been compiled.
 type cLine struct {
 	Ast
 }
