@@ -17,9 +17,9 @@ import (
 // Like in the original implementation, Grammar "is" a GNode.
 type Grammar struct {
 	*GNode
-	rank     Ast         // a *Rank or a Ref to a rank
-	NumRules int         // Each Ast can have rules, recursively. This however i the total count in the grammar
-	id2Rule  map[int]Ast // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
+	rank     Parser         // a *Rank or a Ref to a rank
+	NumRules int            // Each Ast can have rules, recursively. This however i the total count in the grammar
+	id2Rule  map[int]Parser // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
 	TraceOptions
 	wasInitialized bool
 }
@@ -76,7 +76,7 @@ func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) (Ast, error) 
 func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTraceOptions()) }
 func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
 	name := "__empty__"
-	gm := &Grammar{NewGNode(), nil, 0, map[int]Ast{}, opts, false}
+	gm := &Grammar{NewGNode(), nil, 0, map[int]Parser{}, opts, false}
 	gm.GNode.Name = name
 	gm.GNode.Node = gm
 	return gm
@@ -93,9 +93,9 @@ func (gm *Grammar) Bomb() {
 
 func (gm *Grammar) GetGNode() *GNode { return gm.GNode }
 
-// Parse() conforms to the Ast interface, but you would normally call
-// grammar.ParseString() or grammar.ParseCode(), to be able to get
-// errors without a panic.
+// Parse() allows grammar to conform to Parser interface.
+// But normally should call ParseString() or ParseCode(),
+// to be able to get errors without a panic.
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	if ast, error := gm.parseOrFail(ctx); error == nil {
 		return ast
@@ -167,7 +167,7 @@ func (gm *Grammar) ContentString() string {
 }
 
 func (gm *Grammar) IsReady() bool { return gm.rank != nil && gm.wasInitialized }
-func (gm *Grammar) SetRankIfEmpty(ranke Ast) {
+func (gm *Grammar) SetRankIfEmpty(ranke Parser) {
 	if gm.rank != nil {
 		return
 	}
@@ -176,7 +176,7 @@ func (gm *Grammar) SetRankIfEmpty(ranke Ast) {
 	}
 	gm.rank = ranke
 }
-func (gm *Grammar) ForEachChild(f func(Ast) Ast) Ast {
+func (gm *Grammar) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren rank: {type:Rank}
 	gm.GetGNode().Rules = ForEachChild_InRules(gm, f)
 	if gm.rank != nil {
@@ -198,7 +198,7 @@ func (gm *Grammar) postinit() {
 
 	// Merge Choices with just a single choice.
 	walkOptimizeAwayMonochoice := WalkPrepost{Pre: nil} // predeclare, because cb will need to call itself just below
-	walkOptimizeAwayMonochoice.Pre = func(node Ast, parent Ast) string {
+	walkOptimizeAwayMonochoice.Pre = func(node Parser, parent Parser) string {
 		/*
 			BEFORE:	  somenode            ** foreach child, if one child is a mono choice, optimize it away
 					   \
@@ -210,7 +210,7 @@ func (gm *Grammar) postinit() {
 						  \
 						   node below.unaffected
 		*/
-		node.ForEachChild(func(child Ast) Ast {
+		node.ForEachChild(func(child Parser) Parser {
 			if choice, ok := child.(*choice); ok && choice.isMonoChoice() {
 				monochoice := choice.choices[0]
 				mono := monochoice.GetGNode()
@@ -235,7 +235,7 @@ func (gm *Grammar) postinit() {
 
 	// Connect all the nodes and collect dereferences into @rules
 	Walk(gm, nil, WalkPrepost{
-		Pre: func(node Ast, parent Ast) string {
+		Pre: func(node Parser, parent Parser) string {
 			gnode := node.GetGNode()
 			if gnode == nil {
 				return ""
@@ -257,13 +257,15 @@ func (gm *Grammar) postinit() {
 					if parent != nil {
 						gnode.Rule = parent.GetGNode().Rule
 					} else {
-						gnode.Rule = NewNativeUndefined()
+						// TODO gnode.Rule = NewNativeUndefined()
+						//   we used nil here if there is any pb...
+						gnode.Rule = nil
 					}
 				}
 			}
 			return ""
 		},
-		Post: func(node Ast, parent Ast) string {
+		Post: func(node Parser, parent Parser) string {
 			gnode := node.GetGNode()
 			if gnode == nil {
 				return ""
@@ -284,7 +286,7 @@ func (gm *Grammar) postinit() {
 
 	// Prepare all the nodes, children first.
 	Walk(gm, nil, WalkPrepost{
-		Post: func(node Ast, parent Ast) string {
+		Post: func(node Parser, parent Parser) string {
 			node.Prepare()
 			return ""
 		},

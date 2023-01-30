@@ -73,13 +73,13 @@ func (ctx *ParseContext) log(message string, opts TraceOptions) {
 func (ctx *ParseContext) loopStackPush(name string) { ctx.loopStack = append(ctx.loopStack, name) }
 func (ctx *ParseContext) loopStackPop()             { ctx.loopStack = ctx.loopStack[:len(ctx.loopStack)-1] }
 func (ctx *ParseContext) stackPeek(skip int) *frame { return ctx.stack[ctx.stackLength-1-skip] }
-func (ctx *ParseContext) stackPush(x Ast) {
+func (ctx *ParseContext) stackPush(x Parser) {
 	ctx.stack[ctx.stackLength] = ctx.getFrame(x)
 	ctx.stackLength++
 }
 func (ctx *ParseContext) stackPop() { ctx.stackLength-- }
 
-func (ctx *ParseContext) getFrame(x Ast) *frame {
+func (ctx *ParseContext) getFrame(x Parser) *frame {
 	id := x.GetGNode().Id
 	pos := ctx.Code.Pos
 	posFrames := ctx.Frames[pos]

@@ -25,7 +25,7 @@ func (s str) ContentString() string {
 	return green("'" + helpers.Escape(s.Str) + "'")
 }
 func (s str) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Ast) Ast {
+	return Wrap(func(_ *ParseContext, _ Parser) Ast {
 		if didMatch, sMatch := ctx.Code.MatchString(s.Str); didMatch {
 			// a string is not a terminal element
 			// so return NativeString.
@@ -35,7 +35,7 @@ func (s str) Parse(ctx *ParseContext) Ast {
 		}
 	}, s)(ctx)
 }
-func (s str) ForEachChild(f func(Ast) Ast) Ast {
+func (s str) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Str, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}

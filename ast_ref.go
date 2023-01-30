@@ -9,7 +9,7 @@ import (
 type ref struct {
 	*GNode
 	ref   string // ref because joeson.coffee used @ref, because @name was reserved
-	param Ast
+	param Parser
 }
 
 // `it` can be a NativeString ("WORD")
@@ -19,7 +19,7 @@ type ref struct {
 // o(s(r("WORD"), st("("), r("EXPR"), st(")")), func(it Ast) Ast {
 func newRef(it Ast) *ref {
 	var name string
-	var param Ast = nil
+	var param Parser = nil
 	switch v := it.(type) {
 	case NativeString:
 		name = v.Str
@@ -31,7 +31,7 @@ func newRef(it Ast) *ref {
 		name = na.Get(0).(NativeString).Str
 		if na.Length() > 1 {
 			// fmt.Printf("ref param %s %T\n", na.Get(1).ContentString(), na.Get(1))
-			param = na.Get(1)
+			param = na.Get(1).(Parser)
 		}
 	default:
 		panic(fmt.Sprintf("unexpected type for NewRef: %T %v\n", it, it))
@@ -64,7 +64,7 @@ func (x *ref) GetGNode() *GNode        { return x.GNode }
 func (x *ref) HandlesChildLabel() bool { return false }
 func (x *ref) Prepare()                {}
 func (x *ref) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(ctx *ParseContext, _ Ast) Ast {
+	return Wrap(func(ctx *ParseContext, _ Parser) Ast {
 		node := x.GNode.Grammar.GetGNode().Rules[x.ref]
 		if node == nil {
 			panic("Unknown reference " + x.ref + ". Grammar has " + strconv.Itoa(len(x.GNode.Grammar.GetGNode().Rules)) + " rules. ")
@@ -75,7 +75,7 @@ func (x *ref) Parse(ctx *ParseContext) Ast {
 }
 
 func (x *ref) ContentString() string { return red(x.ref) }
-func (x *ref) ForEachChild(f func(Ast) Ast) Ast {
+func (x *ref) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Ref, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}

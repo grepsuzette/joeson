@@ -1,13 +1,13 @@
 package joeson
 
-// cLine wraps an Ast and therefore represents
+// cLine wraps an Ast (more precisely a Parser) and therefore represents
 // a rule which has already been compiled.
 type cLine struct {
-	Ast
+	Parser
 }
 
-func newCLine(x Ast) cLine        { return cLine{x} }
+func newCLine(x Parser) cLine     { return cLine{x} }
 func (cl cLine) lineType() string { return "c" }
 func (cl cLine) stringIndent(nIndent int) string {
-	return cl.Ast.ContentString()
+	return cl.Parser.ContentString()
 }

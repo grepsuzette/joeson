@@ -2,11 +2,11 @@ package joeson
 
 type existential struct {
 	*GNode
-	it Ast
+	it Parser
 }
 
 func newExistential(it Ast) *existential {
-	ex := &existential{GNode: NewGNode(), it: it}
+	ex := &existential{GNode: NewGNode(), it: it.(Parser)}
 	ex.GNode.Node = ex
 	return ex
 }
@@ -50,7 +50,7 @@ func (ex *existential) ContentString() string {
 }
 
 func (ex *existential) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Ast) Ast {
+	return Wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos
 		result := ex.it.Parse(ctx)
 		if result == nil {
@@ -61,7 +61,7 @@ func (ex *existential) Parse(ctx *ParseContext) Ast {
 		}
 	}, ex)(ctx)
 }
-func (ex *existential) ForEachChild(f func(Ast) Ast) Ast {
+func (ex *existential) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}

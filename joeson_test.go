@@ -73,7 +73,7 @@ func TestManyTimes(t *testing.T) {
 		case ILine:
 			frecurse(v.content, indent, v.name)
 		case cLine:
-			fmt.Printf("%s%s\n", helpers.Indent(indent), String(v.Ast))
+			fmt.Printf("%s%s\n", helpers.Indent(indent), String(v.Parser))
 		case sLine:
 			// parse the rules of the intention grammar, one line at a time
 			if it, err := parsedGrammar.ParseString(v.Str, ParseOptions{Debug: false}); err != nil {

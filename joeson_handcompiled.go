@@ -22,15 +22,15 @@ func NewJoesonWithOptions(opts TraceOptions) *Grammar {
 	return gm
 }
 
-func c(a ...Ast) Ast               { return newChoice(NewNativeArray(a)) }
-func e(it Ast) Ast                 { return newExistential(it) }
-func l(label string, node Ast) Ast { node.GetGNode().Label = label; return node }
-func n(it Ast) Ast                 { return newNot(it) }
-func r(s string) *ref              { return newRef(NewNativeString(s)) }
-func re(s string) *regex           { return newRegexFromString(s) }
-func s(a ...Ast) *sequence         { return newSequence(NewNativeArray(a)) }
-func st(s string) str              { return newStr(s) }
-func p(value, join Ast, minmax ...int) *pattern {
+func c(a ...Ast) *choice                 { return newChoice(NewNativeArray(a)) }
+func e(it Ast) *existential              { return newExistential(it) }
+func l(label string, node Parser) Parser { node.GetGNode().Label = label; return node }
+func n(it Parser) *not                   { return newNot(it) }
+func r(s string) *ref                    { return newRef(NewNativeString(s)) }
+func re(s string) *regex                 { return newRegexFromString(s) }
+func s(a ...Ast) *sequence               { return newSequence(NewNativeArray(a)) }
+func st(s string) str                    { return newStr(s) }
+func p(value, join Parser, minmax ...int) *pattern {
 	min := -1
 	max := -1
 	if len(minmax) > 0 {

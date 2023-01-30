@@ -7,13 +7,5 @@ type NativeString struct {
 	Str string
 }
 
-func NewNativeString(s string) NativeString {
-	return NativeString{s}
-}
-func (ns NativeString) GetGNode() *GNode            { return nil }
-func (ns NativeString) HandlesChildLabel() bool     { return false }
-func (ns NativeString) Prepare()                    {}
-func (ns NativeString) ContentString() string       { return ns.Str }
-func (ns NativeString) Parse(ctx *ParseContext) Ast { panic("uncallable") }
-
-func (n NativeString) ForEachChild(f func(Ast) Ast) Ast { return n }
+func NewNativeString(s string) NativeString   { return NativeString{s} }
+func (ns NativeString) ContentString() string { return ns.Str }

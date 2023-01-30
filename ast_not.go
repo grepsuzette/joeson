@@ -2,12 +2,12 @@ package joeson
 
 type not struct {
 	*GNode
-	it Ast
+	it Parser
 }
 
 func newNot(it Ast) *not {
 	gn := NewGNode()
-	x := &not{gn, it}
+	x := &not{gn, it.(Parser)}
 	gn.Capture = false
 	gn.Node = x
 	return x
@@ -18,7 +18,7 @@ func (no *not) Prepare()                {}
 func (no *not) HandlesChildLabel() bool { return false }
 
 func (no *not) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Ast) Ast {
+	return Wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos
 		res := no.it.Parse(ctx)
 		ctx.Code.Pos = pos
@@ -33,7 +33,7 @@ func (no *not) Parse(ctx *ParseContext) Ast {
 func (no *not) ContentString() string {
 	return yellow("!") + String(no.it)
 }
-func (no *not) ForEachChild(f func(Ast) Ast) Ast {
+func (no *not) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}

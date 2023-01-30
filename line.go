@@ -65,7 +65,7 @@ func rule2line(x any) Line {
 		return newSLine(v)
 	case sLine:
 		return O(v.Str)
-	case Ast:
+	case Parser:
 		return newCLine(v)
 	case ALine:
 		return v
@@ -91,21 +91,21 @@ func rule2line(x any) Line {
 // opts:       Parse time options
 
 // see line/README.md # internals
-func getRule(rank_ *rank, name string, line Line, parentRule Ast, attrs ParseOptions, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Ast {
-	var retAst Ast
+func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs ParseOptions, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Parser {
+	var answer Parser
 	// fmt.Println("getRule name=" + name + " eflect.TypeOf(line).String()):" + reflect.TypeOf(line).String())
 	switch v := line.(type) {
 	case ALine:
-		retAst = rankFromLines(v.Array, name, GrammarOptions{TraceOptions: opts, LazyGrammar: lazyGrammar})
+		answer = rankFromLines(v.Array, name, GrammarOptions{TraceOptions: opts, LazyGrammar: lazyGrammar})
 	case cLine:
-		retAst = v.Ast
-		retAst.GetGNode().Name = name
+		answer = v.Parser
+		answer.GetGNode().Name = name
 	case ILine:
 		panic("assert") // ILine is impossible here
 	case OLine:
-		retAst = v.toRule(rank_, parentRule, oLineByIndexOrName{name: name}, opts, lazyGrammar)
-		if retAst.GetGNode().Name == "" {
-			retAst.GetGNode().Name = name
+		answer = v.toRule(rank_, parentRule, oLineByIndexOrName{name: name}, opts, lazyGrammar)
+		if answer.GetGNode().Name == "" {
+			answer.GetGNode().Name = name
 		}
 	case sLine:
 		// temporarily halt trace when SkipSetup
@@ -120,19 +120,19 @@ func getRule(rank_ *rank, name string, line Line, parentRule Ast, attrs ParseOpt
 		if x, error := gm.parseOrFail(
 			newParseContext(NewCodeStream(v.Str), gm.NumRules, attrs, traceOptions),
 		); error == nil {
-			retAst = x
+			answer = x.(Parser)
 		} else {
 			panic(error)
 		}
-		retAst.GetGNode().Name = name
+		answer.GetGNode().Name = name
 	default:
 		panic("unrecog type " + reflect.TypeOf(line).String())
 	}
-	rule := retAst.GetGNode()
-	if rule.Rule != nil && !IsRule(retAst) {
+	rule := answer.GetGNode()
+	if rule.Rule != nil && !IsRule(answer) {
 		panic("assert")
 	}
-	rule.Rule = retAst
+	rule.Rule = answer
 	if rule.Name != "" && rule.Name != name {
 		panic("assert")
 	}
@@ -140,5 +140,5 @@ func getRule(rank_ *rank, name string, line Line, parentRule Ast, attrs ParseOpt
 	rule.SkipLog = attrs.SkipLog
 	rule.CbBuilder = attrs.CbBuilder
 	rule.Debug = attrs.Debug
-	return retAst
+	return answer
 }

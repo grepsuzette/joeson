@@ -7,8 +7,8 @@ import (
 
 type pattern struct {
 	*GNode
-	Value Ast
-	Join  Ast
+	Value Parser
+	Join  Parser
 	Min   NativeInt // -1 for unspec.
 	Max   NativeInt // -1 for unspec.
 }
@@ -20,7 +20,7 @@ func newPattern(it Ast) *pattern {
 	if nativemap, ok := it.(NativeMap); !ok {
 		panic("Pattern expecting a map with value, join")
 	} else {
-		patt.Value = nativemap.Get("value")
+		patt.Value = nativemap.Get("value").(Parser)
 		if patt.Value == nil {
 			panic("Pattern must have a value")
 		} else if patt.Value.GetGNode() == nil {
@@ -28,7 +28,7 @@ func newPattern(it Ast) *pattern {
 		} else {
 			patt.GetGNode().Capture = patt.Value.GetGNode().Capture
 		}
-		patt.Join = nativemap.Get("join") // can be nil
+		patt.Join = nativemap.GetParser("join") // can be nil
 		patt.Min = NewNativeInt(-1)
 		patt.Max = NewNativeInt(-1)
 		if min, exists := nativemap.GetExists("min"); exists {
@@ -60,7 +60,7 @@ func newPattern(it Ast) *pattern {
 }
 func (patt *pattern) GetGNode() *GNode { return patt.GNode }
 func (patt *pattern) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Ast) Ast {
+	return Wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos
 		resValue := patt.Value.Parse(ctx)
 		if resValue == nil {
@@ -125,7 +125,7 @@ func (patt *pattern) ContentString() string {
 		return b.String() + cyan(sCyan)
 	}
 }
-func (patt *pattern) ForEachChild(f func(Ast) Ast) Ast {
+func (patt *pattern) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   value:      {type:GNode}

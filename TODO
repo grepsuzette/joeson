@@ -16,4 +16,14 @@
 ✓ check joeson.coffee:371 and ast_str:42 ast_ref ast_regex with all our grammars, see if necessary: seems no problem
 - Document README
 - Maybe one more example
+✓ Can we separate Ast and Parse()
 - submit on github
+
+If there is any problem, look at grammar.go:261
+    // TODO gnode.Rule = NewNativeUndefined()
+    //   we used nil here if there is any pb...
+    gnode.Rule = nil
+
+- can GNode be nil when it's a Parser? e.g. packrat.go:281. 
+   this deserves a new branch, but seems we can if
+    NativeUndefined gets a dummy GNode.

@@ -40,12 +40,6 @@ func NewNativeIntFrom(x Ast) NativeInt {
 	}
 }
 
-func (n NativeInt) String() string              { return strconv.Itoa(int(n)) }
-func (n NativeInt) Int() int                    { return int(n) }
-func (n NativeInt) ContentString() string       { return strconv.Itoa(int(n)) }
-func (n NativeInt) HandlesChildLabel() bool     { return false }
-func (n NativeInt) GetGNode() *GNode            { return nil }
-func (n NativeInt) Prepare()                    {}
-func (n NativeInt) Parse(ctx *ParseContext) Ast { panic("uncallable") }
-
-func (n NativeInt) ForEachChild(f func(Ast) Ast) Ast { return n }
+func (n NativeInt) String() string        { return strconv.Itoa(int(n)) }
+func (n NativeInt) Int() int              { return int(n) }
+func (n NativeInt) ContentString() string { return strconv.Itoa(int(n)) }

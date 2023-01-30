@@ -1,44 +1,49 @@
 package joeson
 
-// Ast is the byproduct of a parsing.
-// It stands for Abstract Syntax Tree.
-// A parsing is the fruit of a grammar and a document ideally conforming to that grammar.
-// An Ast itself can be parsed.
-//
-// Grammar, the Native* types all satisfy Ast.
-// Also, the internal joeson ast types:
-// choice, rank, existential, lookahead, not, pattern, ref, regex, sequence,
-// str.
 type Ast interface {
-	// Parse() reads from a ParseContext, updates that context's position,
-	// returns an Ast. A return of nil indicates a parse failure.
-	Parse(ctx *ParseContext) Ast
-
-	ContentString() string // colorful representation of an AST node
-	GetGNode() *GNode      // nodes without a grammar node (Native*) return nil
-	Prepare()              // called after children prepared
-	HandlesChildLabel() bool
-	ForEachChild(f func(Ast) Ast) Ast
+	ContentString() string // colorful representation
 }
 
-func IsRule(x Ast) bool {
-	return x != nil && x.GetGNode() != nil && x.GetGNode().Rule == x
+// Special kind of AST that is able to parse
+// A compiled grammar is an AST whose nodes satisfy Parser.
+type Parser interface {
+	Ast
+	Parse(ctx *ParseContext) Ast // Parse, update context's position, a return of nil indicates a parse failure.
+	GetGNode() *GNode            // Grammar node
+	Prepare()                    // Called after children prepared
+	HandlesChildLabel() bool
+	ForEachChild(f func(Parser) Parser) Parser // depth-first walk enabler
+}
+
+func IsRule(parser Parser) bool {
+	if parser == nil {
+		return false
+	} else {
+		return parser.GetGNode() != nil && parser.GetGNode().Rule == parser
+	}
 }
 
 // Show "<name>: " if `x` is a rule, or "<label>:", or empty string
-func prefix(x Ast) string {
-	if IsRule(x) {
-		return red(x.GetGNode().Name + ": ")
-	} else if x.GetGNode().Label != "" {
-		return cyan(x.GetGNode().Label + ":")
+func prefix(parser Parser) string {
+	if parser == nil {
+		return ""
+	} else if IsRule(parser) {
+		return red(parser.GetGNode().Name + ": ")
+	} else if parser.GetGNode().Label != "" {
+		return cyan(parser.GetGNode().Label + ":")
 	} else {
 		return ""
 	}
 }
 
 // This is Prefix(x) + x.ContentString(x)
-func String(x Ast) string {
-	return prefix(x) + x.ContentString()
+func String(ast Ast) string {
+	switch x := ast.(type) {
+	case Parser:
+		return prefix(x) + x.ContentString()
+	default:
+		return x.ContentString()
+	}
 }
 
 // Port of lib/helpers.js:extend() in a less general way (Ast-specific)
@@ -51,29 +56,41 @@ func merge(toExtend Ast, withPropertiesOf Ast) Ast {
 	//   object
 	if toExtend == nil || withPropertiesOf == nil {
 		return toExtend
-	} else if _, isUndefined := withPropertiesOf.(NativeUndefined); isUndefined {
+	}
+	switch vWithPropertiesOf := withPropertiesOf.(type) {
+	case NativeUndefined:
 		return toExtend
-	} else if h, isMap := withPropertiesOf.(NativeMap); isMap {
-		if hToExtend, isMap := toExtend.(NativeMap); isMap {
-			for k, v := range h {
-				hToExtend.Set(k, v)
+	case NativeMap:
+		switch vToExtend := toExtend.(type) {
+		case NativeMap:
+			for k, value := range vWithPropertiesOf {
+				vToExtend.Set(k, value)
 			}
-		} else if toExtend.GetGNode() != nil {
-			for k, v := range h {
+		case Parser:
+			for k, value := range vWithPropertiesOf {
 				switch k {
 				case "label":
-					toExtend.GetGNode().Label = v.(NativeString).Str
+					vToExtend.GetGNode().Label = value.(NativeString).Str
 				default:
 					panic("unhandled property " + k + " in func (Ast) Merge(). toExtend=" + toExtend.ContentString() + " \n withPropertiesOf=" + withPropertiesOf.ContentString())
 				}
 			}
-		} else {
+		default:
 			panic("assert")
 		}
 		return toExtend
-	} else if toExtend.GetGNode() == nil {
-		panic("dont know how until we have SetGNode. toExtend=" + toExtend.ContentString() + " \n withPropertiesOf=" + withPropertiesOf.ContentString())
-	} else {
-		panic("Unhandled case in func (Ast) Merge()")
+	case Parser:
+		switch v := toExtend.(type) {
+		case Parser:
+			if v.GetGNode() == nil {
+				panic("dont know how until we have SetGNode. toExtend=" + toExtend.ContentString() + " \n withPropertiesOf=" + withPropertiesOf.ContentString())
+			} else {
+				panic("Unhandled case in func (Ast) Merge()")
+			}
+		default:
+			panic("assert")
+		}
+	default:
+		panic("assert")
 	}
 }

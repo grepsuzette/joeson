@@ -62,7 +62,7 @@ func (ranke *rank) Length() int {
 	return len(ranke.choice.choices)
 }
 
-func (ranke *rank) Append(node Ast)         { ranke.choice.Append(node) }
+func (ranke *rank) Append(node Parser)      { ranke.choice.Append(node) }
 func (ranke *rank) GetGNode() *GNode        { return ranke.choice.GetGNode() }
 func (ranke *rank) Prepare()                { ranke.choice.Prepare() }
 func (ranke *rank) HandlesChildLabel() bool { return false }
@@ -70,14 +70,14 @@ func (ranke *rank) HandlesChildLabel() bool { return false }
 func (ranke *rank) ContentString() string {
 	var b strings.Builder
 	b.WriteString(blue("Rank("))
-	a := helpers.AMap(ranke.choice.choices, func(x Ast) string {
+	a := helpers.AMap(ranke.choice.choices, func(x Parser) string {
 		return red(x.GetGNode().Name)
 	})
 	b.WriteString(strings.Join(a, blue(",")))
 	b.WriteString(blue(")"))
 	return b.String()
 }
-func (ranke *rank) ForEachChild(f func(Ast) Ast) Ast {
+func (ranke *rank) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}
@@ -87,7 +87,7 @@ func (ranke *rank) ForEachChild(f func(Ast) Ast) Ast {
 }
 
 func (ranke *rank) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Ast) Ast {
+	return Wrap(func(_ *ParseContext, _ Parser) Ast {
 		for _, choice := range ranke.choice.choices {
 			pos := ctx.Code.Pos
 			// Rank inherits from Choice in the original coffee implementation.

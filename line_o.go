@@ -46,7 +46,7 @@ func (ol OLine) stringIndent(nIndent int) string {
 
 // You may provide a `grammar` to attempt to parse the rules with, or leave it nil
 // which will use the joeson_handcompiled grammar.
-func (ol OLine) toRule(rank_ *rank, parentRule Ast, by oLineByIndexOrName, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Ast {
+func (ol OLine) toRule(rank_ *rank, parentRule Parser, by oLineByIndexOrName, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Parser {
 	// figure out the name for this rule
 	var name string
 	var content Line = ol.content

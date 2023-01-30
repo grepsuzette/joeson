@@ -1,35 +1,3 @@
-When "uncompiled rules" are parsed ("compiled"), the
-	// byproduct is an AST of that grammar. A compiled grammar is an
-	// AST that does not contains uncompiled rules. Once a grammar is compiled
-	// it can parse.
-# Grammars
-
-First of all, the joeson grammars are in this package:
-
-```
-GRAMMAR FILES
----------------------------------------------------------------------------
-joeson_intention.go     from which actual handcompiled is written
-joeson_handcompiled.go  the actual grammar, manually compiled from intention
-joeson_misc.go          private functions for the above files
------------------------------------------------------------------------------
-```
-
-`NewJoeson()` creates a joeson grammar parser.
-With it, the grammar in intention but also many other grammars can be parsed.
-
-# TODO how to write a simple grammar
-
-TODO btw we also want to allow simple arrays of rules, we may have a file package for that.
-
-TODO provide a better example:
-```
-O("EXPR", rules(
-    O("CHOICE _"),
-    O("CHOICE", f....)
-))
-```
-
 # `line_*.go` files 
 
 They contain the rule declaration helpers called `O()` 

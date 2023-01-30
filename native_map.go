@@ -10,11 +10,6 @@ type NativeMap map[string]Ast
 func NewEmptyNativeMap() NativeMap            { return NewNativeMap(map[string]Ast{}) }
 func NewNativeMap(h map[string]Ast) NativeMap { return h }
 
-func (nm NativeMap) HandlesChildLabel() bool     { return false }
-func (nm NativeMap) Prepare()                    {}
-func (nm NativeMap) GetGNode() *GNode            { return nil }
-func (nm NativeMap) Parse(ctx *ParseContext) Ast { panic("uncallable") }
-
 func (nm NativeMap) ContentString() string {
 	var b strings.Builder
 	b.WriteString("NativeMap{")
@@ -29,8 +24,6 @@ func (nm NativeMap) ContentString() string {
 	b.WriteString("}")
 	return b.String()
 }
-
-func (nm NativeMap) ForEachChild(f func(Ast) Ast) Ast { return nm }
 
 func (nm NativeMap) Keys() []string {
 	a := []string{}
@@ -105,6 +98,20 @@ func (nm NativeMap) GetOrPanic(k string) Ast {
 
 func (nm NativeMap) Get(k string) Ast {
 	return nm[k]
+}
+
+// if key doesn't exist return nil, otherwise forces a Parser or panic.
+func (nm NativeMap) GetParser(k string) Parser {
+	switch x := nm[k].(type) {
+	case nil:
+		return nil
+	case Parser:
+		return x
+	case Ast:
+		panic("assert Parser expected, not Ast: " + x.ContentString())
+	default:
+		panic("assert")
+	}
 }
 
 func (nm NativeMap) Set(k string, v Ast) {

@@ -28,7 +28,7 @@ func (re *regex) ContentString() string {
 func (re *regex) HandlesChildLabel() bool { return false }
 func (re *regex) Prepare()                {}
 func (re *regex) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Ast) Ast {
+	return Wrap(func(_ *ParseContext, _ Parser) Ast {
 		if didMatch, sMatch := ctx.Code.MatchRegexp(re.re); !didMatch {
 			return nil
 		} else {
@@ -37,7 +37,7 @@ func (re *regex) Parse(ctx *ParseContext) Ast {
 	}, re)(ctx)
 }
 
-func (re *regex) ForEachChild(f func(Ast) Ast) Ast {
+func (re *regex) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Ref, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}

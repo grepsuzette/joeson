@@ -16,7 +16,7 @@ const (
 
 type sequence struct {
 	*GNode
-	sequence []Ast
+	sequence []Parser
 	type_    *helpers.Lazy[sequenceRepr] // internal cache for internalType()
 }
 
@@ -28,7 +28,7 @@ func newSequence(it Ast) *sequence {
 			panic("expecting non nil array")
 		}
 		gn := NewGNode()
-		seq := &sequence{GNode: gn, sequence: a.Array}
+		seq := &sequence{GNode: gn, sequence: helpers.AMap(a.Array, func(a Ast) Parser { return a.(Parser) })}
 		gn.Node = seq
 		gn.Labels_ = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
 		gn.Captures_ = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
@@ -73,13 +73,13 @@ func (seq *sequence) calculateType() sequenceRepr {
 
 func (seq *sequence) ContentString() string {
 	var b strings.Builder
-	as := helpers.AMap(seq.sequence, func(x Ast) string { return String(x) })
+	as := helpers.AMap(seq.sequence, func(x Parser) string { return String(x) })
 	b.WriteString(strings.Join(as, " "))
 	return blue("(") + b.String() + blue(")")
 }
 
 func (seq *sequence) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Ast) Ast {
+	return Wrap(func(_ *ParseContext, _ Parser) Ast {
 		switch seq.type_.Get() {
 		case Array:
 			return seq.parseAsArray(ctx)
@@ -162,7 +162,7 @@ func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 	return results
 }
 
-func (seq *sequence) ForEachChild(f func(Ast) Ast) Ast {
+func (seq *sequence) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   sequence:   {type:[type:GNode]}

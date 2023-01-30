@@ -44,7 +44,7 @@ func newFrame(pos int, id int) *frame {
 // coffeescript impl.  In coffeescript/js, the 2nd
 // argument (`Ast`) doesn't exist, instead .bind(this) was used
 
-type parseFun2 func(*ParseContext, Ast) Ast
+type parseFun2 func(*ParseContext, Parser) Ast
 type parseFun func(*ParseContext) Ast
 
 // debugging variables and callbacks
@@ -68,7 +68,7 @@ var TimeEnd func(name string) = nil
 // - func Wrap(fparse2 parseFun2, node Ast) parseFun
 //     notice this line in Wrap:  wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 
-func stack(fparse parseFun, x Ast) parseFun {
+func stack(fparse parseFun, x Parser) parseFun {
 	return func(ctx *ParseContext) Ast {
 		ctx.stackPush(x)
 		if TimeStart != nil {
@@ -83,7 +83,7 @@ func stack(fparse parseFun, x Ast) parseFun {
 	}
 }
 
-func loopify(fparse parseFun, x Ast) parseFun {
+func loopify(fparse parseFun, x Parser) parseFun {
 	return func(ctx *ParseContext) Ast {
 		log := func(s string) {}
 		opts := ctx.TraceOptions
@@ -250,7 +250,7 @@ func loopify(fparse parseFun, x Ast) parseFun {
 // - handle labels for standalone nodes
 // - set GNode.Origin
 // - call GNode.CbBuilder(result, ctx, caller), if CbBuilder != nil
-func prepareResult(fparse2 parseFun2, caller Ast) parseFun {
+func prepareResult(fparse2 parseFun2, caller Parser) parseFun {
 	return func(ctx *ParseContext) Ast {
 		ctx.Counter++
 		result := fparse2(ctx, caller)
@@ -276,8 +276,12 @@ func prepareResult(fparse2 parseFun2, caller Ast) parseFun {
 				},
 			}
 			if gn.CbBuilder != nil {
-				if result.GetGNode() != nil {
-					result.GetGNode().Origin = origin
+				switch x := result.(type) {
+				case Parser:
+					if x.GetGNode() != nil {
+						x.GetGNode().Origin = origin
+					}
+				default:
 				}
 				result = gn.CbBuilder(result, ctx, caller)
 			}
@@ -286,7 +290,7 @@ func prepareResult(fparse2 parseFun2, caller Ast) parseFun {
 	}
 }
 
-func Wrap(fparse2 parseFun2, node Ast) parseFun {
+func Wrap(fparse2 parseFun2, node Parser) parseFun {
 	wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 	wrapped2 := prepareResult(fparse2, node)
 	gn := node.GetGNode()

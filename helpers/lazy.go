@@ -1,6 +1,8 @@
 package helpers
 
-// niladic lazy varcache, i.e. the callback has no argument
+// lazy, when lazy.Get() is called:
+// - returns lazy.val if set,
+// - returns lazy.val = lazy.f() otherwise
 
 type Lazy[T any] struct {
 	val *T
@@ -15,9 +17,6 @@ func (k *Lazy[T]) IsSet() bool { return k.val != nil }
 func (k *Lazy[T]) Set(t T)     { k.val = &t }
 func (k *Lazy[T]) Clear()      { k.val = nil; k.f = nil }
 func (k *Lazy[T]) Get() T {
-	// The difference with varcache is that
-	// when !IsSet(), lazy's Get() calls the
-	// Lazy0.f callback if not nil...
 	if !k.IsSet() && k.f != nil {
 		ptr := k.f()
 		(*k).val = &ptr
