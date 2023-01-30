@@ -23,8 +23,6 @@ func newPattern(it Ast) *pattern {
 		patt.Value = nativemap.Get("value").(Parser)
 		if patt.Value == nil {
 			panic("Pattern must have a value")
-		} else if patt.Value.GetGNode() == nil {
-			panic("patt.Value can not be a Native* type")
 		} else {
 			patt.GetGNode().Capture = patt.Value.GetGNode().Capture
 		}

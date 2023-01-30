@@ -52,7 +52,7 @@ func ForEachChild_ArrayParser(a []Parser, f func(Parser) Parser) []Parser {
 func ForEachChild_InRules(x Parser, f func(Parser) Parser) map[string]Parser {
 	hnew := map[string]Parser{}
 	gn := x.GetGNode()
-	if gn == nil || gn.Rules == nil {
+	if gn.Rules == nil {
 		return nil
 	}
 	for _, k := range gn.RulesK {

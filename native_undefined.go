@@ -2,14 +2,14 @@ package joeson
 
 // Some nodes such as Not use undefined as a terminal node,
 // whereas nil represents parsing failure.
-type NativeUndefined struct{}
+// note NativeUndefined satisfies not only Ast but also Parser
+type NativeUndefined struct{ *GNode }
 
-func NewNativeUndefined() NativeUndefined        { return NativeUndefined{} }
+func NewNativeUndefined() NativeUndefined        { return NativeUndefined{NewGNode()} }
 func (nu NativeUndefined) ContentString() string { return "<NativeUndefined>" }
 
-// make NativeUndefined satisfy Parser as well
 func (nu NativeUndefined) Parse(ctx *ParseContext) Ast               { return nu }
-func (nu NativeUndefined) GetGNode() *GNode                          { return nil }
+func (nu NativeUndefined) GetGNode() *GNode                          { return nu.GNode }
 func (nu NativeUndefined) Prepare()                                  {}
 func (nu NativeUndefined) HandlesChildLabel() bool                   { return false }
 func (nu NativeUndefined) ForEachChild(f func(Parser) Parser) Parser { return nu }

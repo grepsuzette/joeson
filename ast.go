@@ -9,25 +9,19 @@ type Ast interface {
 type Parser interface {
 	Ast
 	Parse(ctx *ParseContext) Ast // Parse, update context's position, a return of nil indicates a parse failure.
-	GetGNode() *GNode            // Grammar node
+	GetGNode() *GNode            // Grammar node, it can never be nil (even in the case of NativeUndefined a dummy is used)
 	Prepare()                    // Called after children prepared
 	HandlesChildLabel() bool
 	ForEachChild(f func(Parser) Parser) Parser // depth-first walk enabler
 }
 
 func IsRule(parser Parser) bool {
-	if parser == nil {
-		return false
-	} else {
-		return parser.GetGNode() != nil && parser.GetGNode().Rule == parser
-	}
+	return parser.GetGNode().Rule == parser
 }
 
 // Show "<name>: " if `x` is a rule, or "<label>:", or empty string
 func prefix(parser Parser) string {
-	if parser == nil {
-		return ""
-	} else if IsRule(parser) {
+	if IsRule(parser) {
 		return red(parser.GetGNode().Name + ": ")
 	} else if parser.GetGNode().Label != "" {
 		return cyan(parser.GetGNode().Label + ":")
@@ -80,13 +74,9 @@ func merge(toExtend Ast, withPropertiesOf Ast) Ast {
 		}
 		return toExtend
 	case Parser:
-		switch v := toExtend.(type) {
+		switch toExtend.(type) {
 		case Parser:
-			if v.GetGNode() == nil {
-				panic("dont know how until we have SetGNode. toExtend=" + toExtend.ContentString() + " \n withPropertiesOf=" + withPropertiesOf.ContentString())
-			} else {
-				panic("Unhandled case in func (Ast) Merge()")
-			}
+			panic("Unhandled case in func (Ast) Merge()")
 		default:
 			panic("assert")
 		}

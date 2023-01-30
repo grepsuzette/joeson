@@ -46,8 +46,6 @@ func newRef(it Ast) *ref {
 			referenced := ref.GNode.Grammar.GetGNode().Rules[ref.ref]
 			if referenced == nil {
 				panic("ref " + ref.ref + " was not found in grammar.Rules")
-			} else if referenced.GetGNode() == nil {
-				panic("assert")
 			} else {
 				return referenced.GetGNode().Labels_.Get()
 			}

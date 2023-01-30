@@ -10,8 +10,7 @@ import "grepsuzette/joeson/helpers"
    node.name = name of the rule, if this is @rule.
 */
 
-// A grammar node. Ast that can be build by a grammar (this excludes the native*.go types) will
-// have a GNode, that replicates the GNode ancestry that there was in the original coffeescript implementation.
+// A grammar node.
 type GNode struct {
 	Name string // rule name if IsRule(), empty otherwise
 	ParseOptions

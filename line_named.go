@@ -36,10 +36,3 @@ type NamedRule struct {
 	name string
 	line Line // O, I or A
 }
-
-func (nm NamedRule) Parse(ctx *ParseContext) Ast      { panic("assert") }
-func (nm NamedRule) ContentString() string            { return "--Named--" }
-func (nm NamedRule) GetGNode() *GNode                 { panic("assert") }
-func (nm NamedRule) Prepare()                         {}
-func (nm NamedRule) HandlesChildLabel() bool          { return false }
-func (nm NamedRule) ForEachChild(f func(Ast) Ast) Ast { return nm }

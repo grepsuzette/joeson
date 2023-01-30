@@ -278,9 +278,7 @@ func prepareResult(fparse2 parseFun2, caller Parser) parseFun {
 			if gn.CbBuilder != nil {
 				switch x := result.(type) {
 				case Parser:
-					if x.GetGNode() != nil {
-						x.GetGNode().Origin = origin
-					}
+					x.GetGNode().Origin = origin
 				default:
 				}
 				result = gn.CbBuilder(result, ctx, caller)
