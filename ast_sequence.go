@@ -15,7 +15,7 @@ const (
 )
 
 type sequence struct {
-	*GNode
+	*GNodeImpl
 	sequence []Parser
 	type_    *helpers.Lazy[sequenceRepr] // internal cache for internalType()
 }
@@ -28,8 +28,8 @@ func newSequence(it Ast) *sequence {
 			panic("expecting non nil array")
 		}
 		gn := NewGNode()
-		seq := &sequence{GNode: gn, sequence: helpers.AMap(a.Array, func(a Ast) Parser { return a.(Parser) })}
-		gn.Node = seq
+		seq := &sequence{GNodeImpl: gn, sequence: helpers.AMap(a.Array, func(a Ast) Parser { return a.(Parser) })}
+		gn.node = seq
 		gn.Labels_ = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
 		gn.Captures_ = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
 		seq.type_ = helpers.NewLazyFromFunc(func() sequenceRepr { return seq.calculateType() })
@@ -37,7 +37,7 @@ func newSequence(it Ast) *sequence {
 	}
 }
 
-func (seq *sequence) GetGNode() *GNode        { return seq.GNode }
+func (seq *sequence) GetGNode() *GNodeImpl    { return seq.GNodeImpl }
 func (seq *sequence) HandlesChildLabel() bool { return true }
 func (seq *sequence) Prepare()                {}
 
@@ -104,7 +104,7 @@ func (seq *sequence) parseAsSingle(ctx *ParseContext) Ast {
 		if res == nil {
 			return nil
 		}
-		if child.GetGNode().Capture {
+		if child.Capture() {
 			result = res
 		}
 	}
@@ -118,7 +118,7 @@ func (seq *sequence) parseAsArray(ctx *ParseContext) Ast {
 		if res == nil {
 			return nil
 		}
-		if child.GetGNode().Capture {
+		if child.Capture() {
 			results = append(results, res)
 		}
 	}
@@ -134,28 +134,28 @@ func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 			// fmt.Printf(Red("sequence %x %d parseAsObject childlabel=%s res==nil\n"), rnd, k, childLabel)
 			return nil
 		}
-		if child.GetGNode().Label == "&" {
+		if child.Label() == "&" {
 			if notNilAndNotNativeUndefined(results) {
 				results = merge(res, results)
 			} else {
 				results = res
 			}
-		} else if child.GetGNode().Label == "@" {
+		} else if child.Label() == "@" {
 			if notNilAndNotNativeUndefined(results) {
 				results = merge(results, res)
 			} else {
 				results = res
 			}
-		} else if child.GetGNode().Label != "" {
+		} else if child.Label() != "" {
 			if notNilAndNotNativeUndefined(results) {
 				if h, isMap := results.(NativeMap); isMap {
-					h.Set(child.GetGNode().Label, res)
+					h.Set(child.Label(), res)
 				} else {
 					panic("assert")
 				}
 			} else {
 				results = NewEmptyNativeMap()
-				results.(NativeMap).Set(child.GetGNode().Label, res)
+				results.(NativeMap).Set(child.Label(), res)
 			}
 		}
 	}

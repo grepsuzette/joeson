@@ -1,43 +1,43 @@
 package joeson
 
 type existential struct {
-	*GNode
+	*GNodeImpl
 	it Parser
 }
 
 func newExistential(it Ast) *existential {
-	ex := &existential{GNode: NewGNode(), it: it.(Parser)}
-	ex.GNode.Node = ex
+	ex := &existential{GNodeImpl: NewGNode(), it: it.(Parser)}
+	ex.GNodeImpl.node = ex
 	return ex
 }
 
 // TODO handlesChildLabel$: get: -> @parent?.handlesChildLabel
 // examine this case^
 func (ex *existential) HandlesChildLabel() bool {
-	if ex.GNode.Parent != nil {
-		return ex.GNode.Parent.HandlesChildLabel()
+	if ex.GNodeImpl.Parent != nil {
+		return ex.GNodeImpl.Parent.HandlesChildLabel()
 	} else {
 		return false
 	}
 }
 
-func (ex *existential) GetGNode() *GNode { return ex.GNode }
+func (ex *existential) GetGNode() *GNodeImpl { return ex.GNodeImpl }
 
 func (ex *existential) Prepare() {
 	gn := ex.GetGNode()
 	var lbls = ex.calculateLabels()
 	gn.Labels_.Set(lbls)
-	if len(lbls) > 0 && gn.Label == "" {
-		gn.Label = "@"
+	if len(lbls) > 0 && gn.label == "" {
+		gn.label = "@"
 	}
 	var caps = ex.it.GetGNode().Captures_.Get()
 	gn.Captures_.Set(caps)
-	gn.Capture = len(caps) > 0
+	gn.capture = len(caps) > 0
 }
 
 func (ex *existential) calculateLabels() []string {
 	gn := ex.GetGNode()
-	lbl := gn.Label
+	lbl := gn.label
 	if lbl != "" && lbl != "@" && lbl != "&" {
 		return []string{lbl}
 	} else {

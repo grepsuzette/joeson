@@ -99,14 +99,12 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 		answer = rankFromLines(v.Array, name, GrammarOptions{TraceOptions: opts, LazyGrammar: lazyGrammar})
 	case cLine:
 		answer = v.Parser
-		answer.GetGNode().Name = name
+		answer.SetName(name)
 	case ILine:
 		panic("assert") // ILine is impossible here
 	case OLine:
 		answer = v.toRule(rank_, parentRule, oLineByIndexOrName{name: name}, opts, lazyGrammar)
-		if answer.GetGNode().Name == "" {
-			answer.GetGNode().Name = name
-		}
+		answer.SetNameWhenEmpty(name)
 	case sLine:
 		// temporarily halt trace when SkipSetup
 		traceOptions := opts
@@ -124,7 +122,7 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 		} else {
 			panic(error)
 		}
-		answer.GetGNode().Name = name
+		answer.SetName(name)
 	default:
 		panic("unrecog type " + reflect.TypeOf(line).String())
 	}
@@ -133,7 +131,7 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 		panic("assert")
 	}
 	rule.Rule = answer
-	if rule.Name != "" && rule.Name != name {
+	if rule.name != "" && rule.name != name {
 		panic("assert")
 	}
 	rule.SkipCache = attrs.SkipCache

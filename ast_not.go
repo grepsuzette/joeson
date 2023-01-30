@@ -1,19 +1,19 @@
 package joeson
 
 type not struct {
-	*GNode
+	*GNodeImpl
 	it Parser
 }
 
 func newNot(it Ast) *not {
 	gn := NewGNode()
 	x := &not{gn, it.(Parser)}
-	gn.Capture = false
-	gn.Node = x
+	gn.capture = false
+	gn.node = x
 	return x
 }
 
-func (no *not) GetGNode() *GNode        { return no.GNode }
+func (no *not) GetGNode() *GNodeImpl    { return no.GNodeImpl }
 func (no *not) Prepare()                {}
 func (no *not) HandlesChildLabel() bool { return false }
 

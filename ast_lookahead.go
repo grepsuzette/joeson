@@ -1,20 +1,20 @@
 package joeson
 
 type lookahead struct {
-	*GNode
+	*GNodeImpl
 	expr Parser
 }
 
 func newLookahead(it Ast) *lookahead {
 	gn := NewGNode()
 	la := &lookahead{gn, it.(Parser)}
-	gn.Capture = false
-	gn.Node = la
+	gn.capture = false
+	gn.node = la
 	return la
 }
 
 func (look *lookahead) Prepare()                {}
-func (look *lookahead) GetGNode() *GNode        { return look.GNode }
+func (look *lookahead) GetGNode() *GNodeImpl    { return look.GNodeImpl }
 func (look *lookahead) HandlesChildLabel() bool { return false }
 func (look *lookahead) ContentString() string {
 	return blue("(?") + String(look.expr) + blue(")")

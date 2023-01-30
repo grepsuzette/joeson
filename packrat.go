@@ -72,11 +72,11 @@ func stack(fparse parseFun, x Parser) parseFun {
 	return func(ctx *ParseContext) Ast {
 		ctx.stackPush(x)
 		if TimeStart != nil {
-			TimeStart(x.GetGNode().Name)
+			TimeStart(x.Name())
 		}
 		result := fparse(ctx)
 		if TimeEnd != nil {
-			TimeEnd(x.GetGNode().Name)
+			TimeEnd(x.Name())
 		}
 		ctx.stackPop()
 		return result
@@ -144,7 +144,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 					frame.loopStage.Set(3)
 					if opts.Loop && ((opts.FilterLine < 0) || ctx.Code.Line() == opts.FilterLine) {
 						line := ctx.Code.Line()
-						ctx.loopStackPush(x.GetGNode().Name)
+						ctx.loopStackPush(x.Name())
 						var paintInColor func(string) string = nil
 						switch line % 6 {
 						case 0:
@@ -257,8 +257,8 @@ func prepareResult(fparse2 parseFun2, caller Parser) parseFun {
 		if result != nil {
 			// handle labels for standalone nodes
 			gn := caller.GetGNode()
-			if gn.Label != "" && gn.Parent != nil && !gn.Parent.HandlesChildLabel() {
-				result = NewNativeMap(map[string]Ast{gn.Label: result})
+			if gn.label != "" && gn.Parent != nil && !gn.Parent.HandlesChildLabel() {
+				result = NewNativeMap(map[string]Ast{gn.label: result})
 			}
 			start := ctx.stackPeek(0).pos
 			end := ctx.Code.Pos
@@ -295,7 +295,7 @@ func Wrap(fparse2 parseFun2, node Parser) parseFun {
 	return func(ctx *ParseContext) Ast {
 		if IsRule(node) {
 			return wrapped1(ctx)
-		} else if gn.Label != "" &&
+		} else if gn.label != "" &&
 			(gn.Parent != nil && !gn.Parent.HandlesChildLabel()) ||
 			gn.CbBuilder != nil {
 			return wrapped2(ctx)

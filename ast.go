@@ -8,8 +8,9 @@ type Ast interface {
 // A compiled grammar is an AST whose nodes satisfy Parser.
 type Parser interface {
 	Ast
+	GNode
 	Parse(ctx *ParseContext) Ast // Parse, update context's position, a return of nil indicates a parse failure.
-	GetGNode() *GNode            // Grammar node, it can never be nil (even in the case of NativeUndefined a dummy is used)
+	GetGNode() *GNodeImpl        // Grammar node, it can never be nil (even in the case of NativeUndefined a dummy is used)
 	Prepare()                    // Called after children prepared
 	HandlesChildLabel() bool
 	ForEachChild(f func(Parser) Parser) Parser // depth-first walk enabler
@@ -22,9 +23,9 @@ func IsRule(parser Parser) bool {
 // Show "<name>: " if `x` is a rule, or "<label>:", or empty string
 func prefix(parser Parser) string {
 	if IsRule(parser) {
-		return red(parser.GetGNode().Name + ": ")
-	} else if parser.GetGNode().Label != "" {
-		return cyan(parser.GetGNode().Label + ":")
+		return red(parser.Name() + ": ")
+	} else if parser.Label() != "" {
+		return cyan(parser.Label() + ":")
 	} else {
 		return ""
 	}
@@ -64,7 +65,7 @@ func merge(toExtend Ast, withPropertiesOf Ast) Ast {
 			for k, value := range vWithPropertiesOf {
 				switch k {
 				case "label":
-					vToExtend.GetGNode().Label = value.(NativeString).Str
+					vToExtend.SetLabel(value.(NativeString).Str)
 				default:
 					panic("unhandled property " + k + " in func (Ast) Merge(). toExtend=" + toExtend.ContentString() + " \n withPropertiesOf=" + withPropertiesOf.ContentString())
 				}

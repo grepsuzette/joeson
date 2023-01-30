@@ -56,7 +56,7 @@ func (ol OLine) toRule(rank_ *rank, parentRule Parser, by oLineByIndexOrName, op
 	} else if by.name != "" {
 		name = by.name
 	} else if by.index.IsSet && parentRule != nil {
-		name = parentRule.GetGNode().Name + "[" + strconv.Itoa(by.index.Int) + "]"
+		name = parentRule.Name() + "[" + strconv.Itoa(by.index.Int) + "]"
 	} else {
 		panic("assert")
 	}

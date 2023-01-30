@@ -8,17 +8,17 @@ import (
 // but rather a `str` in the joeson grammar.
 // see NativeString which is a terminal element (a native string in js)
 type str struct {
-	*GNode
+	*GNodeImpl
 	Str string
 }
 
 func newStr(s string) str {
 	str := str{NewGNode(), s}
-	str.GNode.Capture = false
-	str.GNode.Node = str
+	str.GNodeImpl.capture = false
+	str.GNodeImpl.node = str
 	return str
 }
-func (s str) GetGNode() *GNode        { return s.GNode }
+func (s str) GetGNode() *GNodeImpl    { return s.GNodeImpl }
 func (s str) Prepare()                {}
 func (s str) HandlesChildLabel() bool { return false }
 func (s str) ContentString() string {

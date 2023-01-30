@@ -16,7 +16,7 @@ import (
 // Then just use ParseString().
 // Like in the original implementation, Grammar "is" a GNode.
 type Grammar struct {
-	*GNode
+	*GNodeImpl
 	rank     Parser         // a *Rank or a Ref to a rank
 	NumRules int            // Each Ast can have rules, recursively. This however i the total count in the grammar
 	id2Rule  map[int]Parser // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
@@ -53,7 +53,7 @@ func GrammarFromLines(lines []Line, name string, options ...GrammarOptions) *Gra
 	newgm := newEmptyGrammarWithOptions(opts.TraceOptions)
 	newgm.SetRankIfEmpty(ranke)
 	// The name is also set afterwards in the coffeescript version
-	newgm.GetGNode().Name = name
+	newgm.SetName(name)
 	newgm.postinit()
 	return newgm
 }
@@ -77,21 +77,21 @@ func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTrace
 func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
 	name := "__empty__"
 	gm := &Grammar{NewGNode(), nil, 0, map[int]Parser{}, opts, false}
-	gm.GNode.Name = name
-	gm.GNode.Node = gm
+	gm.GNodeImpl.name = name
+	gm.GNodeImpl.node = gm
 	return gm
 }
 
 // Destroy the grammar. Only tests should use this.
 func (gm *Grammar) Bomb() {
 	gm.rank = newEmptyRank("bombd")
-	gm.GNode = nil
+	gm.GNodeImpl = NewGNode()
 	gm.NumRules = 0
 	gm.id2Rule = nil
 	gm.wasInitialized = false
 }
 
-func (gm *Grammar) GetGNode() *GNode { return gm.GNode }
+func (gm *Grammar) GetGNode() *GNodeImpl { return gm.GNodeImpl }
 
 // Parse() allows grammar to conform to Parser interface.
 // But normally should call ParseString() or ParseCode(),
@@ -215,8 +215,8 @@ func (gm *Grammar) postinit() {
 				monochoice := choice.choices[0]
 				mono := monochoice.GetGNode()
 				// Merge label
-				if mono.Label == "" {
-					mono.Label = choice.GetGNode().Label
+				if mono.label == "" {
+					mono.label = choice.Label()
 				}
 				// Merge included rules
 				for k, v := range choice.GetGNode().Rules {
@@ -267,12 +267,12 @@ func (gm *Grammar) postinit() {
 		},
 		Post: func(node Parser, parent Parser) string {
 			gnode := node.GetGNode()
-			if gnode == nil {
+			if gnode == nil { // TODO delete this if ASAP, but need test, wip now
 				return ""
 			}
 			if IsRule(node) {
-				gm.GetGNode().RulesK = append(gm.GetGNode().RulesK, gnode.Name)
-				gm.GetGNode().Rules[gnode.Name] = node
+				gm.GetGNode().RulesK = append(gm.GetGNode().RulesK, gnode.name)
+				gm.GetGNode().Rules[gnode.name] = node
 				gnode.Id = gm.NumRules
 				gm.NumRules++
 				gm.id2Rule[gnode.Id] = node
@@ -300,7 +300,7 @@ func (gm *Grammar) postinit() {
 
 func (gm *Grammar) PrintRules() {
 	fmt.Println("+--------------- Grammar.Debug() ----------------------------------")
-	fmt.Println("| name         : " + bold(gm.GNode.Name))
+	fmt.Println("| name         : " + bold(gm.Name()))
 	fmt.Println("| contentString: " + gm.ContentString())
 	fmt.Println("| rules        : " + strconv.Itoa(gm.NumRules))
 	fmt.Println("| ")
@@ -333,20 +333,20 @@ func (gm *Grammar) PrintRules() {
 				case *Grammar:
 					sParentName = "__grammar__" // instead show name, use same as js for diffing
 				default:
-					sParentName = father.GetGNode().Name
+					sParentName = father.Name()
 				}
 			default:
 				// sParentName = fmt.Sprintf("%T", v)
-				sParentName = v.GetGNode().Name
+				sParentName = v.Name()
 			}
 			// sParentName = v.GetGNode().Parent.GetGNode().Name
 		}
 		fmt.Println("|  ",
-			helpers.PadLeft(v.GetGNode().Name, 14),
+			helpers.PadLeft(v.Name(), 14),
 			helpers.PadLeft(strconv.Itoa(v.GetGNode().Id), 3),
 			helpers.PadLeft(helpers.TypeOfToString(v), 20),
-			helpers.PadLeft(helpers.BoolToString(v.GetGNode().Capture), 3),
-			helpers.PadLeft(v.GetGNode().Label, 7),
+			helpers.PadLeft(helpers.BoolToString(v.Capture()), 3),
+			helpers.PadLeft(v.Label(), 7),
 			helpers.PadLeft(strings.Join(v.GetGNode().Labels_.Get(), ","), 21),
 			helpers.PadLeft(sParentName, 16),
 			helpers.PadLeft(v.ContentString(), 30),

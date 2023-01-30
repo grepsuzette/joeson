@@ -51,8 +51,8 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 
 func newEmptyRank(name string) *rank {
 	x := &rank{newEmptyChoice()}
-	x.GetGNode().Name = name
-	x.GetGNode().Node = x
+	x.SetName(name)
+	x.GetGNode().node = x
 	return x
 }
 
@@ -63,7 +63,7 @@ func (ranke *rank) Length() int {
 }
 
 func (ranke *rank) Append(node Parser)      { ranke.choice.Append(node) }
-func (ranke *rank) GetGNode() *GNode        { return ranke.choice.GetGNode() }
+func (ranke *rank) GetGNode() *GNodeImpl    { return ranke.choice.GetGNode() }
 func (ranke *rank) Prepare()                { ranke.choice.Prepare() }
 func (ranke *rank) HandlesChildLabel() bool { return false }
 
@@ -71,7 +71,7 @@ func (ranke *rank) ContentString() string {
 	var b strings.Builder
 	b.WriteString(blue("Rank("))
 	a := helpers.AMap(ranke.choice.choices, func(x Parser) string {
-		return red(x.GetGNode().Name)
+		return red(x.Name())
 	})
 	b.WriteString(strings.Join(a, blue(",")))
 	b.WriteString(blue(")"))

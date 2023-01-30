@@ -53,7 +53,7 @@ func TestBootstrap(t *testing.T) {
 func TestManyTimes(t *testing.T) {
 	// this test replicates the original joeson_test.coffee
 	start := time.Now()
-	nbIter := 10
+	nbIter := 100
 	parsedGrammar := GrammarFromLines(IntentionRules(), "gmIntention")
 	var frecurse func(rule Line, indent int, name string)
 	frecurse = func(rule Line, indent int, name string) {

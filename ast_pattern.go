@@ -6,7 +6,7 @@ import (
 )
 
 type pattern struct {
-	*GNode
+	*GNodeImpl
 	Value Parser
 	Join  Parser
 	Min   NativeInt // -1 for unspec.
@@ -16,7 +16,7 @@ type pattern struct {
 // `it` must be a NativeMap with keys like 'value', 'join', 'min', 'max'
 func newPattern(it Ast) *pattern {
 	patt := &pattern{NewGNode(), nil, nil, -1, -1}
-	patt.Node = patt
+	patt.node = patt
 	if nativemap, ok := it.(NativeMap); !ok {
 		panic("Pattern expecting a map with value, join")
 	} else {
@@ -24,7 +24,7 @@ func newPattern(it Ast) *pattern {
 		if patt.Value == nil {
 			panic("Pattern must have a value")
 		} else {
-			patt.GetGNode().Capture = patt.Value.GetGNode().Capture
+			patt.SetCapture(patt.Value.Capture())
 		}
 		patt.Join = nativemap.GetParser("join") // can be nil
 		patt.Min = NewNativeInt(-1)
@@ -56,7 +56,7 @@ func newPattern(it Ast) *pattern {
 	}
 	return patt
 }
-func (patt *pattern) GetGNode() *GNode { return patt.GNode }
+func (patt *pattern) GetGNode() *GNodeImpl { return patt.GNodeImpl }
 func (patt *pattern) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos
