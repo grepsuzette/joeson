@@ -99,7 +99,7 @@ func (seq *sequence) Parse(ctx *ParseContext) Ast {
 }
 
 func (seq *sequence) parseAsSingle(ctx *ParseContext) Ast {
-	var result Ast = NewNativeUndefined()
+	var result Ast = nil // critical function (about 100k calls to parse the intention grammar), so avoid needless calls to NewNativeUndefined()
 	for _, child := range seq.sequence {
 		res := child.Parse(ctx)
 		if res == nil {
@@ -109,7 +109,11 @@ func (seq *sequence) parseAsSingle(ctx *ParseContext) Ast {
 			result = res
 		}
 	}
-	return result
+	if result == nil {
+		return NewNativeUndefined()
+	} else {
+		return result
+	}
 }
 
 func (seq *sequence) parseAsArray(ctx *ParseContext) Ast {
@@ -128,7 +132,7 @@ func (seq *sequence) parseAsArray(ctx *ParseContext) Ast {
 
 func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 	var results Ast
-	results = NewNativeUndefined()
+	results = nil // critical function (about 100k calls to parse the intention grammar), so avoid needless calls to NewNativeUndefined()
 	for _, child := range seq.sequence {
 		res := child.Parse(ctx)
 		if res == nil {
@@ -160,7 +164,11 @@ func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 			}
 		}
 	}
-	return results
+	if results == nil { // see comment above (critical function)
+		return NewNativeUndefined()
+	} else {
+		return results
+	}
 }
 
 func (seq *sequence) ForEachChild(f func(Parser) Parser) Parser {

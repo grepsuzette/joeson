@@ -5,7 +5,9 @@ package joeson
 // note NativeUndefined satisfies not only Ast but also Parser
 type NativeUndefined struct{ *GNodeImpl }
 
-func NewNativeUndefined() NativeUndefined        { return NativeUndefined{NewGNode()} }
+func NewNativeUndefined() NativeUndefined {
+	return NativeUndefined{NewGNode()}
+}
 func (nu NativeUndefined) ContentString() string { return "<NativeUndefined>" }
 
 func (nu NativeUndefined) Parse(ctx *ParseContext) Ast               { return nu }
