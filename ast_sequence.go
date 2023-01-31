@@ -87,6 +87,7 @@ func (seq *sequence) Parse(ctx *ParseContext) Ast {
 			return seq.parseAsSingle(ctx)
 		case Object:
 			if len(seq.sequence) == 0 {
+				// seems never called
 				return NewNativeUndefined()
 			} else {
 				return seq.parseAsObject(ctx)
