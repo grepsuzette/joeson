@@ -41,6 +41,6 @@ func (re *regex) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Ref, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
-	re.GetGNode().Rules = ForEachChild_InRules(re, f)
+	re.GetGNode().rules = ForEachChild_InRules(re, f)
 	return re
 }

@@ -37,7 +37,7 @@ func (no *not) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}
-	no.GetGNode().Rules = ForEachChild_InRules(no, f)
+	no.GetGNode().rules = ForEachChild_InRules(no, f)
 	if no.it != nil {
 		no.it = f(no.it)
 	}

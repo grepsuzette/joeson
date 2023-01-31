@@ -1,5 +1,6 @@
 main
 joeson
 tmp.html
+*.prof
 .vscode/
 __debug_bin

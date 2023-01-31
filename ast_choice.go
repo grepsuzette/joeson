@@ -69,7 +69,7 @@ func (ch *choice) ForEachChild(f func(Parser) Parser) Parser {
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}
 	// we must first walk through rules, and then only through choices
-	ch.GetGNode().Rules = ForEachChild_InRules(ch, f)
+	ch.GetGNode().rules = ForEachChild_InRules(ch, f)
 	ch.choices = ForEachChild_ArrayParser(ch.choices, f)
 	return ch
 }

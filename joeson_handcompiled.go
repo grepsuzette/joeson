@@ -3,7 +3,7 @@ package joeson
 import "strings"
 
 // NewJoeson() creates a new instance of the handcompiled grammar.
-// You may want to use this with NewGrammarFromLines(), though
+// You may want to use this with GrammarFromLines(), though
 // with default options NewJoeson() is used anyway by default
 // (best example probably in TestBootstrap())
 func NewJoeson() *Grammar {

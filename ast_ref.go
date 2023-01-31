@@ -41,13 +41,13 @@ func newRef(it Ast) *ref {
 	if name[0:1] == "_" {
 		ref.SetCapture(false)
 	}
-	ref.GNodeImpl.Labels_ = helpers.NewLazyFromFunc(func() []string {
+	ref.GNodeImpl.labels_ = helpers.NewLazyFromFunc(func() []string {
 		if ref.Label() == "@" {
-			referenced := ref.GNodeImpl.Grammar.GetGNode().Rules[ref.ref]
+			referenced := ref.grammar.GetRule(ref.ref)
 			if referenced == nil {
 				panic("ref " + ref.ref + " was not found in grammar.Rules")
 			} else {
-				return referenced.GetGNode().Labels_.Get()
+				return referenced.GetGNode().labels_.Get()
 			}
 		} else if ref.Label() != "" {
 			return []string{ref.Label()}
@@ -63,9 +63,9 @@ func (x *ref) HandlesChildLabel() bool { return false }
 func (x *ref) Prepare()                {}
 func (x *ref) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(ctx *ParseContext, _ Parser) Ast {
-		node := x.GNodeImpl.Grammar.GetGNode().Rules[x.ref]
+		node := x.grammar.GetRule(x.ref)
 		if node == nil {
-			panic("Unknown reference " + x.ref + ". Grammar has " + strconv.Itoa(len(x.GNodeImpl.Grammar.GetGNode().Rules)) + " rules. ")
+			panic("Unknown reference " + x.ref + ". Grammar has " + strconv.Itoa(len(x.grammar.GetGNode().rules)) + " rules. ")
 		}
 		ctx.stackPeek(0).Param = x.param
 		return node.Parse(ctx)
@@ -77,6 +77,6 @@ func (x *ref) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Ref, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
-	x.GetGNode().Rules = ForEachChild_InRules(x, f)
+	x.GetGNode().rules = ForEachChild_InRules(x, f)
 	return x
 }

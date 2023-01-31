@@ -18,10 +18,6 @@
 - Maybe one more example
 ✓ Can we separate Ast and Parse()
 ✓ get rid of GetGNode() != nil tests, now that GNode is part of Parser
+✓ optimize what can be
 - submit on github
-
-If there is any problem, look at grammar.go:261
-    // TODO gnode.Rule = NewNativeUndefined()
-    //   we used nil here if there is any pb...
-    gnode.Rule = nil
 

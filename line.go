@@ -127,10 +127,10 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 		panic("unrecog type " + reflect.TypeOf(line).String())
 	}
 	rule := answer.GetGNode()
-	if rule.Rule != nil && !IsRule(answer) {
+	if rule.rule != nil && !IsRule(answer) {
 		panic("assert")
 	}
-	rule.Rule = answer
+	rule.rule = answer
 	if rule.name != "" && rule.name != name {
 		panic("assert")
 	}

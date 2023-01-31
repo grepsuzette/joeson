@@ -31,7 +31,7 @@ func (look *lookahead) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   expr:       {type:GNode}
-	look.GetGNode().Rules = ForEachChild_InRules(look, f)
+	look.GetGNode().rules = ForEachChild_InRules(look, f)
 	if look.expr != nil {
 		look.expr = f(look.expr)
 	}

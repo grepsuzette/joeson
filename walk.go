@@ -52,11 +52,11 @@ func ForEachChild_ArrayParser(a []Parser, f func(Parser) Parser) []Parser {
 func ForEachChild_InRules(x Parser, f func(Parser) Parser) map[string]Parser {
 	hnew := map[string]Parser{}
 	gn := x.GetGNode()
-	if gn.Rules == nil {
+	if gn.rules == nil {
 		return nil
 	}
-	for _, k := range gn.RulesK {
-		if v, exists := gn.Rules[k]; exists {
+	for _, k := range gn.rulesK {
+		if v, exists := gn.rules[k]; exists {
 			if r := f(v); r != nil {
 				hnew[k] = r
 			}

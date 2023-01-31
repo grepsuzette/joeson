@@ -238,7 +238,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 					if i_frame.pos > startPos {
 						panic("assert failed: i_frame.pos > startPos")
 					}
-					if i_frame.pos < startPos || i_frame.id == x.GetGNode().Id {
+					if i_frame.pos < startPos || i_frame.id == x.GetGNode().id {
 						break
 					}
 					frame.wipemask[i_frame.id] = true
@@ -271,28 +271,20 @@ func prepareResult(fparse2 parseFun2, caller Parser) parseFun {
 		if result != nil {
 			// handle labels for standalone nodes
 			gn := caller.GetGNode()
-			if gn.label != "" && gn.Parent != nil && !gn.Parent.HandlesChildLabel() {
+			if gn.label != "" && gn.parent != nil && !gn.parent.HandlesChildLabel() {
 				result = NewNativeMap(map[string]Ast{gn.label: result})
-			}
-			start := ctx.stackPeek(0).pos
-			end := ctx.Code.Pos
-			origin := Origin{
-				code: ctx.Code.text,
-				start: Cursor{
-					line: ctx.Code.PosToLine(start),
-					col:  ctx.Code.PosToCol(start),
-					pos:  start,
-				},
-				end: Cursor{
-					line: ctx.Code.PosToLine(end),
-					col:  ctx.Code.PosToCol(end),
-					pos:  end,
-				},
 			}
 			if gn.CbBuilder != nil {
 				switch x := result.(type) {
 				case Parser:
-					x.GetGNode().Origin = origin
+					start := ctx.stackPeek(0).pos
+					end := ctx.Code.Pos
+					origin := Origin{
+						code:  ctx.Code.text,
+						start: start,
+						end:   end,
+					}
+					x.GetGNode().origin = origin
 				default:
 				}
 				result = gn.CbBuilder(result, ctx, caller)
@@ -310,7 +302,7 @@ func Wrap(fparse2 parseFun2, node Parser) parseFun {
 		if IsRule(node) {
 			return wrapped1(ctx)
 		} else if gn.label != "" &&
-			(gn.Parent != nil && !gn.Parent.HandlesChildLabel()) ||
+			(gn.parent != nil && !gn.parent.HandlesChildLabel()) ||
 			gn.CbBuilder != nil {
 			return wrapped2(ctx)
 		} else {

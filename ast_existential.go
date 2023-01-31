@@ -14,8 +14,8 @@ func newExistential(it Ast) *existential {
 // TODO handlesChildLabel$: get: -> @parent?.handlesChildLabel
 // examine this case^
 func (ex *existential) HandlesChildLabel() bool {
-	if ex.GNodeImpl.Parent != nil {
-		return ex.GNodeImpl.Parent.HandlesChildLabel()
+	if ex.GNodeImpl.parent != nil {
+		return ex.GNodeImpl.parent.HandlesChildLabel()
 	} else {
 		return false
 	}
@@ -26,12 +26,12 @@ func (ex *existential) GetGNode() *GNodeImpl { return ex.GNodeImpl }
 func (ex *existential) Prepare() {
 	gn := ex.GetGNode()
 	var lbls = ex.calculateLabels()
-	gn.Labels_.Set(lbls)
+	gn.labels_.Set(lbls)
 	if len(lbls) > 0 && gn.label == "" {
 		gn.label = "@"
 	}
-	var caps = ex.it.GetGNode().Captures_.Get()
-	gn.Captures_.Set(caps)
+	var caps = ex.it.GetGNode().captures_.Get()
+	gn.captures_.Set(caps)
 	gn.capture = len(caps) > 0
 }
 
@@ -41,7 +41,7 @@ func (ex *existential) calculateLabels() []string {
 	if lbl != "" && lbl != "@" && lbl != "&" {
 		return []string{lbl}
 	} else {
-		return ex.it.GetGNode().Labels_.Get()
+		return ex.it.GetGNode().labels_.Get()
 	}
 }
 
@@ -65,7 +65,7 @@ func (ex *existential) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}
-	ex.GetGNode().Rules = ForEachChild_InRules(ex, f)
+	ex.GetGNode().rules = ForEachChild_InRules(ex, f)
 	if ex.it != nil {
 		ex.it = f(ex.it)
 	}

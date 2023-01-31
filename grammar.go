@@ -24,6 +24,14 @@ type Grammar struct {
 	wasInitialized bool
 }
 
+func (gm *Grammar) GetRule(name string) Parser {
+	if x, exists := gm.GNodeImpl.rules[name]; exists {
+		return x
+	} else {
+		return nil
+	}
+}
+
 // General options to build a grammar
 type GrammarOptions struct {
 	// Options governing what is traced or not during the initialization or the parsing
@@ -51,7 +59,7 @@ func GrammarFromLines(lines []Line, name string, options ...GrammarOptions) *Gra
 	}
 	ranke := rankFromLines(lines, name, opts)
 	newgm := newEmptyGrammarWithOptions(opts.TraceOptions)
-	newgm.SetRankIfEmpty(ranke)
+	newgm.rank = ranke
 	// The name is also set afterwards in the coffeescript version
 	newgm.SetName(name)
 	newgm.postinit()
@@ -167,18 +175,10 @@ func (gm *Grammar) ContentString() string {
 }
 
 func (gm *Grammar) IsReady() bool { return gm.rank != nil && gm.wasInitialized }
-func (gm *Grammar) SetRankIfEmpty(ranke Parser) {
-	if gm.rank != nil {
-		return
-	}
-	if gm.IsReady() {
-		panic("Grammar is already defined and can not be changed on the fly at the moment")
-	}
-	gm.rank = ranke
-}
+
 func (gm *Grammar) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren rank: {type:Rank}
-	gm.GetGNode().Rules = ForEachChild_InRules(gm, f)
+	gm.GetGNode().rules = ForEachChild_InRules(gm, f)
 	if gm.rank != nil {
 		gm.rank = f(gm.rank)
 	}
@@ -219,9 +219,9 @@ func (gm *Grammar) postinit() {
 					mono.label = choice.Label()
 				}
 				// Merge included rules
-				for k, v := range choice.GetGNode().Rules {
-					mono.Rules[k] = v
-					mono.RulesK = append(mono.RulesK, k)
+				for k, v := range choice.GetGNode().rules {
+					mono.rules[k] = v
+					mono.rulesK = append(mono.rulesK, k)
 				}
 				// grandchild becomes the child
 				return monochoice
@@ -241,25 +241,25 @@ func (gm *Grammar) postinit() {
 				return ""
 			}
 			// sanity check: it must have no parent yet if it's not a rule
-			if !IsRule(node) && gnode != nil && gnode.Parent != nil {
+			if !IsRule(node) && gnode != nil && gnode.parent != nil {
 				panic("Grammar tree should be a DAG, nodes should not be referenced more than once.")
 			}
 
-			gnode.Grammar = gm
-			gnode.Parent = parent
+			gnode.grammar = gm
+			gnode.parent = parent
 			if false {
 				// "inline rules are special" in original coffeescript
 				// but the bit of code seem unreachable anyway
 				panic("assert")
 			} else {
 				// set node.rule, the root node for this rule
-				if gnode.Rule == nil {
+				if gnode.rule == nil {
 					if parent != nil {
-						gnode.Rule = parent.GetGNode().Rule
+						gnode.rule = parent.GetGNode().rule
 					} else {
 						// TODO gnode.Rule = NewNativeUndefined()
 						//   we used nil here if there is any pb...
-						gnode.Rule = nil
+						gnode.rule = nil
 					}
 				}
 			}
@@ -271,13 +271,13 @@ func (gm *Grammar) postinit() {
 				return ""
 			}
 			if IsRule(node) {
-				gm.GetGNode().RulesK = append(gm.GetGNode().RulesK, gnode.name)
-				gm.GetGNode().Rules[gnode.name] = node
-				gnode.Id = gm.NumRules
+				gm.GetGNode().rulesK = append(gm.GetGNode().rulesK, gnode.name)
+				gm.GetGNode().rules[gnode.name] = node
+				gnode.id = gm.NumRules
 				gm.NumRules++
-				gm.id2Rule[gnode.Id] = node
+				gm.id2Rule[gnode.id] = node
 				if opts.Loop { // print out id->rulename for convenience
-					fmt.Println("Loop " + red(strconv.Itoa(gnode.Id)) + ":\t" + String(node))
+					fmt.Println("Loop " + red(strconv.Itoa(gnode.id)) + ":\t" + String(node))
 				}
 			}
 			return ""
@@ -321,15 +321,15 @@ func (gm *Grammar) PrintRules() {
 	for i := 0; i < gm.NumRules; i++ {
 		v := gm.id2Rule[i]
 		sParentName := "-"
-		if v.GetGNode().Parent != nil {
-			switch father := v.GetGNode().Parent.(type) {
+		if v.GetGNode().parent != nil {
+			switch father := v.GetGNode().parent.(type) {
 			// case *Grammar:
 			// 	sParentName = "__grammar__" // instead show name, use same as js for diffing
 			case *rank:
 				// 2 kind of ranks:
 				//   1. parent is a grammar
 				//   2. regular rank (subrank)
-				switch father.Parent.(type) {
+				switch father.parent.(type) {
 				case *Grammar:
 					sParentName = "__grammar__" // instead show name, use same as js for diffing
 				default:
@@ -343,11 +343,11 @@ func (gm *Grammar) PrintRules() {
 		}
 		fmt.Println("|  ",
 			helpers.PadLeft(v.Name(), 14),
-			helpers.PadLeft(strconv.Itoa(v.GetGNode().Id), 3),
+			helpers.PadLeft(strconv.Itoa(v.GetGNode().id), 3),
 			helpers.PadLeft(helpers.TypeOfToString(v), 20),
 			helpers.PadLeft(helpers.BoolToString(v.Capture()), 3),
 			helpers.PadLeft(v.Label(), 7),
-			helpers.PadLeft(strings.Join(v.GetGNode().Labels_.Get(), ","), 21),
+			helpers.PadLeft(strings.Join(v.GetGNode().labels_.Get(), ","), 21),
 			helpers.PadLeft(sParentName, 16),
 			helpers.PadLeft(v.ContentString(), 30),
 		)

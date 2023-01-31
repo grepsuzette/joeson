@@ -39,6 +39,6 @@ func (s str) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Str, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
-	s.GetGNode().Rules = ForEachChild_InRules(s, f)
+	s.GetGNode().rules = ForEachChild_InRules(s, f)
 	return s
 }

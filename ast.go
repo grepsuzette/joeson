@@ -1,26 +1,27 @@
 package joeson
 
+// Abstract syntax tree, the result of a Parse() operation by a grammar.
+// It can be almost anything.
 type Ast interface {
-	ContentString() string // colorful representation
+	ContentString() string // A text representation of this AST. Whatever you want.
 }
 
-// Special kind of AST that is able to parse
+// Special kind of AST that is able to parse.
 // A compiled grammar is an AST whose nodes satisfy Parser.
 type Parser interface {
 	Ast
 	GNode
-	Parse(ctx *ParseContext) Ast // Parse, update context's position, a return of nil indicates a parse failure.
-	GetGNode() *GNodeImpl        // Grammar node, it can never be nil (even in the case of NativeUndefined a dummy is used)
-	Prepare()                    // Called after children prepared
+	Parse(ctx *ParseContext) Ast
+	Prepare()
 	HandlesChildLabel() bool
 	ForEachChild(f func(Parser) Parser) Parser // depth-first walk enabler
 }
 
 func IsRule(parser Parser) bool {
-	return parser.GetGNode().Rule == parser
+	return parser.GetGNode().rule == parser
 }
 
-// Show "<name>: " if `x` is a rule, or "<label>:", or empty string
+// Return a prefix consisting of a name or a label when appropriate.
 func prefix(parser Parser) string {
 	if IsRule(parser) {
 		return red(parser.Name() + ": ")
@@ -31,7 +32,7 @@ func prefix(parser Parser) string {
 	}
 }
 
-// This is Prefix(x) + x.ContentString(x)
+// prefix(x) + x.ContentString(x)
 func String(ast Ast) string {
 	if x, isParser := ast.(Parser); isParser {
 		return prefix(x) + x.ContentString()

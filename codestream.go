@@ -16,8 +16,8 @@ type Cursor struct {
 
 type Origin struct {
 	code  string
-	start Cursor
-	end   Cursor
+	start int
+	end   int
 }
 
 // E.g. NewPeek().BeforeLines(2).AfterLines(4)

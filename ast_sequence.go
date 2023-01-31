@@ -30,8 +30,8 @@ func newSequence(it Ast) *sequence {
 		gn := NewGNode()
 		seq := &sequence{GNodeImpl: gn, sequence: helpers.AMap(a.Array, func(a Ast) Parser { return a.(Parser) })}
 		gn.node = seq
-		gn.Labels_ = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
-		gn.Captures_ = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
+		gn.labels_ = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
+		gn.captures_ = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
 		seq.type_ = helpers.NewLazyFromFunc(func() sequenceRepr { return seq.calculateType() })
 		return seq
 	}
@@ -44,14 +44,14 @@ func (seq *sequence) Prepare()                {}
 func (seq *sequence) calculateLabels() []string {
 	a := []string{}
 	for _, child := range seq.sequence {
-		a = append(a, child.GetGNode().Labels_.Get()...)
+		a = append(a, child.GetGNode().labels_.Get()...)
 	}
 	return a
 }
 func (seq *sequence) calculateCaptures() []Ast {
 	a := []Ast{}
 	for _, child := range seq.sequence {
-		a = append(a, child.GetGNode().Captures_.Get()...)
+		a = append(a, child.GetGNode().captures_.Get()...)
 	}
 	return a
 }
@@ -60,8 +60,8 @@ func (seq *sequence) calculateCaptures() []Ast {
 // otherwise, if at least 1 capture, it is Array
 // otherwise a Single
 func (seq *sequence) calculateType() sequenceRepr {
-	if len(seq.GetGNode().Labels_.Get()) == 0 {
-		if len(seq.GetGNode().Captures_.Get()) > 1 {
+	if len(seq.GetGNode().labels_.Get()) == 0 {
+		if len(seq.GetGNode().captures_.Get()) > 1 {
 			return Array
 		} else {
 			return Single
@@ -175,7 +175,7 @@ func (seq *sequence) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   sequence:   {type:[type:GNode]}
-	seq.GetGNode().Rules = ForEachChild_InRules(seq, f)
+	seq.GetGNode().rules = ForEachChild_InRules(seq, f)
 	if seq.sequence != nil {
 		seq.sequence = ForEachChild_Array(seq.sequence, f)
 	}

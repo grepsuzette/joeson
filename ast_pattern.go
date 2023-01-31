@@ -128,7 +128,7 @@ func (patt *pattern) ForEachChild(f func(Parser) Parser) Parser {
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   value:      {type:GNode}
 	//   join:       {type:GNode}
-	patt.GetGNode().Rules = ForEachChild_InRules(patt, f)
+	patt.GetGNode().rules = ForEachChild_InRules(patt, f)
 	if patt.Value != nil {
 		patt.Value = f(patt.Value)
 	}
