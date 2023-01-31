@@ -11,6 +11,8 @@ func Escape(str string) string {
 	return ToAscii(EscapeButKeepNonAscii(str))
 }
 
+var escaper = strings.NewReplacer("\n", "\\n", "\r", "\\r", "\t", "\\t", `\`, "\\\\")
+
 func EscapeButKeepNonAscii(str string) string {
 	/*
 		@escape = (str, asciiOnly=yes) ->
@@ -31,8 +33,7 @@ func EscapeButKeepNonAscii(str string) string {
 	*/
 	// replacer := strings.NewReplacer( /*"\b", "\\b", "\f", "\\f", "\r", "\\r",*/ "\n", "n", "\u2028", "\\u2028", "\u2029", "\\u2029" /*`"`, `\\\"`,*/, `\0`, `\\0`)
 	// return replacer.Replace(str)
-	replacer := strings.NewReplacer("\n", "\\n", "\r", "\\r", "\t", "\\t", `\`, "\\\\")
-	return replacer.Replace(str)
+	return escaper.Replace(str)
 	return str
 }
 

@@ -33,11 +33,10 @@ func prefix(parser Parser) string {
 
 // This is Prefix(x) + x.ContentString(x)
 func String(ast Ast) string {
-	switch x := ast.(type) {
-	case Parser:
+	if x, isParser := ast.(Parser); isParser {
 		return prefix(x) + x.ContentString()
-	default:
-		return x.ContentString()
+	} else {
+		return ast.ContentString()
 	}
 }
 

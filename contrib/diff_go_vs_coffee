@@ -49,6 +49,10 @@ Requirements:
 - [optional] the AnsiEsc plugin for vim to show ansi colors (with ":AnsiEsc")
 - has only been tested on Linux (must not be hard to make it work on Mac though)
 
+Environment Variables:
+  TEST Specify the test name. A list will be provided if missing. Like --test
+  TRACE Comma separated trace options. Like --trace
+
 OPTIONS:
  --help -h             Show help
  --version -v          Show version and exit
