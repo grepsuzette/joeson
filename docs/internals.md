@@ -1,3 +1,5 @@
+This port is as literal as possible. It's main documentation is meant to be the original JoeScript code. Once it becomes more established it can become its own thing and evolve in a more golang-idiomatic way.
+
 # `line_*.go` files 
 
 They contain the rule declaration helpers called `O()` 
