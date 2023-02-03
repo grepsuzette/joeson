@@ -277,17 +277,17 @@ showcontent = (result) ->
                                  $.code.line is trace.filterLine)
                 line = $.code.line
                 _loopStack.push(@name)
-                console.log  "#{ (switch line%6
-                                    when 0 then blue
-                                    when 1 then cyan
-                                    when 2 then white
-                                    when 3 then yellow
-                                    when 4 then red
-                                    when 5 then magenta)('@'+line) \
-                           }\t#{ red (frame.id for frame in $.stack[...$.stackLength]) \
-                          } - #{ _loopStack \
-                          } - #{ yellow escape ''+result \
-                           }: #{ blue escape $.code.peek beforeChars:10, afterChars:10 }"
+                # console.log  "#{ (switch line%6
+                #                     when 0 then blue
+                #                     when 1 then cyan
+                #                     when 2 then white
+                #                     when 3 then yellow
+                #                     when 4 then red
+                #                     when 5 then magenta)('@'+line) \
+                #            }\t#{ red (frame.id for frame in $.stack[...$.stackLength]) \
+                #           } - #{ _loopStack \
+                #           } - #{ yellow escape ''+result \
+                #            }: #{ blue escape $.code.peek beforeChars:10, afterChars:10 }"
               timeStart? 'loopiteration'
               while result isnt null
                 assert.ok frame.wipemask?, "where's my wipemask"

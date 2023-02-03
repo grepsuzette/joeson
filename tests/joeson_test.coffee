@@ -49,6 +49,7 @@ if sTrace?
                 localTrace.grammar = yes
                 localTrace.filterLine = -1
                 localTrace.skipSetup = no
+            when ""
             else
                 if opt.indexOf("line=") == 0 || opt.indexOf("filterline=") == 0
                     pos = opt.indexOf("=")
@@ -118,7 +119,9 @@ trace = @trace
 gmIntention = -> Grammar RAW_GRAMMAR
 allFuncs =
     ParseIntention: ->
-        console.log "TODO"
+        # this allows tracing and diffing,
+        # it does not do more than compiling the RAW_GRAMMAR
+        PARSED_GRAMMAR = Grammar RAW_GRAMMAR
     DebugLabel: ->
         debuglabel = Grammar [
             o In: "l:Br"
@@ -133,7 +136,7 @@ allFuncs =
             console.log "Test DebugLabel is successful"
     ManyTimes: ->
         start = new Date()
-        nbIter = 1
+        nbIter = 100
         PARSED_GRAMMAR = Grammar RAW_GRAMMAR
         frecurse = (rule, indent=0, name=undefined) ->
           if rule instanceof Array
@@ -169,14 +172,27 @@ allFuncs =
             throw "expected n label to be -1, not " + x.n
         else
             console.log "Test Squareroot is successful"
+    Choice2: ->
+        gm = Grammar [
+            o CHOICE: [
+                o "_PIPE* SEQUENCE*_PIPE{2,} _PIPE*", (it) ->
+                    console.log it
+                    return it
+                o "SEQUENCE": "WORD _ '_'"
+            ]
+            i "_PIPE": "_ '|'"
+            i WORD: "[A-Z]{1,}"
+            i "_": "(' ' | '\n')*"
+        ]
+        x = gm.parse "CHOICE _"
 
 if sTest?
     if allFuncs[sTest]?
         console.log "------------ Test#{sTest} ----------------------"
         allFuncs[sTest]()
-    else if sTest == "-h"
+    else if sTest == "-h" # -h to list tests (one per line)
         console.log Object.keys(allFuncs).join("\n")
-    else if sTest == "-H"
+    else if sTest == "-H" # -H to list tests (comma-separated)
         console.log Object.keys(allFuncs).join(",")
     else
         console.log "#{sTest} is an unrecognized test, available: " + \
