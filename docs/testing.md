@@ -14,7 +14,7 @@ $ go test . --run TestHandcompiled -v
 $ go test examples/calculator/calculator_test.go --run test_12 -v
 ```
 
-![](./docs/assets/calculator_test1.png)
+![calculator_test1](https://user-images.githubusercontent.com/350354/216583474-4fd47a26-54a1-400a-aba6-96af1b06188f.png)
 
 ## Control traces with the TRACE environment variable
 
@@ -41,7 +41,7 @@ $ TRACE=all go test examples/calculator/calculator_test.go --run Test_12 -v
 
 It shows very detailed trace:
 
-![](./docs/assets/calculator_test2.png)
+![calculator_test2](https://user-images.githubusercontent.com/350354/216583646-0009d83d-36c2-457b-8cc3-e2aa0012edac.png)
 
 This time with `TRACE=loop,grammar`:
 
@@ -49,6 +49,6 @@ This time with `TRACE=loop,grammar`:
 $ TRACE=loop,grammar go test examples/calculator/calculator_test.go --run Test_12 -v
 ```
 
-![](./docs/assets/calculator_test3.png)
+![calculator_test3](https://user-images.githubusercontent.com/350354/216583710-3a9fe967-2264-4b6a-8786-46a0f7d3edfc.png)
 
 
