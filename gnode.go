@@ -1,6 +1,6 @@
 package joeson
 
-import "grepsuzette/joeson/helpers"
+import "github.com/grepsuzette/joeson/helpers"
 
 /*
    In addition to the attributes defined by subclasses,

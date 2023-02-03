@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"grepsuzette/joeson"
+	"github.com/grepsuzette/joeson"
 	"strconv"
 	"strings"
 	"testing"

@@ -1,7 +1,7 @@
 package joeson
 
 import (
-	"grepsuzette/joeson/helpers"
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 // ILine represents an inner rule in a rank
