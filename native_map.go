@@ -1,7 +1,7 @@
 package joeson
 
 import (
-	"grepsuzette/joeson/helpers"
+	"github.com/grepsuzette/joeson/helpers"
 	"strings"
 )
 

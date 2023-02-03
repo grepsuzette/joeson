@@ -1,7 +1,7 @@
 package joeson
 
 import (
-	"grepsuzette/joeson/helpers"
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 // str does not represent a native string

@@ -1,4 +1,4 @@
-module grepsuzette/joeson
+module github.com/grepsuzette/joeson
 
 go 1.18
 

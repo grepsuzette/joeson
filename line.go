@@ -2,7 +2,7 @@ package joeson
 
 import (
 	"fmt"
-	"grepsuzette/joeson/helpers"
+	"github.com/grepsuzette/joeson/helpers"
 	"reflect"
 )
 
