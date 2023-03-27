@@ -23,6 +23,8 @@ func Named(name string, lineStringOrAst any) NamedRule {
 		return NamedRule{name, newSLine(v)}
 	case Parser:
 		return NamedRule{name, newCLine(v)}
+	case []Line:
+		return NamedRule{name, NewALine(v)}
 	default:
 		msg := fmt.Sprintf("Invalid argument to Named(%s, %v)\n", name, lineStringOrAst)
 		panic(msg)
