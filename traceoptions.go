@@ -17,12 +17,12 @@ type TraceOptions struct {
 
 // Define what the default TraceOptions is when GrammarFromLines() is called optionless.
 // By default if $TRACE envvar is specified, the options will be read from it
-// starting from a Mute() state. If $TRACE is not specified, we only succint
+// starting from a Mute() state. If $TRACE is not specified, we only show succint
 // trace to be beginner-friendly.
 func DefaultTraceOptions() TraceOptions {
 	return CheckEnvironmentForTraceOptionsOrUse(TraceOptions{
-		Stack:      false, // too verbose
-		Loop:       false, // prefer to use grammar
+		Stack:      false, // why default is false: too verbose
+		Loop:       false, // why default is false: prefer to use grammar
 		Grammar:    true,
 		SkipSetup:  true,
 		FilterLine: -1,

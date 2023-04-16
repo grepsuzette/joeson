@@ -2,9 +2,10 @@ package joeson
 
 import (
 	"fmt"
-	"github.com/grepsuzette/joeson/helpers"
 	"testing"
 	"time"
+
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 // this allows tracing and diffing,
@@ -152,29 +153,5 @@ func TestSquareroot(t *testing.T) {
 				t.Error(fmt.Sprintf("was expecting n == -1, but got %d\n", n))
 			}
 		}
-	}
-}
-
-func TestChoice2(t *testing.T) {
-	gm := GrammarFromLines(
-		[]Line{
-			// this is a meaningful test that will eventually go away
-			o(Named("CHOICE", rules(
-				o("_PIPE* SEQUENCE*_PIPE{2,} _PIPE*", func(it Ast) Ast {
-					fmt.Println(it.ContentString())
-					return it
-				}),
-				o(Named("SEQUENCE", "WORD _ '_'")),
-			))),
-			i(Named("_PIPE", "_ '|'")),
-			i(Named("WORD", "[A-Z]{1,}")),
-			i(Named("_", "(' ' | '\n')*")),
-		},
-		"gmChoice",
-	)
-	if x, error := gm.ParseString("CHOICE _"); error != nil {
-		t.Error(error)
-	} else {
-		fmt.Println(x.ContentString())
 	}
 }
