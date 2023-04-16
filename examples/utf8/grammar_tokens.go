@@ -1,10 +1,15 @@
 package main
 
+import (
+	// "fmt"
+
+	j "github.com/grepsuzette/joeson"
+)
+
 // https://go.dev/ref/spec#Characters
 
 // TODO Floating-point literals
 // TODO Imaginary literals (maybe)
-// TODO Rune literals
 // TODO String literals
 
 // "Tokens form the vocabulary of the Go language. There are four classes:
@@ -23,7 +28,7 @@ var rules_tokens = rules(
 	i(named("identifier", "[a-zA-Z_][a-zA-Z0-9_]*"), x("identifier")), // letter { letter | unicode_digit } .   We rewrite it so to accelerate parsing
 	i(named("operator", "'+=' | '&=' | '&&' | '==' | '!=' | '(' | ')' | '-=' | '|=' | '||' | '[' | ']' | '*=' | '^=' | '<-' | '>=' | '{' | '}' | '/=' | '<<=' | '<<' | '<=' | '++' | ':=' | '%=' | '>>=' | '>>' | '--'  | '...' | '&^=' | '&^' | '~' | '+' | '&' | '-' | '|' | '*' | '^' | '!' | '%' | '/' |  '=' | '>' | '<'"), x("operator")),
 	i(named("punctuation", "',' | ';' | '.' | ':'"), x("punctuation")),
-	i(named("literal", "int_lit | rune_lit"), x("literal")),
+	i(named("literal", "int_lit | rune_lit | string_lit"), x("literal")),
 	i(named("int_lit", "hex_lit | octal_lit | binary_lit | decimal_lit"), x("int_lit")),
 	i(named("decimal_lit", "/^0|[1-9](_?[0-9])*/"), x("decimal_lit")),
 	i(named("binary_lit", "/^0[bB](_?[01])*/"), x("binary_lit")),
@@ -45,14 +50,21 @@ var rules_tokens = rules(
 		o("'\\'' ( byte_value | unicode_value ) '\\''"),
 		o(named("byte_value", rules(
 			o("octal_byte_value | hex_byte_value"),
-			i(named("octal_byte_value", "'\\\\' octal_digit{3,3}"), x("octal_byte_value")),
+			i(named("octal_byte_value", "'\\\\' octal_digit{3,3}"), func(ast j.Ast) j.Ast {
+				// check <= 255
+				if j.NewNativeIntFrom(ast).Int() > 255 {
+					return NewParseError("ERROR illegal: octal value over 255")
+				} else {
+					return dumb{"octal_byte_value", ast}
+				}
+			}),
 			i(named("hex_byte_value", "'\\\\x' hex_digit{2,2}"), x("hex_byte_value")),
 		))),
 		o(named("unicode_value", rules(
-			o("escaped_char"),
-			// i(named("escaped_char", `[\a\b\f\n\r\t\v]`), x("escaped_char")),
-			// note: we skip \b as it doesn't work in the regex
-			i(named("escaped_char", `[\a\f\n\r\t\v]`), x("escaped_char")),
+			o("escaped_char | little_u_value | big_u_value | unicode_char"),
+			i(named("escaped_char", `[\a\f\n\r\t\v]`), x("escaped_char")), // note: we skip \b (BELL RING) as it doesn't work in the regex
+			i(named("little_u_value", "'\\\\u' hex_digit{4,4}"), x("little_u_value")),
+			i(named("big_u_value", "'\\\\U' hex_digit{8,8}"), x("big_u_value")),
 		))),
 		i(named("foo", "[0-9a-zA-Z]")),
 	)), x("rune_lit")),

@@ -112,24 +112,52 @@ func TestTokens(t *testing.T) {
 		duo("'\\125'", "rune_lit"),
 		duo("'\\xF2'", "rune_lit"),
 		duo("'\a'", "escaped_char"),
-		// duo("'\b'", "escaped_char"), // skipped
+		// duo("'\b'", "escaped_char"), // skipped BELL RING as it doesn't work
 		duo("'\f'", "escaped_char"),
 		duo("'\n'", "escaped_char"),
 		duo("'\r'", "escaped_char"),
 		duo("'\t'", "escaped_char"),
 		duo("'\v'", "escaped_char"),
+		duo("'\\u13F8'", "little_u_value"),
+		duo("'\\u13a'", "ERROR little_u_value requires 4 hex"),
+		duo("'\\u1a248'", "ERROR little_u_value requires 4 hex"),
+		duo("'\\UFFeeFFee'", "big_u_value"),
+		duo("'\\UFFeeFFe'", "ERROR big_u_value requires 8 hex"),
+		duo("'\\UFFeeFFeeA'", "ERROR big_u_value requires 8 hex"),
+		duo("'a'", "rune_lit"),
+		duo("'ä'", "rune_lit"),
+		duo("'本'", "rune_lit"),
+		duo("'\\000'", "octal_byte_value"),
+		duo("'\\007'", "octal_byte_value"),
+		duo("'\\x07'", "hex_byte_value"),
+		duo("'\\xff'", "hex_byte_value"),
+		duo("'\\u12e4'", "little_u_value"),
+		duo("'\\U00101234'", "big_u_value"),
+		duo(`'`, "rune_lit"), // rune literal containing single quote character
+		duo("'aa'", "ERROR illegal: too many characters"),
+		duo("'\\k'", "ERROR illegal: k is not recognized after a backslash"),
+		duo("'\\xa'", "ERROR illegal: too few hexadecimal digits"),
+		duo("'\\0'", "ERROR illegal: too few octal digits"),
+		duo("'\\400'", "ERROR illegal: octal value over 255"),
+		// duo("'\\uDFFF'", "ERROR illegal: surrogate half"), // TODO
+		// duo("'\\U00110000'", "ERROR illegal: invalid Unicode code point"), // TODO
 	} {
 		if ast, e := gm.ParseString(pair.a); e != nil {
-			if !strings.HasPrefix(pair.b, "ERROR") {
-				t.Fatalf("Error parsing %s. Expected ast.ContentString() to containt '%s', got '%s'", pair.a, pair.b, e.Error())
-			} else {
+			if strings.HasPrefix(pair.b, "ERROR") {
 				fmt.Printf("[32m%s[0m gave an error as expected [32m✓[0m\n", pair.a)
+			} else {
+				t.Fatalf("Error parsing %s. Expected ast.ContentString() to contain '%s', got '%s'", pair.a, pair.b, e.Error())
 			}
 		} else {
 			if strings.Contains(ast.ContentString(), pair.b) {
 				fmt.Printf("[32m%s[0m parsed as [33m%s[0m [32m✓[0m %s\n", pair.a, ast.ContentString(), pair.b)
 			} else {
-				t.Fatalf("Error, \"[1m%s[0m\" [1;31mparsed[0m as %s [1;31mbut expected [0;31m%s[0m", pair.a, ast.ContentString(), pair.b)
+				t.Fatalf(
+					"Error, \"[1m%s[0m\" [1;31mparsed[0m as %s [1;31mbut expected [0;31m%s[0m",
+					pair.a,
+					ast.ContentString(),
+					pair.b,
+				)
 			}
 		}
 	}
