@@ -1,0 +1,59 @@
+package main
+
+// https://go.dev/ref/spec#Characters
+
+// TODO Floating-point literals
+// TODO Imaginary literals (maybe)
+// TODO Rune literals
+// TODO String literals
+
+// "Tokens form the vocabulary of the Go language. There are four classes:
+// identifiers, keywords, operators and punctuation, and literals. White space,
+// formed from spaces (U+0020), horizontal tabs (U+0009), carriage returns
+// (U+000D), and newlines (U+000A), is ignored except as it separates tokens
+// that would otherwise combine into a single token. Also, a newline or end of
+// file may trigger the insertion of a semicolon. While breaking the input into
+// tokens, the next token is the longest sequence of characters that form
+// a valid token."
+
+// Comments represent original spec, where useful (we often optimized it or reordered it for PEG)
+var rules_tokens = rules(
+	o(named("token", "keyword | identifier | operator | punctuation | literal"), x("token")),
+	i(named("keyword", "'break' | 'default' | 'func' | 'interface' | 'select' | 'case' | 'defer' | 'goto' | 'map' | 'struct' | 'chan' | 'else' | 'go' | 'package' | 'switch' | 'const' | 'fallthrough' | 'if' | 'range' | 'type' | 'continue' | 'for' | 'import' | 'return' | 'var'"), x("keyword")),
+	i(named("identifier", "[a-zA-Z_][a-zA-Z0-9_]*"), x("identifier")), // letter { letter | unicode_digit } .   We rewrite it so to accelerate parsing
+	i(named("operator", "'+=' | '&=' | '&&' | '==' | '!=' | '(' | ')' | '-=' | '|=' | '||' | '[' | ']' | '*=' | '^=' | '<-' | '>=' | '{' | '}' | '/=' | '<<=' | '<<' | '<=' | '++' | ':=' | '%=' | '>>=' | '>>' | '--'  | '...' | '&^=' | '&^' | '~' | '+' | '&' | '-' | '|' | '*' | '^' | '!' | '%' | '/' |  '=' | '>' | '<'"), x("operator")),
+	i(named("punctuation", "',' | ';' | '.' | ':'"), x("punctuation")),
+	i(named("literal", "int_lit | rune_lit"), x("literal")),
+	i(named("int_lit", "hex_lit | octal_lit | binary_lit | decimal_lit"), x("int_lit")),
+	i(named("decimal_lit", "/^0|[1-9](_?[0-9])*/"), x("decimal_lit")),
+	i(named("binary_lit", "/^0[bB](_?[01])*/"), x("binary_lit")),
+	i(named("octal_lit", "/^0[oO](_?[0-7])*/"), x("octal_lit")),
+	i(named("hex_lit", "/^0[xX](_?[0-9a-fA-F])*/"), x("hex_lit")),
+	i(named("decimal_digits", "[0-9][_0-9]*")), // decimal_digits = decimal_digit { [ "_" ] decimal_digit } .
+	i(named("binary_digits", "binary_digit ('_'? binary_digit)+")),
+	i(named("octal_digits", "octal_digit ('_'? octal_digit)+")),
+	i(named("hex_digits", "hex_digit ('_'? hex_digit)+")),
+	i(named("newline", "'\n'")),                // "the Unicode code point U+000A"
+	i(named("unicode_char", "[^\\x{0a}]")),     // "an arbitrary Unicode code point except newline"
+	i(named("letter", "unicode_letter | '_'")), // "The underscore character _ (U+005F) is considered a lowercase letter."
+	i(named("digits", "decimal_digit | binary_digit | octal_digit | hex_digit")),
+	i(named("decimal_digit", "[0-9]")),
+	i(named("binary_digit", "[01]")),
+	i(named("octal_digit", "[0-7]")),
+	i(named("hex_digit", "[0-9A-Fa-f]")),
+	o(named("rune_lit", rules(
+		o("'\\'' ( byte_value | unicode_value ) '\\''"),
+		o(named("byte_value", rules(
+			o("octal_byte_value | hex_byte_value"),
+			i(named("octal_byte_value", "'\\\\' octal_digit{3,3}"), x("octal_byte_value")),
+			i(named("hex_byte_value", "'\\\\x' hex_digit{2,2}"), x("hex_byte_value")),
+		))),
+		o(named("unicode_value", rules(
+			o("escaped_char"),
+			// i(named("escaped_char", `[\a\b\f\n\r\t\v]`), x("escaped_char")),
+			// note: we skip \b as it doesn't work in the regex
+			i(named("escaped_char", `[\a\f\n\r\t\v]`), x("escaped_char")),
+		))),
+		i(named("foo", "[0-9a-zA-Z]")),
+	)), x("rune_lit")),
+)
