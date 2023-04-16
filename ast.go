@@ -1,35 +1,15 @@
 package joeson
 
 // Abstract syntax tree, the result of a Parse() operation by a grammar.
-// It can be almost anything.
+// It can be almost anything you want. Presently it only requires a ContentString()
+// method. Remark: perhaps people would find it preferable to use `any` instead of Ast.
+//
+// In particular, the byproduct of the joeson grammar are special Ast nodes
+// that also satisfies Parser and are in turn capable of
+// parsing things (see parser.go).
+//
 type Ast interface {
 	ContentString() string // A text representation of this AST. Whatever you want.
-}
-
-// Special kind of AST that is able to parse.
-// A compiled grammar is an AST whose nodes satisfy Parser.
-type Parser interface {
-	Ast
-	GNode
-	Parse(ctx *ParseContext) Ast
-	Prepare()
-	HandlesChildLabel() bool
-	ForEachChild(f func(Parser) Parser) Parser // depth-first walk enabler
-}
-
-func IsRule(parser Parser) bool {
-	return parser.GetGNode().rule == parser
-}
-
-// Return a prefix consisting of a name or a label when appropriate.
-func prefix(parser Parser) string {
-	if IsRule(parser) {
-		return red(parser.Name() + ": ")
-	} else if parser.Label() != "" {
-		return cyan(parser.Label() + ":")
-	} else {
-		return ""
-	}
 }
 
 // prefix(x) + x.ContentString(x)

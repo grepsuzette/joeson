@@ -7,9 +7,10 @@ package joeson
 import (
 	"errors"
 	"fmt"
-	"github.com/grepsuzette/joeson/helpers"
 	"strconv"
 	"strings"
+
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 // See examples and tests to build a grammar.
@@ -18,7 +19,7 @@ import (
 type Grammar struct {
 	*GNodeImpl
 	rank     Parser         // a *Rank or a Ref to a rank
-	NumRules int            // Each Ast can have rules, recursively. This however i the total count in the grammar
+	NumRules int            // Each Ast can have rules, recursively. This however is the total count in the grammar
 	id2Rule  map[int]Parser // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
 	TraceOptions
 	wasInitialized bool
@@ -82,6 +83,7 @@ func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) (Ast, error) 
 // -- after this are the lower level stuffs --
 
 func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTraceOptions()) }
+
 func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
 	name := "__empty__"
 	gm := &Grammar{NewGNode(), nil, 0, map[int]Parser{}, opts, false}
