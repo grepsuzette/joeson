@@ -7,7 +7,7 @@ type lookahead struct {
 
 func newLookahead(it Ast) *lookahead {
 	gn := NewGNode()
-	la := &lookahead{gn, it.(Parser)}
+	la := &lookahead{gn, newStrFromAst(it)}
 	gn.capture = false
 	gn.node = la
 	return la

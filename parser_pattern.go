@@ -123,6 +123,7 @@ func (patt *pattern) ContentString() string {
 		return b.String() + cyan(sCyan)
 	}
 }
+
 func (patt *pattern) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}

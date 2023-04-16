@@ -1,8 +1,9 @@
 package joeson
 
 import (
-	"github.com/grepsuzette/joeson/helpers"
 	"strings"
+
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 type NativeMap map[string]Ast
