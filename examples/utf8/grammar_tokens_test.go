@@ -127,6 +127,9 @@ func TestTokens(t *testing.T) {
 		duo("'a'", "rune_lit"),
 		duo("'ä'", "rune_lit"),
 		duo("'本'", "rune_lit"),
+		duo("'a'", "unicode_char"),
+		duo("'ä'", "unicode_char"),
+		duo("'本'", "unicode_char"),
 		duo("'\\000'", "octal_byte_value"),
 		duo("'\\007'", "octal_byte_value"),
 		duo("'\\x07'", "hex_byte_value"),
@@ -141,6 +144,13 @@ func TestTokens(t *testing.T) {
 		duo("'\\400'", "ERROR illegal: octal value over 255"),
 		// duo("'\\uDFFF'", "ERROR illegal: surrogate half"), // TODO
 		// duo("'\\U00110000'", "ERROR illegal: invalid Unicode code point"), // TODO
+		// -- string_lit -- tests adapted from https://go.dev/ref/spec#String_literals
+		duo("`abc`", "raw_string_lit"),
+		duo("`\\n`", "raw_string_lit"), // original example is `\n<Actual CR>\n` // same as "\\n\n\\n". But's a bit hard to reproduce...
+		duo(`"
+"`, "interpreted_string_lit"),
+		duo(`"`+"\""+`"`, "interpreted_string_lit"), // same as `"`
+		duo(`"`+"Hello, world!\\n"+`"`, "interpreted_string_lit"),
 	} {
 		if ast, e := gm.ParseString(pair.a); e != nil {
 			if strings.HasPrefix(pair.b, "ERROR") {

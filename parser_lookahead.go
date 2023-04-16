@@ -19,6 +19,7 @@ func (look *lookahead) HandlesChildLabel() bool { return false }
 func (look *lookahead) ContentString() string {
 	return blue("(?") + String(look.expr) + blue(")")
 }
+
 func (look *lookahead) Parse(ctx *ParseContext) Ast {
 	return Wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos
@@ -27,6 +28,7 @@ func (look *lookahead) Parse(ctx *ParseContext) Ast {
 		return result
 	}, look)(ctx)
 }
+
 func (look *lookahead) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
