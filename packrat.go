@@ -1,9 +1,8 @@
 package joeson
 
 import (
-	"strconv"
-
 	"github.com/grepsuzette/joeson/helpers"
+	"strconv"
 )
 
 // refer to the original joeson.coffee
@@ -86,13 +85,12 @@ func stack(fparse parseFun, x Parser) parseFun {
 func loopify(fparse parseFun, x Parser) parseFun {
 	return func(ctx *ParseContext) Ast {
 		opts := ctx.TraceOptions
-		show := opts.Stack || ctx.ParseOptions.Debug
-		if show {
+		if opts.Stack {
 			ctx.log(blue("*")+" "+String(x)+" "+boldBlack(strconv.Itoa(ctx.Counter)), opts)
 		}
 		if x.GetGNode().SkipCache {
 			result := fparse(ctx)
-			if show {
+			if opts.Stack {
 				ctx.log(cyan("`->:")+" "+helpers.Escape(result.ContentString())+" "+boldBlack(helpers.TypeOfToString(result)), opts)
 			}
 			return result
@@ -106,7 +104,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 		case 0: // non-recursive (so far)
 			// The only time a cache hit will simply return is when loopStage is 0
 			if frame.endPos.IsSet {
-				if show {
+				if opts.Stack {
 					if frame.Result != nil {
 						s := ""
 						s += helpers.Escape(frame.Result.ContentString())
@@ -127,7 +125,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 			case 1: // non-recursive (i.e. done)
 				frame.loopStage.Set(0)
 				frame.cacheSet(result, ctx.Code.Pos)
-				if show {
+				if opts.Stack {
 					s := cyan("`-set:") + " "
 					if result == nil {
 						s += "nil"
@@ -141,7 +139,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 				return result
 			case 2: // recursion detected by subroutine above
 				if result == nil {
-					if show {
+					if opts.Stack {
 						ctx.log(yellow("`--- loop nil --- "), opts)
 					}
 					frame.loopStage.Set(0)
@@ -194,7 +192,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 						bestResult = result
 						bestEndPos = ctx.Code.Pos
 						frame.cacheSet(bestResult, bestEndPos)
-						if show {
+						if opts.Stack {
 							ctx.log(yellow("|`--- loop iteration ---")+frame.toString(), opts)
 						}
 						ctx.Code.Pos = startPos
@@ -212,7 +210,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 					ctx.wipeWith(frame, false)
 					ctx.restoreWith(bestStash)
 					ctx.Code.Pos = bestEndPos
-					if show {
+					if opts.Stack {
 						ctx.log(yellow("`--- loop done! --- ")+"best result: "+helpers.Escape(bestResult.ContentString()), opts)
 					}
 					// Step 4: return best result, which will get cached
@@ -230,7 +228,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 				TimeStart("wipemask")
 			}
 			// Step 1: Collect wipemask so we can wipe the frames later.
-			if show {
+			if opts.Stack {
 				ctx.log(yellow("`-base: ")+helpers.Escape(frame.Result.ContentString())+" "+boldBlack(helpers.TypeOfToString(frame.Result)), opts)
 			}
 			if frame.wipemask == nil {
