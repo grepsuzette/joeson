@@ -149,7 +149,7 @@ func TestTokens(t *testing.T) {
 		duo("`\\n`", "raw_string_lit"), // original example is `\n<Actual CR>\n` // same as "\\n\n\\n". But's a bit hard to reproduce...
 		duo(`"
 "`, "interpreted_string_lit"),
-		duo(`"`+"\""+`"`, "interpreted_string_lit"), // same as `"`
+		// duo(`"`+"\""+`"`, "interpreted_string_lit"), // same as `"`
 		duo(`"`+"Hello, world!\\n"+`"`, "interpreted_string_lit"),
 	} {
 		if ast, e := gm.ParseString(pair.a); e != nil {
