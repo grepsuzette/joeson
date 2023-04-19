@@ -55,8 +55,8 @@ var rules_tokens = rules(
 		o(named("string_lit", rules(
 			o("raw_string_lit | interpreted_string_lit"),
 			// o(named("raw_string_lit", "'`' ( !('`') ( unicode_char | newline ) )* '`'"), x("raw_string_lit")),                      // "`" { unicode_char | newline } "`" .   <- since unicode_char is everything but \n, it means any char.
-			o(named("raw_string_lit", "/`[^`]*`/"), x("raw_string_lit")),                                                                 // "`" { unicode_char | newline } "`" .   <- since unicode_char is everything but \n, it means any char.
-			o(named("interpreted_string_lit", "'\"' ( !(?'"+`"`+"') (unicode_value | byte_value) )* '\"'"), x("interpreted_string_lit")), // interpreted_string_lit = `"` { unicode_value | byte_value } `"` .
+			o(named("raw_string_lit", "/`[^`]*`/"), x("raw_string_lit")),                                                                           // "`" { unicode_char | newline } "`" .   <- since unicode_char is everything but \n, it means any char.
+			o(named("interpreted_string_lit", "'\"' (!'\\\"' ('\\\\' [\\s\\S] | unicode_value | byte_value))* '\"'"), x("interpreted_string_lit")), // interpreted_string_lit = `"` { unicode_value | byte_value } `"` .
 		)), x("string_lit")),
 	)), x("literal")),
 	i(named("int_lit", "hex_lit | octal_lit | binary_lit | decimal_lit"), x("int_lit")),

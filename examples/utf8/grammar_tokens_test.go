@@ -147,10 +147,23 @@ func TestTokens(t *testing.T) {
 		// -- string_lit -- tests adapted from https://go.dev/ref/spec#String_literals
 		duo("`abc`", "raw_string_lit"),
 		duo("`\\n`", "raw_string_lit"), // original example is `\n<Actual CR>\n` // same as "\\n\n\\n". But's a bit hard to reproduce...
+		duo("\"i like guitar\"", "interpreted_string_lit"),
+		duo("\"i like \\\"bass\\\" guitar too\"", "interpreted_string_lit"),
 		duo(`"
 "`, "interpreted_string_lit"),
-		duo(`"`+"\""+`"`, "interpreted_string_lit"), // same as `"`
-		duo(`"`+"Hello, world!\\n"+`"`, "interpreted_string_lit"),
+		duo(`"\""`, "interpreted_string_lit"), // same as `"`
+		duo("\"Hello, world!\n\"", "interpreted_string_lit"),
+		duo(`"日本語"`, "interpreted_string_lit"),
+		duo(`"\u65e5本\U00008a9e"`, "interpreted_string_lit"),
+		duo(`"\xff\u00FF"`, "interpreted_string_lit"),
+		// TODO duo(`"\uD800"`, "ERROR illegal: surrogate half"),
+		// TODO duo(`"\U00110000"`, "ERROR illegal: invalid Unicode code point"),
+		// these 5 following all represent the same thing:
+		duo(`"日本語"`, "interpreted_string_lit"),                                  // UTF-8 input text
+		duo("`日本語`", "raw_string_lit"),                                          // UTF-8 input text as a raw literal
+		duo(`"\u65e5\u672c\u8a9e"`, "interpreted_string_lit"),                   // the explicit Unicode code points
+		duo(`"\U000065e5\U0000672c\U00008a9e"`, "interpreted_string_lit"),       // the explicit Unicode code points
+		duo(`"\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e"`, "interpreted_string_lit"), // the explicit UTF-8 bytes
 	} {
 		if ast, e := gm.ParseString(pair.a); e != nil {
 			if strings.HasPrefix(pair.b, "ERROR") {
