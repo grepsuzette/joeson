@@ -8,7 +8,22 @@ import (
 	j "github.com/grepsuzette/joeson"
 )
 
-func TestTokens(t *testing.T) {
+// These tests come directly from https://go.dev/ref/spec#string_lit
+// we try to be as thorough as possible
+
+// Lexical elements - https://go.dev/ref/spec#Lexical_elements
+// - Comments TODO
+// - Tokens
+// - Semicolons TODO
+// - Identifiers
+// - Keywords
+// - Operators and punctuation
+// - Integer literals
+// - Floating-point literals TODO
+// - Imaginary literals TODO
+// - Rune literals
+// - String literals
+func TestLexicalElements(t *testing.T) {
 	gm := j.GrammarFromLines(rules_tokens, "go-tokens")
 	for _, pair := range []Duo{
 		duo("break", "keyword"),
@@ -146,9 +161,9 @@ func TestTokens(t *testing.T) {
 		// duo("'\\U00110000'", "ERROR illegal: invalid Unicode code point"), // TODO
 		// -- string_lit -- tests adapted from https://go.dev/ref/spec#String_literals
 		duo("`abc`", "raw_string_lit"),
-		duo("`\\n`", "raw_string_lit"), // original example is `\n<Actual CR>\n` // same as "\\n\n\\n". But's a bit hard to reproduce...
-		duo("\"i like guitar\"", "interpreted_string_lit"),
-		duo("\"i like \\\"bass\\\" guitar too\"", "interpreted_string_lit"),
+		duo("`\\n`", "raw_string_lit"),                                  // original example is `\n<Actual CR>\n` // same as "\\n\n\\n". But's a bit hard to reproduce...
+		duo("\"i like guitar\"", "interpreted_string_lit"),              // this is an added example
+		duo("\"i like \\\"bass\\\" guitar\"", "interpreted_string_lit"), // this is an added example
 		duo(`"
 "`, "interpreted_string_lit"),
 		duo(`"\""`, "interpreted_string_lit"), // same as `"`
@@ -165,23 +180,31 @@ func TestTokens(t *testing.T) {
 		duo(`"\U000065e5\U0000672c\U00008a9e"`, "interpreted_string_lit"),       // the explicit Unicode code points
 		duo(`"\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e"`, "interpreted_string_lit"), // the explicit UTF-8 bytes
 	} {
-		if ast, e := gm.ParseString(pair.a); e != nil {
-			if strings.HasPrefix(pair.b, "ERROR") {
-				fmt.Printf("[32m%s[0m gave an error as expected [32m✓[0m\n", pair.a)
-			} else {
-				t.Fatalf("Error parsing %s. Expected ast.ContentString() to contain '%s', got '%s'", pair.a, pair.b, e.Error())
-			}
+		test(t, gm, pair)
+	}
+}
+
+// Use `gm` grammar to parse `pair.a`.
+// The result if successful is expected to contain `pair.b`.
+// If `pair.b` starts with "ERROR ", we instead expect an error.
+func test(t *testing.T, gm *j.Grammar, pair Duo) {
+	t.Helper()
+	if ast, e := gm.ParseString(pair.a); e != nil {
+		if strings.HasPrefix(pair.b, "ERROR") {
+			fmt.Printf("[32m%s[0m gave an error as expected [32m✓[0m\n", pair.a)
 		} else {
-			if strings.Contains(ast.ContentString(), pair.b) {
-				fmt.Printf("[32m%s[0m parsed as [33m%s[0m [32m✓[0m %s\n", pair.a, ast.ContentString(), pair.b)
-			} else {
-				t.Fatalf(
-					"Error, \"[1m%s[0m\" [1;31mparsed[0m as %s [1;31mbut expected [0;31m%s[0m",
-					pair.a,
-					ast.ContentString(),
-					pair.b,
-				)
-			}
+			t.Fatalf("Error parsing %s. Expected ast.ContentString() to contain '%s', got '%s'", pair.a, pair.b, e.Error())
+		}
+	} else {
+		if strings.Contains(ast.ContentString(), pair.b) {
+			fmt.Printf("[32m%s[0m parsed as [33m%s[0m [32m✓[0m %s\n", pair.a, ast.ContentString(), pair.b)
+		} else {
+			t.Fatalf(
+				"Error, \"[1m%s[0m\" [1;31mparsed[0m as %s [1;31mbut expected [0;31m%s[0m",
+				pair.a,
+				ast.ContentString(),
+				pair.b,
+			)
 		}
 	}
 }
