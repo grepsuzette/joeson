@@ -1,8 +1,6 @@
 package main
 
 import (
-	// "fmt"
-
 	j "github.com/grepsuzette/joeson"
 )
 
@@ -24,6 +22,7 @@ import (
 // Comments represent original spec, where useful (we often optimized it or reordered it for PEG)
 var rules_tokens = rules(
 	o(named("token", "keyword | identifier | operator | punctuation | literal"), x("token")),
+	o(named("characters", rules_chars)), // import previous rules from grammar_chars.go
 	i(named("keyword", "'break' | 'default' | 'func' | 'interface' | 'select' | 'case' | 'defer' | 'goto' | 'map' | 'struct' | 'chan' | 'else' | 'go' | 'package' | 'switch' | 'const' | 'fallthrough' | 'if' | 'range' | 'type' | 'continue' | 'for' | 'import' | 'return' | 'var'"), x("keyword")),
 	i(named("identifier", "[a-zA-Z_][a-zA-Z0-9_]*"), x("identifier")), // letter { letter | unicode_digit } .   We rewrite it so to accelerate parsing
 	i(named("operator", "'+=' | '&=' | '&&' | '==' | '!=' | '(' | ')' | '-=' | '|=' | '||' | '[' | ']' | '*=' | '^=' | '<-' | '>=' | '{' | '}' | '/=' | '<<=' | '<<' | '<=' | '++' | ':=' | '%=' | '>>=' | '>>' | '--'  | '...' | '&^=' | '&^' | '~' | '+' | '&' | '-' | '|' | '*' | '^' | '!' | '%' | '/' |  '=' | '>' | '<'"), x("operator")),
@@ -68,12 +67,20 @@ var rules_tokens = rules(
 	i(named("binary_digits", "binary_digit ('_'? binary_digit)+")),
 	i(named("octal_digits", "octal_digit ('_'? octal_digit)+")),
 	i(named("hex_digits", "hex_digit ('_'? hex_digit)+")),
-	i(named("newline", "'\n'")),                               // "the Unicode code point U+000A"
-	i(named("unicode_char", "[^\\x{0a}]"), x("unicode_char")), // "an arbitrary Unicode code point except newline"
-	i(named("letter", "unicode_letter | '_'")),                // "The underscore character _ (U+005F) is considered a lowercase letter."
-	i(named("digits", "decimal_digit | binary_digit | octal_digit | hex_digit")),
-	i(named("decimal_digit", "[0-9]")),
-	i(named("binary_digit", "[01]")),
-	i(named("octal_digit", "[0-7]")),
-	i(named("hex_digit", "[0-9A-Fa-f]")),
+
+	// TODO delete
+	// i(named("characters", "(newline | unicode_char | unicode_letter | unicode_digit)")),
+	// i(named("newline", "'\n'")),                               // "the Unicode code point U+000A"
+	// i(named("unicode_char", "[^\\x{0a}]"), x("unicode_char")), // "an arbitrary Unicode code point except newline"
+	// i(named("letter", "unicode_letter | '_'")),                // "The underscore character _ (U+005F) is considered a lowercase letter."
+	// i(named("digits", "decimal_digit | binary_digit | octal_digit | hex_digit")),
+	// i(named("decimal_digit", "[0-9]")),
+	// i(named("binary_digit", "[01]")),
+	// i(named("octal_digit", "[0-7]")),
+	// i(named("hex_digit", "[0-9A-Fa-f]")),
+
+	// // NOTE: https://www.unicode.org/versions/Unicode8.0.0/ch04.pdf <- Section 4.5
+	// // does not define them however. For now we'll stick to ANSI for letters and digits. It can later be improved
+	// i(named("unicode_letter", "[a-zA-Z]")), // "a Unicode code point categorized as "Letter""
+	// i(named("unicode_digit", "[0-9]")),     // "a Unicode code point categorized as "Number, decimal digit""
 )

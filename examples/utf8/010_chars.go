@@ -1,6 +1,7 @@
 package main
 
-// Characters
+// https://go.dev/ref/spec#Characters
+// https://go.dev/ref/spec#Letters_and_digits
 //
 // The following terms are used to denote specific Unicode character categories:
 //
@@ -30,12 +31,14 @@ var rules_chars = rules(
 	as Unicode digits.""
 	*/
 	i(named("characters", "(newline | unicode_char | unicode_letter | unicode_digit)")),
-	i(named("newline", "'\n'")),            // "the Unicode code point U+000A"
-	i(named("unicode_char", "[^\\x{0a}]")), // "an arbitrary Unicode code point except newline"
-	// NOTE: https://www.unicode.org/versions/Unicode8.0.0/ch04.pdf <- Section 4.5
-	// does not define them however. For now we'll stick to ANSI for letters and digits. It can later be improved
-	i(named("unicode_letter", "[a-zA-Z]")), // "a Unicode code point categorized as "Letter""
-	i(named("unicode_digit", "[0-9]")),     // "a Unicode code point categorized as "Number, decimal digit""
+	i(named("newline", "'\n'")),                                 // "the Unicode code point U+000A"
+	i(named("unicode_char", "[^\\x{0a}]"), x("unicode_char")),   // "an arbitrary Unicode code point except newline"
+	i(named("unicode_letter", "[a-zA-Z]"), x("unicode_letter")), // "a Unicode code point categorized as "Letter""
+	i(named("unicode_digit", "[0-9]"), x("unicode_digit")),      // "a Unicode code point categorized as "Number, decimal digit""
+	//                         ^^^
+	// For now we'll stick to ANSI for letters and digits. It can later be improved
+	// That's because https://www.unicode.org/versions/Unicode8.0.0/ch04.pdf <- Section 4.5
+	//   does not define them.
 
 	// Letters and digits
 	i(named("letter", "unicode_letter | '_'")), // "The underscore character _ (U+005F) is considered a lowercase letter."
