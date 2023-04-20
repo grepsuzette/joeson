@@ -2,8 +2,9 @@ package joeson
 
 import (
 	"fmt"
-	"github.com/grepsuzette/joeson/helpers"
 	"reflect"
+
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 type Line interface {
@@ -45,17 +46,51 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 			case string:
 				// TODO better error, because this will happen a lot to users.
 				panic(fmt.Sprintf(
-					"O (or I) called lineInit with %v\nSo the second parameter was a string: %s\nRight now this syntax is not supported\nPlease fix your grammar",
+					"Error in grammar: O (or I) called lineInit with %v\nSo the second parameter was a string: %s\nRight now this syntax is not supported\nPlease fix your grammar",
 					origArgs,
 					v,
 				))
+			case []Line:
+				panic(fmt.Sprintf("Error in grammar: Arrays of rules AKA rules() are expected to arrive as the 1st argument i.e. i=0) but here i=%d, faulty rule:\n%s\n\n^ Please check that rule ^\nIt normally happens when you forget to wrap the rule name and the array of rules in named().", i, summarizeRule(origArgs, 2)))
 			default:
-				fmt.Printf("%s", reflect.TypeOf(v).String())
+				fmt.Printf("%s\n", reflect.TypeOf(v).String())
 				panic("assert")
 			}
 		}
 	}
 	return
+}
+
+// instead of displaying a full tree of rules when there is an error,
+// just retain the first few children.
+func summarizeRule(args []any, max int) string {
+	s := ""
+	for i := range args {
+		if i > max {
+			return s + "...\n"
+		} else {
+			switch v := args[i].(type) {
+			case string:
+				s += `"` + v + `"`
+			case []Line:
+				s += "["
+				for j, w := range v {
+					if j > max {
+						s += "...\n"
+						break
+					} else {
+						s += w.stringIndent(i+1) + "\n"
+					}
+				}
+				s += "]"
+			default:
+				s += "?unhandled_type:" + reflect.TypeOf(v).String() + "', "
+				// s += fmt.Sprintf("%v", v)
+			}
+		}
+		s += ", "
+	}
+	return s
 }
 
 // sanitize arbitrary content into a Line

@@ -1,6 +1,8 @@
 package joeson
 
 import (
+	"regexp"
+
 	"github.com/grepsuzette/joeson/helpers"
 )
 
@@ -26,7 +28,9 @@ They have a name (always), a content, an optional parse callback and an optional
 
 // I() is a helper to declare terminal lines of rules (aka ILine).
 // Since ILine are always named, you are going to always call it like this:
-//   I(Named("hello", "'hi' | 'hello'"), <optionalCallback>)
+//
+//	I(Named("hello", "'hi' | 'hello'"), <optionalCallback>)
+//
 // It is better to refer to the readme, as it is too flexible to explain here.
 func I(a ...any) ILine {
 	name, content, attrs := lineInit(a)
@@ -40,10 +44,11 @@ func (il ILine) lineType() string { return "i" }
 func (il ILine) stringIndent(nIndent int) string {
 	s := helpers.Indent(nIndent)
 	s += il.lineType()
-	s += " "
-	s += il.content.stringIndent(nIndent)
+	s += " " + il.name + " "
+	re := regexp.MustCompile("^ *o *")
+	s += re.ReplaceAllString(il.content.stringIndent(nIndent), "o ")
 	if il.attrs.CbBuilder != nil {
-		s += green(", ") + yellow("𝘧")
+		s += " " + yellow("𝘧")
 	}
 	return s
 }

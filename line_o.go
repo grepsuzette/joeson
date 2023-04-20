@@ -1,8 +1,10 @@
 package joeson
 
 import (
-	"github.com/grepsuzette/joeson/helpers"
+	"regexp"
 	"strconv"
+
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 type OLine struct {
@@ -36,10 +38,11 @@ func (ol OLine) lineType() string { return "o" }
 func (ol OLine) stringIndent(nIndent int) string {
 	s := helpers.Indent(nIndent)
 	s += ol.lineType()
-	s += " "
-	s += ol.content.stringIndent(nIndent)
+	s += " " + ol.name + " "
+	re := regexp.MustCompile("^ *o *")
+	s += re.ReplaceAllString(ol.content.stringIndent(nIndent), "o ")
 	if ol.attrs.CbBuilder != nil {
-		s += green(", ") + yellow("𝘧")
+		s += " " + yellow("𝘧")
 	}
 	return s
 }
