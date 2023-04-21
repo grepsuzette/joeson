@@ -1,9 +1,10 @@
 package joeson
 
 import (
-	"github.com/grepsuzette/joeson/helpers"
 	"reflect"
 	"strings"
+
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 // A rank is created from lines of rules. A grammar contains such a rank of rules.
@@ -17,9 +18,9 @@ type rank struct {
 // So, why is this function private?
 // Because you should use the higher level GrammarFromLines().
 //
-//  `optionalLazyGrammar` is a lazy callback specifying how to create or retrieve a grammar
-//  from its cache, should the `lines` contain some string rules (SLine) needing to be compiled.
-//  In general leave it nil to have the joeson_handcompiled grammar be used automatically.
+//	`optionalLazyGrammar` is a lazy callback specifying how to create or retrieve a grammar
+//	from its cache, should the `lines` contain some string rules (SLine) needing to be compiled.
+//	In general leave it nil to have the joeson_handcompiled grammar be used automatically.
 func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank {
 	var lazyGm *helpers.Lazy[*Grammar]
 	if options.LazyGrammar != nil {
@@ -77,6 +78,7 @@ func (ranke *rank) ContentString() string {
 	b.WriteString(blue(")"))
 	return b.String()
 }
+
 func (ranke *rank) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}

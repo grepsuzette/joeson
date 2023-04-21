@@ -2,6 +2,7 @@ package joeson
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/grepsuzette/joeson/helpers"
@@ -44,14 +45,18 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 			case ParseOptions:
 				attrs = v
 			case string:
-				// TODO better error, because this will happen a lot to users.
-				panic(fmt.Sprintf(
+				fmt.Sprintf(
 					"Error in grammar: O (or I) called lineInit with %v\nSo the second parameter was a string: %s\nRight now this syntax is not supported\nPlease fix your grammar",
 					origArgs,
 					v,
-				))
+				)
+				os.Exit(1)
+			case OLine:
+				fmt.Printf("Error in grammar: lineInit called with OLine %s\n", v.stringIndent(0))
+				panic("assert")
 			case []Line:
-				panic(fmt.Sprintf("Error in grammar: Arrays of rules AKA rules() are expected to arrive as the 1st argument i.e. i=0) but here i=%d, faulty rule:\n%s\n\n^ Please check that rule ^\nIt normally happens when you forget to wrap the rule name and the array of rules in named().", i, summarizeRule(origArgs, 2)))
+				fmt.Printf("Error in grammar: Arrays of rules AKA rules() are expected to arrive as the 1st argument i.e. i=0) but here i=%d, faulty rule:\n%s\n\n^ Please check that rule ^\nIt normally happens when you forget to wrap the rule name and the array of rules in named().", i, summarizeRule(origArgs, 2))
+				os.Exit(1)
 			default:
 				fmt.Printf("%s\n", reflect.TypeOf(v).String())
 				panic("assert")
