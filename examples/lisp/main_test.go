@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
-	// "strings"
 	"testing"
+
+	// "strings"
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 type exprExpectation struct {
@@ -105,7 +107,7 @@ func Test(t *testing.T) {
 		v := o.expectation
 		t.Run(fmt.Sprintf("eval %s expected to give %s", k, v), func(t *testing.T) {
 			if ast, e := gm.ParseString(k); e == nil {
-				s := stripansi(m.Eval(ast.(Expr)).ContentString())
+				s := helpers.StripAnsi(m.Eval(ast.(Expr)).ContentString())
 				if s != v {
 					t.Errorf("%s expected to eval as %s gave %s instead\n", k, v, s)
 				}
