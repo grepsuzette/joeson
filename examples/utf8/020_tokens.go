@@ -68,19 +68,9 @@ var rules_tokens = rules(
 	i(named("octal_digits", "octal_digit ('_'? octal_digit)+")),
 	i(named("hex_digits", "hex_digit ('_'? hex_digit)+")),
 
-	// TODO delete
-	// i(named("characters", "(newline | unicode_char | unicode_letter | unicode_digit)")),
-	// i(named("newline", "'\n'")),                               // "the Unicode code point U+000A"
-	// i(named("unicode_char", "[^\\x{0a}]"), x("unicode_char")), // "an arbitrary Unicode code point except newline"
-	// i(named("letter", "unicode_letter | '_'")),                // "The underscore character _ (U+005F) is considered a lowercase letter."
-	// i(named("digits", "decimal_digit | binary_digit | octal_digit | hex_digit")),
-	// i(named("decimal_digit", "[0-9]")),
-	// i(named("binary_digit", "[01]")),
-	// i(named("octal_digit", "[0-7]")),
-	// i(named("hex_digit", "[0-9A-Fa-f]")),
-
-	// // NOTE: https://www.unicode.org/versions/Unicode8.0.0/ch04.pdf <- Section 4.5
-	// // does not define them however. For now we'll stick to ANSI for letters and digits. It can later be improved
-	// i(named("unicode_letter", "[a-zA-Z]")), // "a Unicode code point categorized as "Letter""
-	// i(named("unicode_digit", "[0-9]")),     // "a Unicode code point categorized as "Number, decimal digit""
+	// "White space, formed from spaces (U+0020), horizontal tabs (U+0009),
+	// carriage returns (U+000D), and newlines (U+000A), is ignored except as
+	// it separates tokens that would otherwise combine into a single token."
+	i(named("_", "/[ \t\n\r]*/")),
+	i(named("__", "/[ \t\n\r]+/")),
 )

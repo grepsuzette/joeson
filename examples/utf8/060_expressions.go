@@ -13,11 +13,13 @@ var partial_rules_expressions = rules( // also depends on 050_grammar_types.go
 	o(named("Operand", rules(
 		o("'(' Expression ')' | OperandName TypeArgs? | Literal"),
 		o(named("Literal", "BasicLit | CompositeLit | FunctionLit")),
-		// TODO add float_lit and imaginary_lot
+		// TODO add float_lit and imaginary_lit
 		o(named("BasicLit", "int_lit | rune_lit | string_lit")),
 		o(named("OperandName", "QualifiedIdent | identifier")),
 		i(named("QualifiedIdent", "PackageName '.' identifier"), x("QualifiedIdent")), // https://go.dev/ref/spec#QualifiedIdent
 		i(named("PackageName", "identifier")),                                         // https://go.dev/ref/spec#PackageName
+
+		o(named("Block", "'{' Statement*';' '}'")),
 	))),
 	o(named("token", rules_tokens)), // import previous rules
 )

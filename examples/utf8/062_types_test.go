@@ -14,8 +14,25 @@ func TestTypes(t *testing.T) {
 	for _, pair := range []Duo{
 		duo("[32]byte", "ArrayType"),
 		duo("[]32byte", "ERROR "),
-		// duo("[2*N] struct { x, y int32 }", "?"),
-		// duo("_", ""),
+		// TODO uncomment when Type finished
+		// duo("[2*N] struct { x, y int32 }", ""),
+		// duo("[1000]*float64", ""),
+		// duo("[3][5]int", ""),
+		// duo("[2][2][2]float64", ""),  // same as [2]([2]([2]float64))
+		// TODO
+		// // invalid array types
+		// type (
+		//         T1 [10]T1                 // element type of T1 is T1
+		//         T2 [10]struct{ f T2 }     // T2 contains T2 as component of a struct
+		//         T3 [10]T4                 // T3 contains T3 as component of a struct in T4
+		//         T4 struct{ f T3 }         // T4 contains T4 as component of array T3 in a struct
+		// )
+		// // valid array types
+		// type (
+		//         T5 [10]*T5                // T5 contains T5 as component of a pointer
+		//         T6 [10]func() T6          // T6 contains T6 as component of a function type
+		//         T7 [10]struct{ f []T7 }   // T7 contains T7 as component of a slice in a struct
+		// )
 	} {
 		test(t, gm, pair)
 	}
