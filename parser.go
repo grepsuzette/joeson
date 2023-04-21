@@ -1,12 +1,20 @@
 package joeson
 
-// Parser objects are able to to parse other grammars.
-// The joeson grammar produce Ast nodes that satisfy both
-// interfaces Ast and Parser.
+// Parser objects are able to parse a ParseContext producing Ast.
 //
-// These nodes are the usual suspects for PEG grammars,
-// namely Choice, Existential, Lookahead, Not, Pattern, Ref,
-// Regex, Sequence, and joeson also have Rank and Str.
+// Choice, Existential, Lookahead, Not, Pattern, Ref,
+// Regex, Sequence, and joeson also have Rank and Str are built-in Parsers
+// in joeson, though arguably and in a way any rule or any callback rule is
+// a kind of parser.
+//
+// = Errors =
+// Parse() should return nil when the current parser failed to recognize
+// anything,
+//
+//	but it should return an AstError when current context IS the correct one
+//	handled by this parser but the context somehow is erroneous. For example,
+//	parsing "0o9" for an octal parser may return NewAstError(parser, "0o9" is
+//	invalid octal").
 type Parser interface {
 	Ast
 	GNode

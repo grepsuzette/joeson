@@ -1,15 +1,36 @@
 package joeson
 
-// Abstract syntax tree, the result of a Parse() operation by a grammar.
-// It can be almost anything you want. Presently it only requires a ContentString()
-// method. Remark: perhaps people would find it preferable to use `any` instead of Ast.
+// Ast is the result type of a Parse() operation by a grammar.
+// It can be nil if a parser failed,
+// otherwise it can almost anything. Presently it only requires a ContentString() method.
+// (perhaps people would find it preferable to use `any` instead of Ast)
 //
-// In particular, the byproduct of the joeson grammar are special Ast nodes
-// that also satisfies Parser and are in turn capable of
-// parsing things (see parser.go).
-//
+// See Parser, which is an interface for special Ast, capable of parsing
+// (they are the byproduct of the joeson grammar).
 type Ast interface {
-	ContentString() string // A text representation of this AST. Whatever you want.
+	ContentString() string // a text representation of this ast. whatever you want.
+}
+
+type ParseError struct {
+	ctx         *ParseContext
+	ErrorString string
+}
+
+func (pe ParseError) ContentString() string {
+	return "ERROR " + pe.ErrorString + " " + pe.ctx.String()
+}
+
+func NewParseError(ctx *ParseContext, s string) ParseError {
+	return ParseError{ctx, s}
+}
+
+func IsParseError(ast Ast) bool {
+	switch ast.(type) {
+	case ParseError:
+		return true
+	default:
+	}
+	return false
 }
 
 // prefix(x) + x.ContentString(x)

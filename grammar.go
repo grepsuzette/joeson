@@ -5,7 +5,6 @@ ported from https://github.com/jaekwon/JoeScript 's joeson.coffee
 package joeson
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -67,8 +66,9 @@ func GrammarFromLines(lines []Line, name string, options ...GrammarOptions) *Gra
 	return newgm
 }
 
-// Main grammar parse function
-func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) (Ast, error) {
+// If you pre-tokenize, use Parse() instead, where ParseContext is prepared
+// from your next token. This doesn't panic, but note Ast can be AstError too.
+func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) Ast {
 	if len(attrs) > 0 {
 		return gm.ParseCode(NewCodeStream(sCode), attrs[0])
 	} else {
@@ -76,45 +76,74 @@ func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) (Ast, error)
 	}
 }
 
-func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) (Ast, error) {
-	return gm.parseOrFail(newParseContext(code, gm.NumRules, attrs, gm.TraceOptions))
+func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) Ast {
+	return gm.Parse(newParseContext(code, gm.NumRules, attrs, gm.TraceOptions))
 }
-
-// -- after this are the lower level stuffs --
-
-func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTraceOptions()) }
-
-func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
-	name := "__empty__"
-	gm := &Grammar{NewGNode(), nil, 0, map[int]Parser{}, opts, false}
-	gm.GNodeImpl.name = name
-	gm.GNodeImpl.node = gm
-	return gm
-}
-
-// Destroy the grammar. Only tests should use this.
-func (gm *Grammar) Bomb() {
-	gm.rank = newEmptyRank("bombd")
-	gm.GNodeImpl = NewGNode()
-	gm.NumRules = 0
-	gm.id2Rule = nil
-	gm.wasInitialized = false
-}
-
-func (gm *Grammar) GetGNode() *GNodeImpl { return gm.GNodeImpl }
 
 // Parse() allows grammar to conform to Parser interface.
-// But normally should call ParseString() or ParseCode(),
+// But normally should call ParseString(), ParseCode(), or ParseContext()
 // to be able to get errors without a panic.
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
-	if ast, error := gm.parseOrFail(ctx); error == nil {
-		return ast
-	} else {
-		panic(error)
+	var oldTrace bool
+	if ctx.Debug {
+		// temporarily enable stack tracing
+		oldTrace = gm.TraceOptions.Stack
+		gm.TraceOptions.Stack = true
 	}
+	if gm.rank == nil {
+		panic("Grammar.rank is nil")
+	}
+	result := gm.rank.Parse(ctx)
+	// undo temporary stack tracing
+	if ctx.Debug {
+		gm.TraceOptions.Stack = oldTrace
+	}
+	// if parse is incomplete, compute error message
+	if ctx.Code.Pos != ctx.Code.Length() {
+		// find the maximum parsed entity
+		maxAttempt := ctx.Code.Pos
+		maxSuccess := ctx.Code.Pos
+		for pos := ctx.Code.Pos; pos < len(ctx.Frames); pos++ {
+			posFrames := ctx.Frames[pos]
+			for _, frame := range posFrames {
+				if frame != nil {
+					maxAttempt = pos
+					if frame.Result != nil {
+						maxSuccess = pos
+						break
+					}
+				}
+			}
+		}
+		sErr := fmt.Sprintf("Error parsing at char:%d=(line:%d,col:%d).", maxSuccess, ctx.Code.PosToLine(maxSuccess), ctx.Code.PosToCol(maxSuccess))
+		sErr += "\n" + ctx.Code.Print()
+		sErr += "\nDetails:\n"
+		sErr += green("OK") + "/"
+		sErr += yellow("Parsing") + "/"
+		sErr += red("Suspect") + "/"
+		sErr += white("Unknown") + "\n\n"
+		sErr += green(ctx.Code.Peek(NewPeek().BeforeLines(2)))
+		sErr += yellow(ctx.Code.Peek(NewPeek().AfterChars(maxSuccess - ctx.Code.Pos)))
+		ctx.Code.Pos = maxSuccess
+		sErr += red(ctx.Code.Peek(NewPeek().AfterChars(maxAttempt-ctx.Code.Pos))) + "/"
+		ctx.Code.Pos = maxAttempt
+		sErr += white(ctx.Code.Peek(NewPeek().AfterLines(2))) + "\n"
+		// return nil, errors.New(sErr)
+
+		// ParseError or
+		// print + return nil
+		// or panic
+		// or os.Exit?
+		// panic for now
+		// panic(errors.New(sErr))
+		panic(sErr)
+	}
+	return result
 }
 
+/*
 func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error) {
+	// func (gm *Grammar) Parse(ctx *ParseContext) (Ast, error) {
 	var oldTrace bool
 	if ctx.Debug {
 		// temporarily enable stack tracing
@@ -165,6 +194,30 @@ func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error) {
 	// joeson.coffee has a opts.returnContext but won't implement it
 	return result, nil
 }
+*/
+
+// -- after this are the lower level stuffs --
+
+func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTraceOptions()) }
+
+func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
+	name := "__empty__"
+	gm := &Grammar{NewGNode(), nil, 0, map[int]Parser{}, opts, false}
+	gm.GNodeImpl.name = name
+	gm.GNodeImpl.node = gm
+	return gm
+}
+
+// Destroy the grammar. Only tests should use this.
+func (gm *Grammar) Bomb() {
+	gm.rank = newEmptyRank("bombd")
+	gm.GNodeImpl = NewGNode()
+	gm.NumRules = 0
+	gm.id2Rule = nil
+	gm.wasInitialized = false
+}
+
+func (gm *Grammar) GetGNode() *GNodeImpl { return gm.GNodeImpl }
 
 func (gm *Grammar) Prepare()                {}
 func (gm *Grammar) HandlesChildLabel() bool { return false }

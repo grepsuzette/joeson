@@ -3,9 +3,10 @@ package joeson
 import (
 	"errors"
 	"fmt"
-	"github.com/grepsuzette/joeson/helpers"
 	"strconv"
 	"strings"
+
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 type stash struct {
@@ -14,7 +15,7 @@ type stash struct {
 }
 
 // One rule is parsed by a different ParseContext, with an increasing Counter.
-// Suppose a rule is defined like so: `i(named("LABEL", "'&' | '@' | WORD"))``,
+// Suppose a rule is defined like so: `i(named("LABEL", "'&' | '@' | WORD"))“,
 // its Code will contain "'&' | '@' | WORD" and start at position 0.
 type ParseContext struct {
 	TraceOptions     // grammar.TraceOptions at the moment this context is created
@@ -55,19 +56,24 @@ func (ctx *ParseContext) log(message string, opts TraceOptions) {
 	if !ctx.SkipLog {
 		line := ctx.Code.Line()
 		if opts.FilterLine == -1 || line == opts.FilterLine {
-			codeSgmnt := white(strconv.Itoa(line) + "," + strconv.Itoa(ctx.Code.Col()))
-			p := helpers.Escape(ctx.Code.Peek(NewPeek().BeforeChars(5)))
-			codeSgmnt += "\t" + boldBlack(helpers.PadRight(helpers.SliceString(p, len(p)-5, len(p)), 5))
-			p = helpers.Escape(ctx.Code.Peek(NewPeek().AfterChars(20)))
-			codeSgmnt += green(helpers.PadLeft(helpers.SliceString(p, 0, 20), 20))
-			if ctx.Code.Pos+20 < len(ctx.Code.text) {
-				codeSgmnt += boldBlack(">")
-			} else {
-				codeSgmnt += boldBlack("]")
-			}
-			fmt.Printf("%s %s%s\n", codeSgmnt, cyan(strings.Join(make([]string, ctx.stackLength), "| ")), message)
+			fmt.Printf("%s %s\n", ctx.String(), message)
 		}
 	}
+}
+
+func (ctx *ParseContext) String() string {
+	line := ctx.Code.Line()
+	codeSgmnt := white(strconv.Itoa(line) + "," + strconv.Itoa(ctx.Code.Col()))
+	p := helpers.Escape(ctx.Code.Peek(NewPeek().BeforeChars(5)))
+	codeSgmnt += "\t" + boldBlack(helpers.PadRight(helpers.SliceString(p, len(p)-5, len(p)), 5))
+	p = helpers.Escape(ctx.Code.Peek(NewPeek().AfterChars(20)))
+	codeSgmnt += green(helpers.PadLeft(helpers.SliceString(p, 0, 20), 20))
+	if ctx.Code.Pos+20 < len(ctx.Code.text) {
+		codeSgmnt += boldBlack(">")
+	} else {
+		codeSgmnt += boldBlack("]")
+	}
+	return codeSgmnt + " " + cyan(strings.Join(make([]string, ctx.stackLength), "| "))
 }
 
 func (ctx *ParseContext) loopStackPush(name string) { ctx.loopStack = append(ctx.loopStack, name) }

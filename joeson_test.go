@@ -36,11 +36,12 @@ func TestBootstrap(t *testing.T) {
 		GrammarOptions{LazyGrammar: helpers.NewLazyFromValue[*Grammar](gmIntention)},
 	)
 	gmDebuglabel.PrintRules()
-	if x, err := gmDebuglabel.ParseString("Toy"); err != nil {
-		t.Error(err)
+	ast := gmDebuglabel.ParseString("Toy")
+	if IsParseError(ast) {
+		t.Error(ast.(ParseError).ContentString())
 	} else {
-		var nm NativeMap = x.(NativeMap)
-		fmt.Println(x.ContentString())
+		var nm NativeMap = ast.(NativeMap)
+		fmt.Println(ast.ContentString())
 		if s, exists := nm.GetStringExists("l"); exists {
 			if s != "Toy" {
 				t.Errorf("expected NativeMap with 'l' label containing 'Toy', got %s\n", s)
@@ -77,16 +78,17 @@ func TestManyTimes(t *testing.T) {
 			fmt.Printf("%s%s\n", helpers.Indent(indent), String(v.Parser))
 		case sLine:
 			// parse the rules of the intention grammar, one line at a time
-			if it, err := parsedGrammar.ParseString(v.Str, ParseOptions{Debug: false}); err != nil {
-				panic(err)
+			ast := parsedGrammar.ParseString(v.Str, ParseOptions{Debug: false})
+			if IsParseError(ast) {
+				panic(ast.ContentString())
 			} else {
 				sName := ""
 				if name != "" {
 					sName = red(helpers.PadLeft(name+":", 10-indent*2))
 				}
 				sResult := red("null")
-				if it != nil {
-					sResult = yellow(String(it))
+				if ast != nil {
+					sResult = yellow(String(ast))
 				}
 				fmt.Printf("%s%s%s %s\n", helpers.Indent(indent), sName, sResult, white(""))
 			}
@@ -111,9 +113,12 @@ func TestDebugLabel(t *testing.T) {
 		},
 		"gmDebugLabel",
 	)
-	if x, error := debuglabel.ParseString("Toy"); error == nil {
-		if nm, isNativeMap := x.(NativeMap); !isNativeMap {
-			t.Errorf("expected NativeMap, got %T. ContentString: %s\n", x, x.ContentString())
+	ast := debuglabel.ParseString("Toy")
+	if IsParseError(ast) {
+		t.Error(ast.ContentString())
+	} else {
+		if nm, isNativeMap := ast.(NativeMap); !isNativeMap {
+			t.Errorf("expected NativeMap, got %T. ContentString: %s\n", ast, ast.ContentString())
 		} else {
 			// in two operations...
 			if label, exists := nm.GetExists("l"); !exists {
@@ -126,8 +131,6 @@ func TestDebugLabel(t *testing.T) {
 				t.Fail()
 			}
 		}
-	} else {
-		t.Error(error)
 	}
 }
 
@@ -140,10 +143,11 @@ func TestSquareroot(t *testing.T) {
 		},
 		"gmSqr",
 	)
-	if x, error := gm.ParseString("squareroot(-1)"); error != nil {
-		t.Error(error)
+	ast := gm.ParseString("squareroot(-1)")
+	if IsParseError(ast) {
+		t.Error(ast.ContentString())
 	} else {
-		nmap := x.(NativeMap)
+		nmap := ast.(NativeMap)
 		if w, exists := nmap.GetStringExists("w"); !exists || w != "squareroot" {
 			t.Error("was expecting w == squareroot")
 		} else if n, exists := nmap.GetIntExists("n"); !exists || n != -1 {
