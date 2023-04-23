@@ -33,7 +33,7 @@ func (ps *peekOper) AfterLines(n int) *peekOper  { ps.afterLines = n; return ps 
 // Pos acts as a cursor
 type CodeStream struct {
 	text       string
-	Pos        int // "Hello, 世界, X" <- pos of o is 4, pos of 界 is 10
+	Pos        int // "Hello, 世界, X" <- Pos of o is 4, Pos of 界 is 10
 	lineStarts []int
 }
 
@@ -105,50 +105,6 @@ func (code *CodeStream) Peek(oper *peekOper) string {
 		end = code.Pos + oper.afterChars
 	}
 	return helpers.SliceString(code.text, start, end)
-}
-
-// Get next byte(s). Default value for len is 1,
-// this is why its put as a pointer here (nil will give a value of 1)
-func (code *CodeStream) Next(pLen *int) string {
-	n := 1
-	if pLen != nil {
-		n = *pLen
-	}
-	if n <= 0 {
-		panic("<CodeStream>.next wants len > 0")
-	}
-	oldpos := code.Pos
-	code.Pos += n
-	return helpers.SliceString(code.text, oldpos, code.Pos)
-}
-
-// Get next hex byte(s) as number.
-// Default value for len is 1,
-// this is why its put as a pointer here (nil will give a value of 1)
-// If you use more than 8, note it will outflow the capacity of uint64.
-func (code *CodeStream) Hex(pLen *int) uint64 {
-	// Do we want int, or int64 etc?
-	// We read 4 bits at a time, hence the <<4
-	// Ultimately we can handle 64bits.
-	// Let's return uint64
-	var num uint64 = 0
-	nextBytes := code.Next(pLen)
-	len1 := len(nextBytes)
-	for i := 0; i < len1; i++ {
-		theByte := nextBytes[i]
-		// "The bitSize argument [3rd one of ParseUint] specifies the integer
-		// type that the result must fit into. Bit sizes 0, 8, 16, 32, and 64
-		// correspond to int, int8, int16, int32, and int64. If bitSize is
-		// below 0 or above 64, an error is returned."
-		//  -> As we read 4bit at a time, doesn't really matter
-		//     and we can use uint8 here -----------------v
-		if theUint, err := strconv.ParseUint(string(theByte), 16, 8); err != nil {
-			panic("Invalid hex-character pattern in string")
-		} else {
-			num = (num << 4) | theUint
-		}
-	}
-	return num
 }
 
 // Match string `s` against current code.pos.
