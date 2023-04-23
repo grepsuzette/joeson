@@ -42,7 +42,6 @@ type GNodeImpl struct {
 	labels_   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate GNode behavior in the original coffeescript impl.
 	captures_ *helpers.Lazy[[]Ast]    // the lazy captures getter, ditto.
 	rules     map[string]Parser       // Treelike. Grammar collects all rules in its post walk
-	rulesK    []string                // because golang maps are unsorted, this helps keeping the insertion order TODO check if really necessary
 	id        int                     // rule number in a grammar. They start on 0. See also map grammar.id2Rule.
 	rule      Parser                  // what's the rule for the node with this gnode. When Rule == node, it means node is a rule of a grammar (in which case node.IsRule() is true)
 	grammar   *Grammar                // the root
@@ -76,7 +75,6 @@ func NewGNode() *GNodeImpl {
 
 func (gn *GNodeImpl) Include(name string, rule Parser) {
 	rule.SetNameWhenEmpty(name)
-	gn.rulesK = append(gn.rulesK, name)
 	gn.rules[name] = rule
 }
 

@@ -55,11 +55,9 @@ func ForEachChild_InRules(x Parser, f func(Parser) Parser) map[string]Parser {
 	if gn.rules == nil {
 		return nil
 	}
-	for _, k := range gn.rulesK {
-		if v, exists := gn.rules[k]; exists {
-			if r := f(v); r != nil {
-				hnew[k] = r
-			}
+	for k, v := range gn.rules {
+		if r := f(v); r != nil {
+			hnew[k] = r
 		}
 	}
 	return hnew
