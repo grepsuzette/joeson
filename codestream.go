@@ -140,6 +140,5 @@ func (code *CodeStream) Print() string {
 	s += cyan(helpers.SliceString(code.text, helpers.Max(0, code.Pos-20), code.Pos))
 	s += boldCyan("|")
 	s += boldWhite(helpers.SliceString(code.text, code.Pos, code.Pos+40)) + "'"
-	// s += "' (note: caret | and colors extraneously inserted)"
 	return s
 }

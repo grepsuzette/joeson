@@ -46,11 +46,6 @@ line 4`)
 	eq_str(t, cs.Peek(NewPeek().AfterLines(1)), "rest of line 2\nline 3")
 }
 
-// func TestDumb(t *testing.T) {
-// cs := NewCodeStream("FOO")
-// eq_str(t, cs.Peek(NewPeek().AfterChars(20)), "")
-// }
-
 func TestRegexp(t *testing.T) {
 	cs := NewCodeStream("A EXPRESSION|B")
 	cs.Pos = 2
