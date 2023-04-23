@@ -14,9 +14,6 @@ type stash struct {
 	count  int
 }
 
-// One rule is parsed by a different ParseContext, with an increasing Counter.
-// Suppose a rule is defined like so: `i(named("LABEL", "'&' | '@' | WORD"))“,
-// its Code will contain "'&' | '@' | WORD" and start at position 0.
 type ParseContext struct {
 	TraceOptions     // grammar.TraceOptions at the moment this context is created
 	ParseOptions     // Defined arbitrarily within a rule, e.g. in I("INT", "/[0-9]+/", someCb, ParseOptions{SkipLog: false}), and then passed to the ParseContext.
@@ -30,7 +27,6 @@ type ParseContext struct {
 	loopStack   []string
 }
 
-// To create a ParseContext.
 // numRules: grammar numRules at the moment context is created. If no grammar (esp. when
 // joeson rules are parsed the very first time) pass 0.
 func newParseContext(code *CodeStream, numRules int, attrs ParseOptions, opts TraceOptions) *ParseContext {
