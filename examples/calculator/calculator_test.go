@@ -94,13 +94,16 @@ func Test_failing(t *testing.T) {
 		"-(7)":      "Error parsing at char:0",
 	}
 	for s, sExpectedError := range h {
-		res, error := gm.ParseString(s)
-		if error == nil {
+		res := gm.ParseString(s)
+		if !joeson.IsParseError(res) {
 			t.Error("expected error but got none, for: " + s + ". Res: " + res.ContentString())
-		} else if strings.Index(error.Error(), sExpectedError) == 0 {
-			// expected
 		} else {
-			t.Error("expected error " + sExpectedError + " for " + s + " but got " + error.Error() + " instead")
+			sError := res.(joeson.ParseError).ErrorString
+			if strings.Index(sError, sExpectedError) == 0 {
+				// np, expected case
+			} else {
+				t.Error("expected error " + sExpectedError + " for " + s + " but got " + sError + " instead")
+			}
 		}
 	}
 }
@@ -123,13 +126,13 @@ func Test_calc(t *testing.T) {
 		"4*((2+1) * 3 )":                   36,
 	}
 	for s, nExpectedResult := range h {
-		res, error := gm.ParseString(s)
-		if error == nil {
+		res := gm.ParseString(s)
+		if joeson.IsParseError(res) {
+			t.Error(res.ContentString())
+		} else {
 			if extractResult(t, res) != nExpectedResult {
 				t.Fail()
 			}
-		} else {
-			t.Error(error)
 		}
 	}
 }
@@ -150,7 +153,11 @@ func boldYellow(s string) string { return esc + "[1;33m" + s + reset }
 
 func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
 	t.Helper()
-	if res, error := joeson.GrammarFromLines(linesCalc, "calc").ParseString(sExpression); error == nil {
+	// if res, error := joeson.GrammarFromLines(linesCalc, "calc").ParseString(sExpression); error == nil {
+	res := joeson.GrammarFromLines(linesCalc, "calc").ParseString(sExpression)
+	if joeson.IsParseError(res) {
+		t.Error(res.ContentString())
+	} else {
 		fmt.Println(
 			cyan(sExpression),
 			" --> ",
@@ -161,7 +168,5 @@ func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
 		if extractResult(t, res) != nExpectedResult {
 			t.Fail()
 		}
-	} else {
-		t.Error(error)
 	}
 }

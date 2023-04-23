@@ -127,15 +127,7 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 		sErr += red(ctx.Code.Peek(NewPeek().AfterChars(maxAttempt-ctx.Code.Pos))) + "/"
 		ctx.Code.Pos = maxAttempt
 		sErr += white(ctx.Code.Peek(NewPeek().AfterLines(2))) + "\n"
-		// return nil, errors.New(sErr)
-
-		// ParseError or
-		// print + return nil
-		// or panic
-		// or os.Exit?
-		// panic for now
-		// panic(errors.New(sErr))
-		panic(sErr)
+		return NewParseError(ctx, sErr)
 	}
 	return result
 }
