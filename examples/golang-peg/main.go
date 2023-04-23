@@ -22,8 +22,9 @@ func rules(a ...j.Line) []j.Line { return a }
 func main() {
 	gm_chars := j.GrammarFromLines(rules_chars, "go-characters")
 	for _, s := range []string{"345678", "aaegeagr", "_"} {
-		if _, e := gm_chars.ParseString(s); e != nil {
-			panic("parse error on " + s)
+		ast := gm_chars.ParseString(s)
+		if j.IsParseError(ast) {
+			panic(ast.ContentString())
 		}
 	}
 	gm_tokens := j.GrammarFromLines(rules_tokens, "go-tokens")
@@ -37,11 +38,12 @@ func main() {
 // If `pair.b` starts with "ERROR ", we instead expect an error.
 func test(t *testing.T, gm *j.Grammar, pair Duo) {
 	t.Helper()
-	if ast, e := gm.ParseString(pair.a); e != nil {
+	ast := gm.ParseString(pair.a)
+	if j.IsParseError(ast) {
 		if strings.HasPrefix(pair.b, "ERROR") {
 			fmt.Printf("[32m%s[0m gave an error as expected [32m✓[0m\n", pair.a)
 		} else {
-			t.Fatalf("Error parsing %s. Expected ast.ContentString() to contain '%s', got '%s'", pair.a, pair.b, e.Error())
+			t.Fatalf("Error parsing %s. Expected ast.ContentString() to contain '%s', got '%s'", pair.a, pair.b, ast.ContentString())
 		}
 	} else {
 		if strings.Contains(ast.ContentString(), pair.b) {
