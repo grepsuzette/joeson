@@ -8,12 +8,6 @@ import (
 	"strings"
 )
 
-type Cursor struct {
-	line int
-	col  int
-	pos  int
-}
-
 type Origin struct {
 	code  string
 	start int
@@ -55,10 +49,6 @@ func NewCodeStream(text string) *CodeStream {
 
 func (code *CodeStream) PosToLine(pos int) int { return helpers.BisectRight(code.lineStarts, pos) - 1 }
 func (code *CodeStream) PosToCol(pos int) int  { return pos - code.lineStarts[code.PosToLine(pos)] }
-func (code *CodeStream) PosToCursor(pos int) Cursor {
-	line := helpers.BisectRight(code.lineStarts, pos) - 1
-	return Cursor{line: line, pos: pos}
-}
 
 func (code *CodeStream) Line() int   { return code.PosToLine(code.Pos) }
 func (code *CodeStream) Col() int    { return code.PosToCol(code.Pos) }
