@@ -1,37 +1,27 @@
 package joeson
 
 // Ast is the result type of a Parse() operation by a grammar.
-// It can be nil if a parser failed,
-// otherwise it can almost anything. Presently it only requires a ContentString() method.
-// (perhaps people would find it preferable to use `any` instead of Ast)
 //
-// See Parser, which is an interface for special Ast, capable of parsing
-// (they are the byproduct of the joeson grammar).
+// The return can be:
+// - `nil` if a parser failed (in a way where backtracking will happen),
+// - `ParseError` if a parsing must definitely fail (ParseError is an Ast).
+// - Anything you want satisfying Ast otherwise. For that, you will 
+//   need a rule with a callback.
+//
+//   For joeson grammar without callbacks as you can see in examples/calculator, the 
+//   parser_*.go generate Ast nodes that are of types NativeArray, NativeInt,
+//   NativeMap, NativeString.
+//
+//   To generate more specific Ast types, you may take a look at examples/lisp.
+//
+// Note: Parsers such as sequence, choice, not, pattern are also Ast,
+// they are produced when parsing a valid joeson grammar; and they in turn help
+// parsing that grammar.
+//
 type Ast interface {
-	ContentString() string // a text representation of this ast. whatever you want.
+	ContentString() string // text representation of this ast. 
 }
 
-type ParseError struct {
-	ctx         *ParseContext
-	ErrorString string
-}
-
-func (pe ParseError) ContentString() string {
-	return "ERROR " + pe.ErrorString + " " + pe.ctx.String()
-}
-
-func NewParseError(ctx *ParseContext, s string) ParseError {
-	return ParseError{ctx, s}
-}
-
-func IsParseError(ast Ast) bool {
-	switch ast.(type) {
-	case ParseError:
-		return true
-	default:
-	}
-	return false
-}
 
 // prefix(x) + x.ContentString(x)
 func String(ast Ast) string {

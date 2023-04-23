@@ -7,35 +7,41 @@ import (
 
 // refer to the original joeson.coffee
 
-type frame struct {
-	Result    Ast
-	endPos    helpers.NilableInt // can be left undefined
-	loopStage helpers.NilableInt // can be left undefined
-	wipemask  []bool             // len = ctx.grammar.numRules
-	pos       int
-	id        int
-	Param     Ast // used in ref.go or joeson.coffee:536
-}
+type (
+	stash struct {
+		frames []*frame
+		count  int
+	}
+    frame struct {
+		result    Ast
+		endpos    helpers.NilableInt
+		loopstage helpers.NilableInt
+		wipemask  []bool // len = ctx.grammar.numRules
+		pos       int
+		id        int
+		param     Ast // used in ref.go or joeson.coffee:536
+	}
+)
 
 func (f frame) toString() string {
 	return "N/A frame.toString"
 }
 
-func (fr *frame) cacheSet(result Ast, endPos int) {
-	fr.Result = result
-	if endPos < 0 {
-		fr.endPos.Unset()
+func (fr *frame) cacheSet(result Ast, endpos int) {
+	fr.result = result
+	if endpos < 0 {
+		fr.endpos.Unset()
 	} else {
-		fr.endPos.Set(endPos)
+		fr.endpos.Set(endpos)
 	}
 }
 func newFrame(pos int, id int) *frame {
 	return &frame{
-		Result:   nil,
+		result:   nil,
 		pos:      pos,
 		id:       id,
 		wipemask: nil,
-		Param:    nil,
+		param:    nil,
 	}
 }
 
@@ -59,13 +65,13 @@ var TimeEnd func(name string) = nil
 //   @$prepareResult = (fn) -> ($) -> Ast
 //   @$wrap = (fn) -> Ast
 //
-// Here they are called stack, loopify, prepareResult and Wrap:
+// Here they are called stack, loopify, prepareResult and wrap:
 //
 // - func stack(fparse parseFun, x Ast) parseFun
 // - func loopify(fparse parseFun, x Ast) parseFun
 // - func prepareResult(fparse2 parseFun2, caller Ast) parseFun
-// - func Wrap(fparse2 parseFun2, node Ast) parseFun
-//     notice this line in Wrap:  wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
+// - func wrap(fparse2 parseFun2, node Ast) parseFun
+//     notice this line in wrap:  wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 
 func stack(fparse parseFun, x Parser) parseFun {
 	return func(ctx *ParseContext) Ast {
@@ -88,7 +94,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 		if opts.Stack {
 			ctx.log(blue("*")+" "+String(x)+" "+boldBlack(strconv.Itoa(ctx.Counter)), opts)
 		}
-		if x.GetGNode().SkipCache {
+		if x.getgnode().SkipCache {
 			result := fparse(ctx)
 			if opts.Stack {
 				ctx.log(cyan("`->:")+" "+helpers.Escape(result.ContentString())+" "+boldBlack(helpers.TypeOfToString(result)), opts)
@@ -97,33 +103,33 @@ func loopify(fparse parseFun, x Parser) parseFun {
 		}
 		frame := ctx.getFrame(x)
 		startPos := ctx.Code.Pos
-		if !frame.loopStage.IsSet {
-			frame.loopStage.Set(0)
+		if !frame.loopstage.IsSet {
+			frame.loopstage.Set(0)
 		}
-		switch frame.loopStage.Int {
+		switch frame.loopstage.Int {
 		case 0: // non-recursive (so far)
 			// The only time a cache hit will simply return is when loopStage is 0
-			if frame.endPos.IsSet {
+			if frame.endpos.IsSet {
 				if opts.Stack {
-					if frame.Result != nil {
+					if frame.result != nil {
 						s := ""
-						s += helpers.Escape(frame.Result.ContentString())
+						s += helpers.Escape(frame.result.ContentString())
 						s += " "
-						s += cyan(helpers.TypeOfToString(frame.Result))
+						s += cyan(helpers.TypeOfToString(frame.result))
 						ctx.log(cyan("`-hit:")+" "+s, opts)
 					} else {
 						ctx.log(cyan("`-hit:")+" nil", opts)
 					}
 				}
-				ctx.Code.Pos = frame.endPos.Int
-				return frame.Result
+				ctx.Code.Pos = frame.endpos.Int
+				return frame.result
 			}
-			frame.loopStage.Set(1)
+			frame.loopstage.Set(1)
 			frame.cacheSet(nil, -1)
 			result := fparse(ctx)
-			switch frame.loopStage.Int {
+			switch frame.loopstage.Int {
 			case 1: // non-recursive (i.e. done)
-				frame.loopStage.Set(0)
+				frame.loopstage.Set(0)
 				frame.cacheSet(result, ctx.Code.Pos)
 				if opts.Stack {
 					s := cyan("`-set:") + " "
@@ -142,11 +148,11 @@ func loopify(fparse parseFun, x Parser) parseFun {
 					if opts.Stack {
 						ctx.log(yellow("`--- loop nil --- "), opts)
 					}
-					frame.loopStage.Set(0)
+					frame.loopstage.Set(0)
 					// cacheSet(frame, nil) // unneeded (already nil)
 					return result
 				} else {
-					frame.loopStage.Set(3)
+					frame.loopstage.Set(3)
 					if opts.Loop && ((opts.FilterLine < 0) || ctx.Code.Line() == opts.FilterLine) {
 						ctx.loopStackPush(x.Name())
 						// if false {
@@ -214,22 +220,22 @@ func loopify(fparse parseFun, x Parser) parseFun {
 						ctx.log(yellow("`--- loop done! --- ")+"best result: "+helpers.Escape(bestResult.ContentString()), opts)
 					}
 					// Step 4: return best result, which will get cached
-					frame.loopStage.Set(0)
+					frame.loopstage.Set(0)
 					return bestResult
 				}
 			default:
-				panic("Unexpected stage " + strconv.Itoa(frame.loopStage.Int))
+				panic("Unexpected stage " + strconv.Itoa(frame.loopstage.Int))
 			}
 		case 1, 2, 3:
-			if frame.loopStage.Int == 1 {
-				frame.loopStage.Set(2) // recursion detected
+			if frame.loopstage.Int == 1 {
+				frame.loopstage.Set(2) // recursion detected
 			}
 			if TimeStart != nil {
 				TimeStart("wipemask")
 			}
 			// Step 1: Collect wipemask so we can wipe the frames later.
 			if opts.Stack {
-				ctx.log(yellow("`-base: ")+helpers.Escape(frame.Result.ContentString())+" "+boldBlack(helpers.TypeOfToString(frame.Result)), opts)
+				ctx.log(yellow("`-base: ")+helpers.Escape(frame.result.ContentString())+" "+boldBlack(helpers.TypeOfToString(frame.result)), opts)
 			}
 			if frame.wipemask == nil {
 				frame.wipemask = make([]bool, ctx.numRules)
@@ -238,7 +244,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 					if i_frame.pos > startPos {
 						panic("assert failed: i_frame.pos > startPos")
 					}
-					if i_frame.pos < startPos || i_frame.id == x.GetGNode().id {
+					if i_frame.pos < startPos || i_frame.id == x.getgnode().id {
 						break
 					}
 					frame.wipemask[i_frame.id] = true
@@ -247,13 +253,13 @@ func loopify(fparse parseFun, x Parser) parseFun {
 					TimeEnd("wipemask")
 				}
 				// Step 2: Return whatever was cacheSet.
-				if frame.endPos.IsSet {
-					ctx.Code.Pos = frame.endPos.Int
+				if frame.endpos.IsSet {
+					ctx.Code.Pos = frame.endpos.Int
 				}
-				return frame.Result
+				return frame.result
 			}
 		default:
-			panic("Unexpected stage " + strconv.Itoa(frame.loopStage.Int) + " (B)")
+			panic("Unexpected stage " + strconv.Itoa(frame.loopstage.Int) + " (B)")
 		}
 		return nil
 	}
@@ -270,7 +276,7 @@ func prepareResult(fparse2 parseFun2, caller Parser) parseFun {
 		result := fparse2(ctx, caller)
 		if result != nil {
 			// handle labels for standalone nodes
-			gn := caller.GetGNode()
+			gn := caller.getgnode()
 			if gn.label != "" && gn.parent != nil && !gn.parent.HandlesChildLabel() {
 				result = NewNativeMap(map[string]Ast{gn.label: result})
 			}
@@ -284,7 +290,7 @@ func prepareResult(fparse2 parseFun2, caller Parser) parseFun {
 						start: start,
 						end:   end,
 					}
-					x.GetGNode().origin = origin
+					x.getgnode().origin = origin
 				default:
 				}
 				result = gn.CbBuilder(result, ctx, caller)
@@ -294,10 +300,10 @@ func prepareResult(fparse2 parseFun2, caller Parser) parseFun {
 	}
 }
 
-func Wrap(fparse2 parseFun2, node Parser) parseFun {
+func wrap(fparse2 parseFun2, node Parser) parseFun {
 	wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 	wrapped2 := prepareResult(fparse2, node)
-	gn := node.GetGNode()
+	gn := node.getgnode()
 	return func(ctx *ParseContext) Ast {
 		if IsRule(node) {
 			return wrapped1(ctx)

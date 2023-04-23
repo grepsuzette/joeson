@@ -42,7 +42,7 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 			ranke.Append(choice)
 		} else if il, ok := line.(ILine); ok {
 			name, rule := il.toRule(ranke, ranke, options.TraceOptions, lazyGm)
-			ranke.GetGNode().Include(name, rule)
+			ranke.getgnode().Include(name, rule)
 		} else {
 			panic("Unknown type line, expected 'o' or 'i' line, got '" + line.stringIndent(0) + "' (" + reflect.TypeOf(line).String() + ")")
 		}
@@ -53,7 +53,7 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 func newEmptyRank(name string) *rank {
 	x := &rank{newEmptyChoice()}
 	x.SetName(name)
-	x.GetGNode().node = x
+	x.getgnode().node = x
 	return x
 }
 
@@ -64,7 +64,7 @@ func (ranke *rank) Length() int {
 }
 
 func (ranke *rank) Append(node Parser)      { ranke.choice.Append(node) }
-func (ranke *rank) GetGNode() *GNodeImpl    { return ranke.choice.GetGNode() }
+func (ranke *rank) getgnode() *gnodeimpl    { return ranke.choice.getgnode() }
 func (ranke *rank) Prepare()                { ranke.choice.Prepare() }
 func (ranke *rank) HandlesChildLabel() bool { return false }
 
@@ -89,7 +89,7 @@ func (ranke *rank) ForEachChild(f func(Parser) Parser) Parser {
 }
 
 func (ranke *rank) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Parser) Ast {
+	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		for _, choice := range ranke.choice.choices {
 			pos := ctx.Code.Pos
 			// Rank inherits from Choice in the original coffee implementation.

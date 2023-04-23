@@ -166,7 +166,7 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 	default:
 		panic("unrecog type " + reflect.TypeOf(line).String())
 	}
-	rule := answer.GetGNode()
+	rule := answer.getgnode()
 	if rule.rule != nil && !IsRule(answer) {
 		panic("assert")
 	}

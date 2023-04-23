@@ -7,7 +7,7 @@ import (
 )
 
 type ref struct {
-	*GNodeImpl
+	*gnodeimpl
 	ref   string // ref because joeson.coffee used @ref, because @name was reserved
 	param Parser
 }
@@ -36,18 +36,18 @@ func newRef(it Ast) *ref {
 	default:
 		panic(fmt.Sprintf("unexpected type for NewRef: %T %v\n", it, it))
 	}
-	ref := &ref{GNodeImpl: NewGNode(), ref: name, param: param}
-	ref.GNodeImpl.node = ref
+	ref := &ref{gnodeimpl: NewGNode(), ref: name, param: param}
+	ref.gnodeimpl.node = ref
 	if name[0:1] == "_" {
 		ref.SetCapture(false)
 	}
-	ref.GNodeImpl.labels_ = helpers.NewLazyFromFunc(func() []string {
+	ref.gnodeimpl.labels_ = helpers.NewLazyFromFunc(func() []string {
 		if ref.Label() == "@" {
 			referenced := ref.grammar.GetRule(ref.ref)
 			if referenced == nil {
 				panic("ref " + ref.ref + " was not found in grammar.Rules")
 			} else {
-				return referenced.GetGNode().labels_.Get()
+				return referenced.getgnode().labels_.Get()
 			}
 		} else if ref.Label() != "" {
 			return []string{ref.Label()}
@@ -58,16 +58,16 @@ func newRef(it Ast) *ref {
 	return ref
 }
 
-func (x *ref) GetGNode() *GNodeImpl    { return x.GNodeImpl }
+func (x *ref) getgnode() *gnodeimpl    { return x.gnodeimpl }
 func (x *ref) HandlesChildLabel() bool { return false }
 func (x *ref) Prepare()                {}
 func (x *ref) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(ctx *ParseContext, _ Parser) Ast {
+	return wrap(func(ctx *ParseContext, _ Parser) Ast {
 		node := x.grammar.GetRule(x.ref)
 		if node == nil {
 			panic("Unknown reference " + x.ref + ". Grammar has " + strconv.Itoa(len(x.grammar.GetGNode().rules)) + " rules. ")
 		}
-		ctx.stackPeek(0).Param = x.param
+		ctx.stackPeek(0).param = x.param
 		return node.Parse(ctx)
 	}, x)(ctx)
 }

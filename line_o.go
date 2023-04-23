@@ -64,6 +64,6 @@ func (ol OLine) toRule(rank_ *rank, parentRule Parser, by oLineByIndexOrName, op
 		panic("assert")
 	}
 	rule := getRule(rank_, name, content, parentRule, ol.attrs, opts, lazyGrammar)
-	rule.GetGNode().parent = parentRule
+	rule.getgnode().parent = parentRule
 	return rule
 }

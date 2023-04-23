@@ -51,7 +51,7 @@ func ForEachChild_ArrayParser(a []Parser, f func(Parser) Parser) []Parser {
 // working with RulesK will guarantee they are processed in order
 func ForEachChild_InRules(x Parser, f func(Parser) Parser) map[string]Parser {
 	hnew := map[string]Parser{}
-	gn := x.GetGNode()
+	gn := x.getgnode()
 	if gn.rules == nil {
 		return nil
 	}

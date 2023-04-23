@@ -1,7 +1,7 @@
 package joeson
 
 type lookahead struct {
-	*GNodeImpl
+	*gnodeimpl
 	expr Parser
 }
 
@@ -14,14 +14,14 @@ func newLookahead(it Ast) *lookahead {
 }
 
 func (look *lookahead) Prepare()                {}
-func (look *lookahead) GetGNode() *GNodeImpl    { return look.GNodeImpl }
+func (look *lookahead) getgnode() *gnodeimpl    { return look.gnodeimpl }
 func (look *lookahead) HandlesChildLabel() bool { return false }
 func (look *lookahead) ContentString() string {
 	return blue("(?") + String(look.expr) + blue(")")
 }
 
 func (look *lookahead) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Parser) Ast {
+	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos
 		result := look.expr.Parse(ctx) // check whether it parses...
 		ctx.Code.Pos = pos             // ...but revert to prev pos if so

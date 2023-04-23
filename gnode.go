@@ -1,6 +1,5 @@
 package joeson
 
-import "github.com/grepsuzette/joeson/helpers"
 
 /*
    In addition to the attributes defined by subclasses,
@@ -10,8 +9,8 @@ import "github.com/grepsuzette/joeson/helpers"
    node.name = name of the rule, if this is @rule.
 */
 
-type GNode interface {
-	GetGNode() *GNodeImpl
+type gnode interface {
+	getgnode() *gnodeimpl
 	Name() string
 	Label() string
 	Capture() bool

@@ -2,8 +2,8 @@ package joeson
 
 import "github.com/grepsuzette/joeson/helpers"
 
-// GNodeImpl holds the data for a grammar node
-type GNodeImpl struct {
+// gnodeimpl holds the data for a grammar node
+type gnodeimpl struct {
 	ParseOptions
 	parent    Parser                  // A grammar must be a DAG, which implies 1 Parent at most (root.Parent being nil)
 	name      string                  // rule name if IsRule(), empty otherwise. E.g. "AddOp" in `i(named("AddOp", "'+' | '-'"))`
@@ -19,8 +19,8 @@ type GNodeImpl struct {
 	origin    Origin                  // records the start-end in the source of where this gnode originates from. Unused as of now.
 }
 
-func NewGNode() *GNodeImpl {
-	gn := &GNodeImpl{
+func NewGNode() *gnodeimpl {
+	gn := &gnodeimpl{
 		capture: true,
 		rules:   map[string]Parser{},
 	}
@@ -48,28 +48,28 @@ func NewGNode() *GNodeImpl {
 	return gn
 }
 
-func (gn *GNodeImpl) Include(name string, rule Parser) {
+func (gn *gnodeimpl) Include(name string, rule Parser) {
 	rule.SetNameWhenEmpty(name)
 	gn.rules[name] = rule
 }
 
-func (gn *GNodeImpl) GetGNode() *GNodeImpl { return gn }
-func (gn *GNodeImpl) Name() string         { return gn.name }
-func (gn *GNodeImpl) Label() string        { return gn.label }
-func (gn *GNodeImpl) Capture() bool        { return gn.capture }
-func (gn *GNodeImpl) SetName(name string)  { gn.name = name }
-func (gn *GNodeImpl) SetNameWhenEmpty(name string) {
+func (gn *gnodeimpl) GetGNode() *gnodeimpl { return gn }
+func (gn *gnodeimpl) Name() string         { return gn.name }
+func (gn *gnodeimpl) Label() string        { return gn.label }
+func (gn *gnodeimpl) Capture() bool        { return gn.capture }
+func (gn *gnodeimpl) SetName(name string)  { gn.name = name }
+func (gn *gnodeimpl) SetNameWhenEmpty(name string) {
 	if gn.name == "" {
 		gn.name = name
 	}
 }
-func (gn *GNodeImpl) SetLabel(label string) { gn.label = label }
-func (gn *GNodeImpl) SetCapture(b bool)     { gn.capture = b }
+func (gn *gnodeimpl) SetLabel(label string) { gn.label = label }
+func (gn *gnodeimpl) SetCapture(b bool)     { gn.capture = b }
 
-func (gn *GNodeImpl) Labels() []string                { return gn.labels_.Get() }
-func (gn *GNodeImpl) Captures() []Ast                 { return gn.captures_.Get() }
-func (gn *GNodeImpl) SetLabels(v []string)            { gn.labels_.Set(v) }
-func (gn *GNodeImpl) SetCaptures(v []Ast)             { gn.captures_.Set(v) }
-func (gn *GNodeImpl) SetLazyLabels(f func() []string) { gn.labels_ = helpers.NewLazyFromFunc(f) }
-func (gn *GNodeImpl) SetLazyCaptures(f func() []Ast)  { gn.captures_ = helpers.NewLazyFromFunc(f) }
+func (gn *gnodeimpl) Labels() []string                { return gn.labels_.Get() }
+func (gn *gnodeimpl) Captures() []Ast                 { return gn.captures_.Get() }
+func (gn *gnodeimpl) SetLabels(v []string)            { gn.labels_.Set(v) }
+func (gn *gnodeimpl) SetCaptures(v []Ast)             { gn.captures_.Set(v) }
+func (gn *gnodeimpl) SetLazyLabels(f func() []string) { gn.labels_ = helpers.NewLazyFromFunc(f) }
+func (gn *gnodeimpl) SetLazyCaptures(f func() []Ast)  { gn.captures_ = helpers.NewLazyFromFunc(f) }
 

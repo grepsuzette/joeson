@@ -16,7 +16,7 @@ import (
 // Then just use ParseString().
 // Like in the original implementation, Grammar "is" a GNode.
 type Grammar struct {
-	*GNodeImpl
+	*gnodeimpl
 	rank     Parser         // a *Rank or a Ref to a rank
 	NumRules int            // Each Ast can have rules, recursively. This however is the total count in the grammar
 	id2Rule  map[int]Parser // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
@@ -25,7 +25,7 @@ type Grammar struct {
 }
 
 func (gm *Grammar) GetRule(name string) Parser {
-	if x, exists := gm.GNodeImpl.rules[name]; exists {
+	if x, exists := gm.gnodeimpl.rules[name]; exists {
 		return x
 	} else {
 		return nil
@@ -102,12 +102,12 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 		// find the maximum parsed entity
 		maxAttempt := ctx.Code.Pos
 		maxSuccess := ctx.Code.Pos
-		for pos := ctx.Code.Pos; pos < len(ctx.Frames); pos++ {
-			posFrames := ctx.Frames[pos]
+		for pos := ctx.Code.Pos; pos < len(ctx.frames); pos++ {
+			posFrames := ctx.frames[pos]
 			for _, frame := range posFrames {
 				if frame != nil {
 					maxAttempt = pos
-					if frame.Result != nil {
+					if frame.result != nil {
 						maxSuccess = pos
 						break
 					}
@@ -194,21 +194,21 @@ func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTrace
 func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
 	name := "__empty__"
 	gm := &Grammar{NewGNode(), nil, 0, map[int]Parser{}, opts, false}
-	gm.GNodeImpl.name = name
-	gm.GNodeImpl.node = gm
+	gm.gnodeimpl.name = name
+	gm.gnodeimpl.node = gm
 	return gm
 }
 
 // Destroy the grammar. Only tests should use this.
 func (gm *Grammar) Bomb() {
 	gm.rank = newEmptyRank("bombd")
-	gm.GNodeImpl = NewGNode()
+	gm.gnodeimpl = NewGNode()
 	gm.NumRules = 0
 	gm.id2Rule = nil
 	gm.wasInitialized = false
 }
 
-func (gm *Grammar) GetGNode() *GNodeImpl { return gm.GNodeImpl }
+func (gm *Grammar) getgnode() *gnodeimpl { return gm.gnodeimpl }
 
 func (gm *Grammar) Prepare()                {}
 func (gm *Grammar) HandlesChildLabel() bool { return false }
@@ -259,7 +259,7 @@ func (gm *Grammar) postinit() {
 		node.ForEachChild(func(child Parser) Parser {
 			if choice, ok := child.(*choice); ok && choice.isMonoChoice() {
 				monochoice := choice.choices[0]
-				mono := monochoice.GetGNode()
+				mono := monochoice.getgnode()
 				// Merge label
 				if mono.label == "" {
 					mono.label = choice.Label()
@@ -281,7 +281,7 @@ func (gm *Grammar) postinit() {
 	// Connect all the nodes and collect dereferences into @rules
 	Walk(gm, nil, WalkPrepost{
 		Pre: func(node Parser, parent Parser) string {
-			gnode := node.GetGNode()
+			gnode := node.getgnode()
 			if gnode == nil {
 				return ""
 			}
@@ -300,7 +300,7 @@ func (gm *Grammar) postinit() {
 				// set node.rule, the root node for this rule
 				if gnode.rule == nil {
 					if parent != nil {
-						gnode.rule = parent.GetGNode().rule
+						gnode.rule = parent.getgnode().rule
 					} else {
 						// TODO gnode.Rule = NewNativeUndefined()
 						//   we used nil here if there is any pb...
@@ -311,7 +311,7 @@ func (gm *Grammar) postinit() {
 			return ""
 		},
 		Post: func(node Parser, parent Parser) string {
-			gnode := node.GetGNode()
+			gnode := node.getgnode()
 			if gnode == nil { // TODO delete this if ASAP, but need test, wip now
 				return ""
 			}
@@ -365,8 +365,8 @@ func (gm *Grammar) PrintRules() {
 	for i := 0; i < gm.NumRules; i++ {
 		v := gm.id2Rule[i]
 		sParentName := "-"
-		if v.GetGNode().parent != nil {
-			switch father := v.GetGNode().parent.(type) {
+		if v.getgnode().parent != nil {
+			switch father := v.getgnode().parent.(type) {
 			// case *Grammar:
 			// 	sParentName = "__grammar__" // instead show name, use same as js for diffing
 			case *rank:
@@ -387,11 +387,11 @@ func (gm *Grammar) PrintRules() {
 		}
 		fmt.Println("|  ",
 			helpers.PadLeft(v.Name(), 14),
-			helpers.PadLeft(strconv.Itoa(v.GetGNode().id), 3),
+			helpers.PadLeft(strconv.Itoa(v.getgnode().id), 3),
 			helpers.PadLeft(helpers.TypeOfToString(v), 20),
 			helpers.PadLeft(helpers.BoolToString(v.Capture()), 3),
 			helpers.PadLeft(v.Label(), 7),
-			helpers.PadLeft(strings.Join(v.GetGNode().labels_.Get(), ","), 21),
+			helpers.PadLeft(strings.Join(v.getgnode().labels_.Get(), ","), 21),
 			helpers.PadLeft(sParentName, 16),
 			helpers.PadLeft(v.ContentString(), 30),
 		)

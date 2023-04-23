@@ -15,7 +15,7 @@ const (
 )
 
 type sequence struct {
-	*GNodeImpl
+	*gnodeimpl
 	sequence []Parser
 	type_    *helpers.Lazy[sequenceRepr] // internal cache for internalType()
 }
@@ -28,7 +28,7 @@ func newSequence(it Ast) *sequence {
 			panic("expecting non nil array")
 		}
 		gn := NewGNode()
-		seq := &sequence{GNodeImpl: gn, sequence: helpers.AMap(a.Array, func(a Ast) Parser { return a.(Parser) })}
+		seq := &sequence{gnodeimpl: gn, sequence: helpers.AMap(a.Array, func(a Ast) Parser { return a.(Parser) })}
 		gn.node = seq
 		gn.labels_ = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
 		gn.captures_ = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
@@ -37,21 +37,21 @@ func newSequence(it Ast) *sequence {
 	}
 }
 
-func (seq *sequence) GetGNode() *GNodeImpl    { return seq.GNodeImpl }
+func (seq *sequence) getgnode() *gnodeimpl    { return seq.gnodeimpl }
 func (seq *sequence) HandlesChildLabel() bool { return true }
 func (seq *sequence) Prepare()                {}
 
 func (seq *sequence) calculateLabels() []string {
 	a := []string{}
 	for _, child := range seq.sequence {
-		a = append(a, child.GetGNode().labels_.Get()...)
+		a = append(a, child.getgnode().labels_.Get()...)
 	}
 	return a
 }
 func (seq *sequence) calculateCaptures() []Ast {
 	a := []Ast{}
 	for _, child := range seq.sequence {
-		a = append(a, child.GetGNode().captures_.Get()...)
+		a = append(a, child.getgnode().captures_.Get()...)
 	}
 	return a
 }
@@ -60,8 +60,8 @@ func (seq *sequence) calculateCaptures() []Ast {
 // otherwise, if at least 1 capture, it is Array
 // otherwise a Single
 func (seq *sequence) calculateType() sequenceRepr {
-	if len(seq.GetGNode().labels_.Get()) == 0 {
-		if len(seq.GetGNode().captures_.Get()) > 1 {
+	if len(seq.getgnode().labels_.Get()) == 0 {
+		if len(seq.getgnode().captures_.Get()) > 1 {
 			return Array
 		} else {
 			return Single
@@ -79,7 +79,7 @@ func (seq *sequence) ContentString() string {
 }
 
 func (seq *sequence) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Parser) Ast {
+	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		switch seq.type_.Get() {
 		case Array:
 			return seq.parseAsArray(ctx)
@@ -175,7 +175,7 @@ func (seq *sequence) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   sequence:   {type:[type:GNode]}
-	seq.GetGNode().rules = ForEachChild_InRules(seq, f)
+	seq.getgnode().rules = ForEachChild_InRules(seq, f)
 	if seq.sequence != nil {
 		seq.sequence = ForEachChild_Array(seq.sequence, f)
 	}

@@ -1,7 +1,7 @@
 package joeson
 
 type not struct {
-	*GNodeImpl
+	*gnodeimpl
 	it Parser
 }
 
@@ -13,12 +13,12 @@ func newNot(it Ast) *not {
 	return x
 }
 
-func (no *not) GetGNode() *GNodeImpl    { return no.GNodeImpl }
+func (no *not) getgnode() *gnodeimpl    { return no.gnodeimpl }
 func (no *not) Prepare()                {}
 func (no *not) HandlesChildLabel() bool { return false }
 
 func (no *not) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Parser) Ast {
+	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos
 		res := no.it.Parse(ctx)
 		ctx.Code.Pos = pos

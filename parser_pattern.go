@@ -6,7 +6,7 @@ import (
 )
 
 type pattern struct {
-	*GNodeImpl
+	*gnodeimpl
 	Value Parser
 	Join  Parser
 	Min   NativeInt // -1 for unspec.
@@ -56,9 +56,9 @@ func newPattern(it Ast) *pattern {
 	}
 	return patt
 }
-func (patt *pattern) GetGNode() *GNodeImpl { return patt.GNodeImpl }
+func (patt *pattern) getgnode() *gnodeimpl { return patt.gnodeimpl }
 func (patt *pattern) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Parser) Ast {
+	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos
 		resValue := patt.Value.Parse(ctx)
 		if resValue == nil {

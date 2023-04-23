@@ -6,19 +6,19 @@ import (
 )
 
 type choice struct {
-	*GNodeImpl
+	*gnodeimpl
 	choices []Parser
 }
 
 func newEmptyChoice() *choice {
 	ch := &choice{NewGNode(), []Parser{}}
-	ch.GNodeImpl.node = ch
+	ch.gnodeimpl.node = ch
 	return ch
 }
 func newChoice(it Ast) *choice {
 	if a, ok := it.(*NativeArray); ok {
 		ch := &choice{NewGNode(), helpers.AMap(a.Array, func(ast Ast) Parser { return ast.(Parser) })}
-		ch.GNodeImpl.node = ch
+		ch.gnodeimpl.node = ch
 		return ch
 	} else {
 		panic("Choice expects a NativeArray")
@@ -27,7 +27,7 @@ func newChoice(it Ast) *choice {
 
 func (ch *choice) isMonoChoice() bool      { return len(ch.choices) == 1 }
 func (ch *choice) Append(node Parser)      { ch.choices = append(ch.choices, node) }
-func (ch *choice) GetGNode() *GNodeImpl    { return ch.GNodeImpl }
+func (ch *choice) getgnode() *gnodeimpl    { return ch.gnodeimpl }
 func (ch *choice) HandlesChildLabel() bool { return false }
 
 func (ch *choice) Prepare() {
@@ -41,7 +41,7 @@ func (ch *choice) Prepare() {
 }
 
 func (ch *choice) Parse(ctx *ParseContext) Ast {
-	return Wrap(func(_ *ParseContext, _ Parser) Ast {
+	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		for _, choice := range ch.choices {
 			pos := ctx.Code.Pos
 			result := choice.Parse(ctx)
