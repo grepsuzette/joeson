@@ -52,11 +52,6 @@ func newFrame(pos int, id int) *frame {
 type parseFun2 func(*ParseContext, Parser) Ast
 type parseFun func(*ParseContext) Ast
 
-// debugging variables and callbacks
-// to rewrite soon in a more idiomatic way
-var TimeStart func(name string) = nil
-var TimeEnd func(name string) = nil
-
 // in joeson.coffee those functions were originally declared as
 // class method to GNode and had a $ prefix:
 // @GNode
@@ -76,13 +71,7 @@ var TimeEnd func(name string) = nil
 func stack(fparse parseFun, x Parser) parseFun {
 	return func(ctx *ParseContext) Ast {
 		ctx.stackPush(x)
-		if TimeStart != nil {
-			TimeStart(x.Name())
-		}
 		result := fparse(ctx)
-		if TimeEnd != nil {
-			TimeEnd(x.Name())
-		}
 		ctx.stackPop()
 		return result
 	}
@@ -184,9 +173,6 @@ func loopify(fparse parseFun, x Parser) parseFun {
 						// 	fmt.Println(s) // also this way in original joeson.coffee
 						// }
 					}
-					if TimeStart != nil {
-						TimeStart("loopiteration")
-					}
 					var bestStash *stash = nil
 					var bestEndPos int = 0
 					var bestResult Ast = nil
@@ -206,9 +192,6 @@ func loopify(fparse parseFun, x Parser) parseFun {
 						if ctx.Code.Pos <= bestEndPos {
 							break
 						}
-					}
-					if TimeEnd != nil {
-						TimeEnd("loopiteration")
 					}
 					if opts.Loop {
 						ctx.loopStackPop()
@@ -230,9 +213,6 @@ func loopify(fparse parseFun, x Parser) parseFun {
 			if frame.loopstage.Int == 1 {
 				frame.loopstage.Set(2) // recursion detected
 			}
-			if TimeStart != nil {
-				TimeStart("wipemask")
-			}
 			// Step 1: Collect wipemask so we can wipe the frames later.
 			if opts.Stack {
 				ctx.log(yellow("`-base: ")+helpers.Escape(frame.result.ContentString())+" "+boldBlack(helpers.TypeOfToString(frame.result)), opts)
@@ -248,9 +228,6 @@ func loopify(fparse parseFun, x Parser) parseFun {
 						break
 					}
 					frame.wipemask[i_frame.id] = true
-				}
-				if TimeEnd != nil {
-					TimeEnd("wipemask")
 				}
 				// Step 2: Return whatever was cacheSet.
 				if frame.endpos.IsSet {

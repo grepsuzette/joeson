@@ -92,9 +92,6 @@ func (ctx *ParseContext) getFrame(x Parser) *frame {
 func (ctx *ParseContext) wipeWith(frame_ *frame, makeStash bool) *stash {
 	// return *stash, or nil if !makeStash
 	// default for makeStash was true in coffee
-	if TimeStart != nil {
-		TimeStart("wipewith")
-	}
 	if frame_.wipemask == nil {
 		panic(errors.New("need frame.wipemask to know what to wipe"))
 	}
@@ -117,9 +114,6 @@ func (ctx *ParseContext) wipeWith(frame_ *frame, makeStash bool) *stash {
 		posFrames[i] = nil
 		stashCount++
 	}
-	if TimeEnd != nil {
-		TimeEnd("wipewith")
-	}
 	if stash_ != nil {
 		return &stash{frames: stash_, count: stashCount}
 	} else {
@@ -128,9 +122,6 @@ func (ctx *ParseContext) wipeWith(frame_ *frame, makeStash bool) *stash {
 }
 
 func (ctx *ParseContext) restoreWith(stash_ *stash) {
-	if TimeStart != nil {
-		TimeStart("restorewith")
-	}
 	stashCount := stash_.count
 	for i, frame := range stash_.frames {
 		if frame == nil {
@@ -141,8 +132,5 @@ func (ctx *ParseContext) restoreWith(stash_ *stash) {
 		if stashCount == 0 {
 			break
 		}
-	}
-	if TimeEnd != nil {
-		TimeEnd("restorewith")
 	}
 }
