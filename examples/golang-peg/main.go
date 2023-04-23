@@ -30,7 +30,9 @@ func main() {
 	gm_tokens.ParseString("aawfe8f2")
 }
 
-// Use `gm` grammar to parse `pair.a`.
+// test() is untokenized raw parsing, it is used to parse small units.
+//
+// It means "use `gm` grammar to `gm.ParseString(pair.a)`".
 // The result if successful is expected to contain `pair.b`.
 // If `pair.b` starts with "ERROR ", we instead expect an error.
 func test(t *testing.T, gm *j.Grammar, pair Duo) {
