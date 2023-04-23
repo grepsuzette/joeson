@@ -42,8 +42,9 @@ func main() {
 			if !strings.HasPrefix(s, "(") {
 				s = "(" + s + ")"
 			}
-			if ast, e := gm.ParseString(s); e != nil {
-				fmt.Println("Parse error: " + e.Error())
+			ast := gm.ParseString(s)
+			if j.IsParseError(ast) {
+				fmt.Println("Parse error: " + ast.ContentString())
 			} else {
 				if expr, ok := ast.(Expr); ok {
 					evaluatedExpr := vm.Eval(expr)

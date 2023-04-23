@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	// "strings"
+	"github.com/grepsuzette/joeson"
 	"github.com/grepsuzette/joeson/helpers"
 )
 
@@ -106,13 +107,14 @@ func Test(t *testing.T) {
 		k := o.expr
 		v := o.expectation
 		t.Run(fmt.Sprintf("eval %s expected to give %s", k, v), func(t *testing.T) {
-			if ast, e := gm.ParseString(k); e == nil {
+			ast := gm.ParseString(k)
+			if joeson.IsParseError(ast) {
+				t.Errorf("%s expect to eval as %s did not even parse! error = %s\n", k, v, ast.ContentString())
+			} else {
 				s := helpers.StripAnsi(m.Eval(ast.(Expr)).ContentString())
 				if s != v {
 					t.Errorf("%s expected to eval as %s gave %s instead\n", k, v, s)
 				}
-			} else {
-				t.Errorf("%s expect to eval as %s did not even parse! error = %s\n", k, v, e)
 			}
 		})
 	}
