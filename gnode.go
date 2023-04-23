@@ -55,19 +55,19 @@ func (gn *GNodeImpl) SetLazyCaptures(f func() []Ast)  { gn.captures_ = helpers.N
 // A grammar node.
 type GNodeImpl struct {
 	ParseOptions
-	name      string // rule name if IsRule(), empty otherwise
-	label     string
-	capture   bool
-	labels_   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate GNode behavior in the original coffeescript
+	parent    Parser                  // A grammar must be a DAG, which implies 1 Parent at most (root.Parent being nil)
+	name      string                  // rule name if IsRule(), empty otherwise. E.g. "AddOp" in `i(named("AddOp", "'+' | '-'"))`
+	label     string                  // example "l" when this is `l:list` in `i(named("expr", "l:list | s:string | n:number | operator:operator"), parseExpr),`
+	capture   bool                    // helps determining in which way to collect things higher up (see for instance Sequence.calculateType())
+	labels_   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate GNode behavior in the original coffeescript impl.
 	captures_ *helpers.Lazy[[]Ast]    // the lazy captures getter, ditto.
 	rules     map[string]Parser       // Treelike. Grammar collects all rules in its post walk
-	rulesK    []string                // because golang maps are unsorted, this helps keeping the insertion order
-	id        int                     // The rule number in a grammar. They start on 0. See also map grammar.id2Rule.
-	rule      Parser                  // What's the rule for the node with this gnode. When Rule == node, it means node is a rule of a grammar (in which case node.IsRule() is true)
-	parent    Parser                  // Grammar must be a DAG, which implies 1 Parent at most (root.Parent being nil)
-	grammar   *Grammar
-	node      Parser // The node containing this GNode. Only used by GNode.Captures_ default implementation.
-	origin    Origin // Where this node originates from.
+	rulesK    []string                // because golang maps are unsorted, this helps keeping the insertion order TODO check if really necessary
+	id        int                     // rule number in a grammar. They start on 0. See also map grammar.id2Rule.
+	rule      Parser                  // what's the rule for the node with this gnode. When Rule == node, it means node is a rule of a grammar (in which case node.IsRule() is true)
+	grammar   *Grammar                // the root
+	node      Parser                  // node containing this impl. Hackish. Only used by GNode.Captures_ default implementation.
+	origin    Origin                  // Where this node originates from.
 }
 
 func NewGNode() *GNodeImpl {
