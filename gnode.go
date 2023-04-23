@@ -31,28 +31,8 @@ type GNode interface {
 	SetLazyCaptures(func() []Ast)
 }
 
-// TODO sink that lower in this file after it's done
-func (gn *GNodeImpl) GetGNode() *GNodeImpl { return gn }
-func (gn *GNodeImpl) Name() string         { return gn.name }
-func (gn *GNodeImpl) Label() string        { return gn.label }
-func (gn *GNodeImpl) Capture() bool        { return gn.capture }
-func (gn *GNodeImpl) SetName(name string)  { gn.name = name }
-func (gn *GNodeImpl) SetNameWhenEmpty(name string) {
-	if gn.name == "" {
-		gn.name = name
-	}
-}
-func (gn *GNodeImpl) SetLabel(label string) { gn.label = label }
-func (gn *GNodeImpl) SetCapture(b bool)     { gn.capture = b }
-
-func (gn *GNodeImpl) Labels() []string                { return gn.labels_.Get() }
-func (gn *GNodeImpl) Captures() []Ast                 { return gn.captures_.Get() }
-func (gn *GNodeImpl) SetLabels(v []string)            { gn.labels_.Set(v) }
-func (gn *GNodeImpl) SetCaptures(v []Ast)             { gn.captures_.Set(v) }
-func (gn *GNodeImpl) SetLazyLabels(f func() []string) { gn.labels_ = helpers.NewLazyFromFunc(f) }
-func (gn *GNodeImpl) SetLazyCaptures(f func() []Ast)  { gn.captures_ = helpers.NewLazyFromFunc(f) }
-
-// A grammar node.
+// Data for a grammar node.
+// GNode is the interface, but all implementers hold this impl.
 type GNodeImpl struct {
 	ParseOptions
 	parent    Parser                  // A grammar must be a DAG, which implies 1 Parent at most (root.Parent being nil)
@@ -67,7 +47,7 @@ type GNodeImpl struct {
 	rule      Parser                  // what's the rule for the node with this gnode. When Rule == node, it means node is a rule of a grammar (in which case node.IsRule() is true)
 	grammar   *Grammar                // the root
 	node      Parser                  // node containing this impl. Hackish. Only used by GNode.Captures_ default implementation.
-	origin    Origin                  // Where this node originates from.
+	origin    Origin                  // records the start-end in the source of where this gnode originates from. Unused as of now.
 }
 
 func NewGNode() *GNodeImpl {
@@ -99,3 +79,24 @@ func (gn *GNodeImpl) Include(name string, rule Parser) {
 	gn.rulesK = append(gn.rulesK, name)
 	gn.rules[name] = rule
 }
+
+func (gn *GNodeImpl) GetGNode() *GNodeImpl { return gn }
+func (gn *GNodeImpl) Name() string         { return gn.name }
+func (gn *GNodeImpl) Label() string        { return gn.label }
+func (gn *GNodeImpl) Capture() bool        { return gn.capture }
+func (gn *GNodeImpl) SetName(name string)  { gn.name = name }
+func (gn *GNodeImpl) SetNameWhenEmpty(name string) {
+	if gn.name == "" {
+		gn.name = name
+	}
+}
+func (gn *GNodeImpl) SetLabel(label string) { gn.label = label }
+func (gn *GNodeImpl) SetCapture(b bool)     { gn.capture = b }
+
+func (gn *GNodeImpl) Labels() []string                { return gn.labels_.Get() }
+func (gn *GNodeImpl) Captures() []Ast                 { return gn.captures_.Get() }
+func (gn *GNodeImpl) SetLabels(v []string)            { gn.labels_.Set(v) }
+func (gn *GNodeImpl) SetCaptures(v []Ast)             { gn.captures_.Set(v) }
+func (gn *GNodeImpl) SetLazyLabels(f func() []string) { gn.labels_ = helpers.NewLazyFromFunc(f) }
+func (gn *GNodeImpl) SetLazyCaptures(f func() []Ast)  { gn.captures_ = helpers.NewLazyFromFunc(f) }
+
