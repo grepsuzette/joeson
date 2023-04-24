@@ -1,7 +1,4 @@
-/*
-Package joeson is a packrat left recursive parser in Go
-ported from https://github.com/jaekwon/JoeScript 's joeson.coffee
-*/
+// joeson is a packrat left recursive parser in Go
 package joeson
 
 import (
@@ -12,27 +9,16 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// See examples and tests to build a grammar.
-// Then just use ParseString().
-// Like in the original implementation, Grammar "is" a GNode.
 type Grammar struct {
 	*gnodeimpl
 	rank     Parser         // a *Rank or a Ref to a rank
-	NumRules int            // Each Ast can have rules, recursively. This however is the total count in the grammar
-	id2Rule  map[int]Parser // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
+	numrules int            // Each Ast can have rules, recursively. This however is the total count in the grammar
+	id2rule  map[int]Parser // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
 	TraceOptions
 	wasInitialized bool
 }
 
-func (gm *Grammar) GetRule(name string) Parser {
-	if x, exists := gm.gnodeimpl.rules[name]; exists {
-		return x
-	} else {
-		return nil
-	}
-}
 
-// General options to build a grammar
 type GrammarOptions struct {
 	// Options governing what is traced or not during the initialization or the parsing
 	TraceOptions TraceOptions
@@ -60,11 +46,12 @@ func GrammarFromLines(lines []Line, name string, options ...GrammarOptions) *Gra
 	ranke := rankFromLines(lines, name, opts)
 	newgm := newEmptyGrammarWithOptions(opts.TraceOptions)
 	newgm.rank = ranke
-	// The name is also set afterwards in the coffeescript version
 	newgm.SetName(name)
 	newgm.postinit()
 	return newgm
 }
+
+func (gm *Grammar) CountRules() int { return gm.numrules }
 
 // Parse functions don't panic.
 // A parser returns nil when declining to parse. When there is an error
@@ -79,7 +66,7 @@ func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) Ast {
 }
 
 func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) Ast {
-	return gm.Parse(newParseContext(code, gm.NumRules, attrs, gm.TraceOptions))
+	return gm.Parse(newParseContext(code, gm.numrules, attrs, gm.TraceOptions))
 }
 
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
@@ -132,61 +119,6 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	return result
 }
 
-/*
-func (gm *Grammar) parseOrFail(ctx *ParseContext) (Ast, error) {
-	// func (gm *Grammar) Parse(ctx *ParseContext) (Ast, error) {
-	var oldTrace bool
-	if ctx.Debug {
-		// temporarily enable stack tracing
-		oldTrace = gm.TraceOptions.Stack
-		gm.TraceOptions.Stack = true
-	}
-	if gm.rank == nil {
-		panic("Grammar.rank is nil")
-	}
-	result := gm.rank.Parse(ctx)
-	// undo temporary stack tracing
-	if ctx.Debug {
-		gm.TraceOptions.Stack = oldTrace
-	}
-	// if parse is incomplete, compute error message
-	if ctx.Code.Pos != ctx.Code.Length() {
-		// find the maximum parsed entity
-		maxAttempt := ctx.Code.Pos
-		maxSuccess := ctx.Code.Pos
-		for pos := ctx.Code.Pos; pos < len(ctx.Frames); pos++ {
-			posFrames := ctx.Frames[pos]
-			for _, frame := range posFrames {
-				if frame != nil {
-					maxAttempt = pos
-					if frame.Result != nil {
-						maxSuccess = pos
-						break
-					}
-				}
-			}
-		}
-		// TODO this is kept as original, but seems it was not finished
-		sErr := fmt.Sprintf("Error parsing at char:%d=(line:%d,col:%d).", maxSuccess, ctx.Code.PosToLine(maxSuccess), ctx.Code.PosToCol(maxSuccess))
-		sErr += "\n" + ctx.Code.Print()
-		sErr += "\nDetails:\n"
-		sErr += green("OK") + "/"
-		sErr += yellow("Parsing") + "/"
-		sErr += red("Suspect") + "/"
-		sErr += white("Unknown") + "\n\n"
-		sErr += green(ctx.Code.Peek(NewPeek().BeforeLines(2)))
-		sErr += yellow(ctx.Code.Peek(NewPeek().AfterChars(maxSuccess - ctx.Code.Pos)))
-		ctx.Code.Pos = maxSuccess
-		sErr += red(ctx.Code.Peek(NewPeek().AfterChars(maxAttempt-ctx.Code.Pos))) + "/"
-		ctx.Code.Pos = maxAttempt
-		sErr += white(ctx.Code.Peek(NewPeek().AfterLines(2))) + "\n"
-		return nil, errors.New(sErr)
-	}
-	// joeson.coffee has a opts.returnContext but won't implement it
-	return result, nil
-}
-*/
-
 // -- after this are the lower level stuffs --
 
 func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTraceOptions()) }
@@ -203,12 +135,21 @@ func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
 func (gm *Grammar) Bomb() {
 	gm.rank = newEmptyRank("bombd")
 	gm.gnodeimpl = NewGNode()
-	gm.NumRules = 0
-	gm.id2Rule = nil
+	gm.numrules = 0
+	gm.id2rule = nil
 	gm.wasInitialized = false
 }
 
 func (gm *Grammar) getgnode() *gnodeimpl { return gm.gnodeimpl }
+
+func (gm *Grammar) getRule(name string) Parser {
+	if x, exists := gm.gnodeimpl.rules[name]; exists {
+		return x
+	} else {
+		return nil
+	}
+}
+
 
 func (gm *Grammar) Prepare()                {}
 func (gm *Grammar) HandlesChildLabel() bool { return false }
@@ -235,7 +176,7 @@ func (gm *Grammar) ForEachChild(f func(Parser) Parser) Parser {
 // collect and collect rules, simplify the rule tree etc.
 func (gm *Grammar) postinit() {
 	if gm.rank == nil {
-		panic("You can only call grammar.Postinit() after some rank has been set")
+		panic("grammar.rank is nil")
 	}
 	opts := gm.TraceOptions
 
@@ -312,14 +253,11 @@ func (gm *Grammar) postinit() {
 		},
 		Post: func(node Parser, parent Parser) string {
 			gnode := node.getgnode()
-			if gnode == nil { // TODO delete this if ASAP, but need test, wip now
-				return ""
-			}
 			if IsRule(node) {
 				gm.GetGNode().rules[gnode.name] = node
-				gnode.id = gm.NumRules
-				gm.NumRules++
-				gm.id2Rule[gnode.id] = node
+				gnode.id = gm.numrules
+				gm.numrules++
+				gm.id2rule[gnode.id] = node
 				if opts.Loop { // print out id->rulename for convenience
 					fmt.Println("Loop " + red(strconv.Itoa(gnode.id)) + ":\t" + String(node))
 				}
@@ -346,9 +284,9 @@ func (gm *Grammar) PrintRules() {
 	fmt.Println("+--------------- Grammar.Debug() ----------------------------------")
 	fmt.Println("| name         : " + bold(gm.Name()))
 	fmt.Println("| contentString: " + gm.ContentString())
-	fmt.Println("| rules        : " + strconv.Itoa(gm.NumRules))
+	fmt.Println("| rules        : " + strconv.Itoa(gm.numrules))
 	fmt.Println("| ")
-	if gm.NumRules <= 0 {
+	if gm.numrules <= 0 {
 		return
 	}
 	fmt.Println("| ",
@@ -362,8 +300,8 @@ func (gm *Grammar) PrintRules() {
 		helpers.PadLeft("contentString", 30),
 	)
 	fmt.Println("|   -------------------------------------------------------------------------------------")
-	for i := 0; i < gm.NumRules; i++ {
-		v := gm.id2Rule[i]
+	for i := 0; i < gm.numrules; i++ {
+		v := gm.id2rule[i]
 		sParentName := "-"
 		if v.getgnode().parent != nil {
 			switch father := v.getgnode().parent.(type) {

@@ -43,7 +43,7 @@ func newRef(it Ast) *ref {
 	}
 	ref.gnodeimpl.labels_ = helpers.NewLazyFromFunc(func() []string {
 		if ref.Label() == "@" {
-			referenced := ref.grammar.GetRule(ref.ref)
+			referenced := ref.grammar.getRule(ref.ref)
 			if referenced == nil {
 				panic("ref " + ref.ref + " was not found in grammar.Rules")
 			} else {
@@ -63,7 +63,7 @@ func (x *ref) HandlesChildLabel() bool { return false }
 func (x *ref) Prepare()                {}
 func (x *ref) Parse(ctx *ParseContext) Ast {
 	return wrap(func(ctx *ParseContext, _ Parser) Ast {
-		node := x.grammar.GetRule(x.ref)
+		node := x.grammar.getRule(x.ref)
 		if node == nil {
 			panic("Unknown reference " + x.ref + ". Grammar has " + strconv.Itoa(len(x.grammar.GetGNode().rules)) + " rules. ")
 		}

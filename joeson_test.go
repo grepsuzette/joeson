@@ -12,7 +12,7 @@ import (
 // it does not do more than compiling the intention grammar
 func TestParseIntention(t *testing.T) {
 	gmIntention := GrammarFromLines(IntentionRules(), "gmIntention")
-	if !gmIntention.IsReady() || gmIntention.NumRules != JoesonNbRules {
+	if !gmIntention.IsReady() || gmIntention.numrules != JoesonNbRules {
 		t.Fail()
 	}
 }

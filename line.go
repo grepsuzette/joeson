@@ -155,7 +155,7 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 		// parse the string
 		// a grammar like joeson_handcompiled is needed for that,
 		gm := lazyGrammar.Get() // uses Lazy to get the grammar in cache or build it
-		ast := gm.Parse(newParseContext(NewCodeStream(v.Str), gm.NumRules, attrs, traceOptions))
+		ast := gm.Parse(newParseContext(NewCodeStream(v.Str), gm.numrules, attrs, traceOptions))
 		if IsParseError(ast) {
 			// do we really want to panic here?
 			panic(ast.(ParseError).ContentString())
