@@ -78,7 +78,7 @@ func TestManyTimes(t *testing.T) {
 			fmt.Printf("%s%s\n", helpers.Indent(indent), String(v.Parser))
 		case sLine:
 			// parse the rules of the intention grammar, one line at a time
-			ast := parsedGrammar.ParseString(v.Str, ParseOptions{Debug: false})
+			ast := parsedGrammar.ParseString(v.Str)
 			if IsParseError(ast) {
 				panic(ast.ContentString())
 			} else {

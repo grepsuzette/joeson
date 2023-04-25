@@ -1,11 +1,11 @@
 package joeson
 
-// Each ParseContext have ParseOptions.
+// Each ParseContext has ParseOptions.
 // They can originate from different places:
-// - grammar.ParseString("<text to parse>", <optionalParseOptions>))
-// - or from a rule:
-//    i(Named("EXAMPLE", "/regex/", ParseOptions{SkipLog: false, SkipCache: true}, func(it Ast, ctx *ParseContext) Ast { return it })),
-//    in which case they will be stored in GNode.ParseOptions
+//   - grammar.ParseString("<text to parse>", <optionalParseOptions>))
+//   - or from a rule:
+//     i(Named("EXAMPLE", "/regex/", ParseOptions{SkipLog: false, SkipCache: true}, func(it Ast, ctx *ParseContext) Ast { return it })),
+//     in which case they will be stored in gnodeimpl.ParseOptions
 type ParseOptions struct {
 	SkipLog   bool
 	SkipCache bool

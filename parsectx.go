@@ -11,20 +11,20 @@ import (
 
 type ParseContext struct {
 	TraceOptions     // grammar.TraceOptions at the moment this context is created
-	ParseOptions     // Defined arbitrarily within a rule, e.g. in I("INT", "/[0-9]+/", someCb, ParseOptions{SkipLog: false}), and then passed to the ParseContext.
 	Counter      int // the iteration counter that is shown in the stack trace, useful when debugging
 	Code         *CodeStream
 
-	numRules    int        // grammar.numRules at the moment context is created. If no grammar (esp., when joeson rules are parsed the first time) pass 0.
-	frames      [][]*frame // 2D. frames[len(code.text) + 1][grammar.numRules]frame. Though it's public only core.grammar should access it.
-	stack       [1024]*frame
-	stackLength int
-	loopStack   []string
+	numRules     int        // grammar.numRules at the moment context is created. If no grammar (esp., when joeson rules are parsed the first time) pass 0.
+	frames       [][]*frame // 2D. frames[len(code.text) + 1][grammar.numRules]frame. Though it's public only core.grammar should access it.
+	stack        [1024]*frame
+	stackLength  int
+	loopStack    []string
+	parseOptions ParseOptions // Defined arbitrarily within a rule (setParseOptions()), e.g. in I("INT", "/[0-9]+/", someCb, ParseOptions{SkipLog: false}), and then passed to the ParseContext.
 }
 
 // numRules: grammar numRules at the moment context is created. If no grammar (esp. when
 // joeson rules are parsed the very first time) pass 0.
-func newParseContext(code *CodeStream, numRules int, attrs ParseOptions, opts TraceOptions) *ParseContext {
+func newParseContext(code *CodeStream, numRules int, opts TraceOptions) *ParseContext {
 	// frames is 2d
 	// frames[len(code.text) + 1][grammar.numRules]frame
 	//                         ^---- +1 is to include EOF
@@ -36,11 +36,16 @@ func newParseContext(code *CodeStream, numRules int, attrs ParseOptions, opts Tr
 		Code:         code,
 		numRules:     numRules,
 		TraceOptions: opts,
-		ParseOptions: attrs,
 		frames:       frames,
 		stackLength:  0,
 		Counter:      0,
 	}
+}
+
+// ParseOptions are only set from within the callback within a rule.
+func (ctx *ParseContext) setParseOptions(opts ParseOptions) *ParseContext {
+	ctx.parseOptions = opts
+	return ctx
 }
 
 func (ctx *ParseContext) String() string {
@@ -59,7 +64,7 @@ func (ctx *ParseContext) String() string {
 }
 
 func (ctx *ParseContext) log(message string, opts TraceOptions) {
-	if !ctx.SkipLog {
+	if !ctx.parseOptions.SkipLog {
 		line := ctx.Code.Line()
 		if opts.FilterLine == -1 || line == opts.FilterLine {
 			fmt.Printf("%s %s\n", ctx.String(), message)

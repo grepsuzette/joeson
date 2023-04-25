@@ -18,7 +18,6 @@ type Grammar struct {
 	wasInitialized bool
 }
 
-
 type GrammarOptions struct {
 	// Options governing what is traced or not during the initialization or the parsing
 	TraceOptions TraceOptions
@@ -57,21 +56,17 @@ func (gm *Grammar) CountRules() int { return gm.numrules }
 // A parser returns nil when declining to parse. When there is an error
 // but the parser takes the responsability (denying any other parser the
 // chance to parse), it returns a ParseError.
-func (gm *Grammar) ParseString(sCode string, attrs ...ParseOptions) Ast {
-	if len(attrs) > 0 {
-		return gm.ParseCode(NewCodeStream(sCode), attrs[0])
-	} else {
-		return gm.ParseCode(NewCodeStream(sCode), ParseOptions{})
-	}
+func (gm *Grammar) ParseString(sCode string) Ast {
+	return gm.ParseCode(NewCodeStream(sCode))
 }
 
-func (gm *Grammar) ParseCode(code *CodeStream, attrs ParseOptions) Ast {
-	return gm.Parse(newParseContext(code, gm.numrules, attrs, gm.TraceOptions))
+func (gm *Grammar) ParseCode(code *CodeStream) Ast {
+	return gm.Parse(newParseContext(code, gm.numrules, gm.TraceOptions))
 }
 
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	var oldTrace bool
-	if ctx.Debug {
+	if ctx.parseOptions.Debug {
 		// temporarily enable stack tracing
 		oldTrace = gm.TraceOptions.Stack
 		gm.TraceOptions.Stack = true
@@ -81,7 +76,7 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	}
 	result := gm.rank.Parse(ctx)
 	// undo temporary stack tracing
-	if ctx.Debug {
+	if ctx.parseOptions.Debug {
 		gm.TraceOptions.Stack = oldTrace
 	}
 	// if parse is incomplete, compute error message
@@ -149,7 +144,6 @@ func (gm *Grammar) getRule(name string) Parser {
 		return nil
 	}
 }
-
 
 func (gm *Grammar) Prepare()                {}
 func (gm *Grammar) HandlesChildLabel() bool { return false }

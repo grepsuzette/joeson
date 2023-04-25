@@ -145,6 +145,7 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 	case OLine:
 		answer = v.toRule(rank_, parentRule, oLineByIndexOrName{name: name}, opts, lazyGrammar)
 		answer.SetNameWhenEmpty(name)
+		answer.(gnode).getgnode().ParseOptions = attrs
 	case sLine:
 		// temporarily halt trace when SkipSetup
 		traceOptions := opts
@@ -155,7 +156,8 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 		// parse the string
 		// a grammar like joeson_handcompiled is needed for that,
 		gm := lazyGrammar.Get() // uses Lazy to get the grammar in cache or build it
-		ast := gm.Parse(newParseContext(NewCodeStream(v.Str), gm.numrules, attrs, traceOptions))
+		ctx := newParseContext(NewCodeStream(v.Str), gm.numrules, traceOptions).setParseOptions(attrs)
+		ast := gm.Parse(ctx)
 		if IsParseError(ast) {
 			// do we really want to panic here?
 			panic(ast.(ParseError).ContentString())

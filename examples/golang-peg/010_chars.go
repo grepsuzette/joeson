@@ -1,5 +1,7 @@
 package main
 
+import j "github.com/grepsuzette/joeson"
+
 // https://go.dev/ref/spec#Characters
 // https://go.dev/ref/spec#Letters_and_digits
 //
@@ -43,7 +45,7 @@ var rules_chars = rules(
 	// Letters and digits
 	i(named("letter", "unicode_letter | '_'")), // "The underscore character _ (U+005F) is considered a lowercase letter."
 	i(named("digits", "decimal_digit | binary_digit | octal_digit | hex_digit")),
-	i(named("decimal_digit", "[0-9]")),
+	i(named("decimal_digit", "[0-9]"), j.ParseOptions{Debug:true}),
 	i(named("binary_digit", "[01]")),
 	i(named("octal_digit", "[0-7]")),
 	i(named("hex_digit", "[0-9A-Fa-f]")),
