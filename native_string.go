@@ -1,8 +1,6 @@
 package joeson
 
-// NativeInt and NativeString denote terminal nodes
-// and at the same time satisfy the `Ast` interface. Joeson.coffee used
-// Number or string directly.
+// NativeString is a `string` wrapped in an object that satisfies the `Ast` interface.
 type NativeString struct {
 	Str string
 }

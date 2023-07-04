@@ -1,18 +1,15 @@
 package joeson
 
 import (
-	"github.com/grepsuzette/joeson/helpers"
 	"strconv"
+
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 // refer to the original joeson.coffee
 
 type (
-	stash struct {
-		frames []*frame
-		count  int
-	}
-    frame struct {
+	frame struct {
 		result    Ast
 		endpos    helpers.NilableInt
 		loopstage helpers.NilableInt
@@ -21,6 +18,7 @@ type (
 		id        int
 		param     Ast // used in ref.go or joeson.coffee:536
 	}
+	stash []*frame
 )
 
 func (f frame) toString() string {
@@ -35,6 +33,7 @@ func (fr *frame) cacheSet(result Ast, endpos int) {
 		fr.endpos.Set(endpos)
 	}
 }
+
 func newFrame(pos int, id int) *frame {
 	return &frame{
 		result:   nil,
@@ -49,8 +48,10 @@ func newFrame(pos int, id int) *frame {
 // coffeescript impl.  In coffeescript/js, the 2nd
 // argument (`Ast`) doesn't exist, instead .bind(this) was used
 
-type parseFun2 func(*ParseContext, Parser) Ast
-type parseFun func(*ParseContext) Ast
+type (
+	parseFunc2 func(*ParseContext, Parser) Ast
+	parseFunc  func(*ParseContext) Ast
+)
 
 // in joeson.coffee those functions were originally declared as
 // class method to GNode and had a $ prefix:
@@ -68,7 +69,7 @@ type parseFun func(*ParseContext) Ast
 // - func wrap(fparse2 parseFun2, node Ast) parseFun
 //     notice this line in wrap:  wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 
-func stack(fparse parseFun, x Parser) parseFun {
+func stack(fparse parseFunc, x Parser) parseFunc {
 	return func(ctx *ParseContext) Ast {
 		ctx.stackPush(x)
 		result := fparse(ctx)
@@ -77,7 +78,7 @@ func stack(fparse parseFun, x Parser) parseFun {
 	}
 }
 
-func loopify(fparse parseFun, x Parser) parseFun {
+func loopify(fparse parseFunc, x Parser) parseFunc {
 	return func(ctx *ParseContext) Ast {
 		opts := ctx.TraceOptions
 		if opts.Stack {
@@ -173,7 +174,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 						// 	fmt.Println(s) // also this way in original joeson.coffee
 						// }
 					}
-					var bestStash *stash = nil
+					var bestStash stash = nil
 					var bestEndPos int = 0
 					var bestResult Ast = nil
 					for result != nil {
@@ -212,10 +213,16 @@ func loopify(fparse parseFun, x Parser) parseFun {
 		case 1, 2, 3:
 			if frame.loopstage.Int == 1 {
 				frame.loopstage.Set(2) // recursion detected
+				// ctx.log("left Recursion detected", opts)
 			}
 			// Step 1: Collect wipemask so we can wipe the frames later.
 			if opts.Stack {
-				ctx.log(yellow("`-base: ")+helpers.Escape(frame.result.ContentString())+" "+boldBlack(helpers.TypeOfToString(frame.result)), opts)
+				cs := "nil"
+				if frame.result != nil {
+					cs = frame.result.ContentString()
+				}
+				ctx.log(yellow("`-base: ")+
+					helpers.Escape(cs)+" "+boldBlack(helpers.TypeOfToString(frame.result)), opts)
 			}
 			if frame.wipemask == nil {
 				frame.wipemask = make([]bool, ctx.numRules)
@@ -247,7 +254,7 @@ func loopify(fparse parseFun, x Parser) parseFun {
 // - handle labels for standalone nodes
 // - set GNode.Origin
 // - call GNode.CbBuilder(result, ctx, caller), if CbBuilder != nil
-func prepareResult(fparse2 parseFun2, caller Parser) parseFun {
+func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 	return func(ctx *ParseContext) Ast {
 		ctx.Counter++
 		result := fparse2(ctx, caller)
@@ -277,7 +284,7 @@ func prepareResult(fparse2 parseFun2, caller Parser) parseFun {
 	}
 }
 
-func wrap(fparse2 parseFun2, node Parser) parseFun {
+func wrap(fparse2 parseFunc2, node Parser) parseFunc {
 	wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 	wrapped2 := prepareResult(fparse2, node)
 	gn := node.getgnode()
@@ -292,5 +299,4 @@ func wrap(fparse2 parseFun2, node Parser) parseFun {
 			return fparse2(ctx, node)
 		}
 	}
-
 }

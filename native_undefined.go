@@ -1,8 +1,9 @@
 package joeson
 
-// Some nodes such as Not use undefined as a terminal node,
-// whereas nil represents parsing failure.
-// note NativeUndefined satisfies not only Ast but also Parser
+// Some parsers (namedly Not, Pattern, Sequence, Existential) need
+// a value different from `nil` (which represents parsing failure).
+//
+// note NativeUndefined satisfies both Ast and Parser.
 type NativeUndefined struct{ *gnodeimpl }
 
 func NewNativeUndefined() NativeUndefined {

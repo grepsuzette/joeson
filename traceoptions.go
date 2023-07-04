@@ -34,9 +34,9 @@ func Mute() TraceOptions {
 	return TraceOptions{Stack: false, Loop: false, Grammar: false, FilterLine: -1, SkipSetup: false}
 }
 
-// Verbose() creates a TraceOptions with all traces enabled.
+// Verbose() creates a TraceOptions with Stack and Grammar tracing enabled.
 func Verbose() TraceOptions {
-	return TraceOptions{Stack: true, Loop: true, Grammar: true, FilterLine: -1, SkipSetup: false}
+	return TraceOptions{Stack: true, Loop: false, Grammar: true, FilterLine: -1, SkipSetup: true}
 }
 
 // If $TRACE (or $trace) environment variable is defined, derive the

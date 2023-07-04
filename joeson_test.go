@@ -154,7 +154,7 @@ func TestSquareroot(t *testing.T) {
 			if !exists {
 				t.Error("label n not found")
 			} else {
-				t.Error(fmt.Sprintf("was expecting n == -1, but got %d\n", n))
+				t.Errorf("was expecting n == -1, but got %d\n", n)
 			}
 		}
 	}

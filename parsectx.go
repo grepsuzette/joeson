@@ -9,21 +9,24 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
+// As in the initial implementation, ParseContext does not know Grammar. It's
+// just a context.
 type ParseContext struct {
-	TraceOptions     // grammar.TraceOptions at the moment this context is created
-	Counter      int // the iteration counter that is shown in the stack trace, useful when debugging
+	TraceOptions        // grammar.TraceOptions at the moment this context is created.
+	Counter      int    // [For debugging] iteration counter shown with TRACE=stack. Useful with conditional breakpoints
+	GrammarName  string // [For debugging] set in grammar.Parse to the value of grammar.Name(). Useful for conditional breakpoints (typically in packrat loopify()) to only break when your final grammar is being used to parse anything. See docs/diffing.md # debugging methodology
 	Code         *CodeStream
 
-	numRules     int        // grammar.numRules at the moment context is created. If no grammar (esp., when joeson rules are parsed the first time) pass 0.
-	frames       [][]*frame // 2D. frames[len(code.text) + 1][grammar.numRules]frame. Though it's public only core.grammar should access it.
+	numRules     int
+	frames       [][]*frame // 2D: [len(code.text) + 1][numRules]
 	stack        [1024]*frame
 	stackLength  int
 	loopStack    []string
 	parseOptions ParseOptions // Defined arbitrarily within a rule (setParseOptions()), e.g. in I("INT", "/[0-9]+/", someCb, ParseOptions{SkipLog: false}), and then passed to the ParseContext.
 }
 
-// numRules: grammar numRules at the moment context is created. If no grammar (esp. when
-// joeson rules are parsed the very first time) pass 0.
+// Create a new parse context.
+// numRules: grammar numRules at the moment context is created (can be 0 before the very first grammar is created)
 func newParseContext(code *CodeStream, numRules int, opts TraceOptions) *ParseContext {
 	// frames is 2d
 	// frames[len(code.text) + 1][grammar.numRules]frame
@@ -94,7 +97,7 @@ func (ctx *ParseContext) getFrame(x Parser) *frame {
 	}
 }
 
-func (ctx *ParseContext) wipeWith(frame_ *frame, makeStash bool) *stash {
+func (ctx *ParseContext) wipeWith(frame_ *frame, makeStash bool) stash {
 	// return *stash, or nil if !makeStash
 	// default for makeStash was true in coffee
 	if frame_.wipemask == nil {
@@ -103,8 +106,6 @@ func (ctx *ParseContext) wipeWith(frame_ *frame, makeStash bool) *stash {
 	var stash_ []*frame
 	if makeStash {
 		stash_ = make([]*frame, ctx.numRules)
-	} else {
-		stash_ = nil
 	}
 	stashCount := 0
 	pos := frame_.pos
@@ -120,22 +121,16 @@ func (ctx *ParseContext) wipeWith(frame_ *frame, makeStash bool) *stash {
 		stashCount++
 	}
 	if stash_ != nil {
-		return &stash{frames: stash_, count: stashCount}
+		return stash_
 	} else {
 		return nil
 	}
 }
 
-func (ctx *ParseContext) restoreWith(stash_ *stash) {
-	stashCount := stash_.count
-	for i, frame := range stash_.frames {
-		if frame == nil {
-			continue
-		}
-		ctx.frames[frame.pos][i] = frame
-		stashCount--
-		if stashCount == 0 {
-			break
+func (ctx *ParseContext) restoreWith(stash_ stash) {
+	for i, frame := range stash_ {
+		if frame != nil {
+			ctx.frames[frame.pos][i] = frame
 		}
 	}
 }

@@ -1,5 +1,5 @@
 
-nice if no need to __ between tokens in the grammar
+would be nice if no need to have __ between tokens in the grammar
 how?
 
 sourcecode -> tokenize -> parse

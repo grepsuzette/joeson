@@ -5,10 +5,7 @@ import (
 	"strconv"
 )
 
-// NativeInt and NativeString denote terminal nodes
-// and at the same time satisfy the `Ast` interface. Joeson.coffee used
-// Number or string directly.
-
+// NativeInt is an `int` but also an object that satisfies the `Ast` interface.
 type NativeInt int
 
 func NewNativeInt(n int) NativeInt { return NativeInt(n) }

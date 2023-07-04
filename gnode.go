@@ -1,6 +1,5 @@
 package joeson
 
-
 /*
    In addition to the attributes defined by subclasses,
      the following attributes exist for all nodes.
@@ -14,6 +13,7 @@ type gnode interface {
 	Name() string
 	Label() string
 	Capture() bool
+
 	SetName(string)
 	SetNameWhenEmpty(string)
 	SetLabel(string)
@@ -24,6 +24,7 @@ type gnode interface {
 
 	Labels() []string
 	Captures() []Ast
+
 	SetLabels([]string)
 	SetCaptures([]Ast)
 	SetLazyLabels(func() []string)

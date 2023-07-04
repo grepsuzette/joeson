@@ -12,9 +12,6 @@ func TestExpressions(t *testing.T) {
 		o(named("__expression", partial_rules_expressions)),
 		o(named("__type", partial_rules_types)),
 	), "go-types-and-exprs")
-	for _, pair := range []Duo{
-		duo("math.Sin", "QualifiedIdent"), // denotes the Sin function in package math
-	} {
-		test(t, gm, pair)
-	}
+
+	test(t, gm, "math.Sin", "QualifiedIdent") // denotes the Sin function in package math
 }

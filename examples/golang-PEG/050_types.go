@@ -1,10 +1,8 @@
 package main
 
-import (
-// j "github.com/grepsuzette/joeson"
-)
-
 // https://go.dev/ref/spec#Types
+
+// also depends on 060_grammar_expressions.go
 
 // Type      = TypeName [ TypeArgs ] | TypeLit | "(" Type ")" .
 // TypeName  = identifier | QualifiedIdent .
@@ -13,7 +11,7 @@ import (
 // TypeLit   = ArrayType | StructType | PointerType | FunctionType | InterfaceType |
 //             SliceType | MapType | ChannelType .
 
-var partial_rules_types = rules( // also depends on 060_grammar_expressions.go
+var partial_rules_types = rules(
 	o(named("Type", rules(
 		o("TypeName TypeArgs? | TypeLit | '(' Type ')'"),
 		o(named("TypeLit", rules(

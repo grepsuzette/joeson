@@ -45,7 +45,7 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 			case ParseOptions:
 				attrs = v
 			case string:
-				fmt.Sprintf(
+				fmt.Printf(
 					"Error in grammar: O (or I) called lineInit with %v\nSo the second parameter was a string: %s\nRight now this syntax is not supported\nPlease fix your grammar",
 					origArgs,
 					v,
@@ -124,7 +124,7 @@ func rule2line(x any) Line {
 // name:       The final and correct name for this rule
 // rule:       A rule-like object
 //                 In coffee it means string, array, object (map) or oline
-//                 In this implementation it means Line, amongst:
+//                 In this implementation it means Line, among:
 //                   SLine (for string), ALine, OLine
 // parentRule: The actual parent Rule instance
 // attrs:      {cb,...}, extends the result
@@ -133,7 +133,9 @@ func rule2line(x any) Line {
 // see line/README.md # internals
 func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs ParseOptions, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Parser {
 	var answer Parser
-	// fmt.Println("getRule name=" + name + " eflect.TypeOf(line).String()):" + reflect.TypeOf(line).String())
+	// if name == "decimal_digit" {
+	// 	fmt.Printf("getRule name=%s reflect.TypeOf(line).String())=%s attrs=%s\n", name, reflect.TypeOf(line).String(), attrs)
+	// }
 	switch v := line.(type) {
 	case ALine:
 		answer = rankFromLines(v.Array, name, GrammarOptions{TraceOptions: opts, LazyGrammar: lazyGrammar})
@@ -143,9 +145,10 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 	case ILine:
 		panic("assert") // ILine is impossible here
 	case OLine:
+		v.attrs = attrs
 		answer = v.toRule(rank_, parentRule, oLineByIndexOrName{name: name}, opts, lazyGrammar)
 		answer.SetNameWhenEmpty(name)
-		answer.(gnode).getgnode().ParseOptions = attrs
+		// answer.(gnode).getgnode().ParseOptions = attrs
 	case sLine:
 		// temporarily halt trace when SkipSetup
 		traceOptions := opts
@@ -159,7 +162,6 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 		ctx := newParseContext(NewCodeStream(v.Str), gm.numrules, traceOptions).setParseOptions(attrs)
 		ast := gm.Parse(ctx)
 		if IsParseError(ast) {
-			// do we really want to panic here?
 			panic(ast.(ParseError).ContentString())
 		} else {
 			answer = ast.(Parser)
@@ -176,9 +178,12 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 	if rule.name != "" && rule.name != name {
 		panic("assert")
 	}
-	rule.SkipCache = attrs.SkipCache
-	rule.SkipLog = attrs.SkipLog
+	// if name == "decimal_digit" {
+	// 	fmt.Printf(" name=%s attrs rule.rule.Debug=%s rule.Debug=%s attrs.Debug=%s\n", name, reflect.TypeOf(line).String(), rule.Debug, rule.Debug, attrs.Debug)
+	// }
+	// rule.SkipCache = attrs.SkipCache
+	// rule.SkipLog = attrs.SkipLog
 	rule.CbBuilder = attrs.CbBuilder
-	rule.Debug = attrs.Debug
+	// rule.Debug = attrs.Debug
 	return answer
 }

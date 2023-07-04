@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/grepsuzette/joeson"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/grepsuzette/joeson"
 )
 
 // this example is the typical example with a calculator
@@ -89,7 +90,7 @@ func eval(first joeson.Ast, rest joeson.Ast) joeson.Ast {
 
 func Test_failing(t *testing.T) {
 	gm := joeson.GrammarFromLines(linesCalc, "calc")
-	var h = map[string]string{
+	h := map[string]string{
 		"90 (6090)": "Error parsing at char:3",
 		"-(7)":      "Error parsing at char:0",
 	}
@@ -110,7 +111,7 @@ func Test_failing(t *testing.T) {
 
 func Test_calc(t *testing.T) {
 	gm := joeson.GrammarFromLines(linesCalc, "calc")
-	var h = map[string]int{
+	h := map[string]int{
 		"0 + 1":                            1,
 		"0 - 1":                            -1,
 		"0 * 1":                            0,
@@ -144,8 +145,10 @@ func Test_calc(t *testing.T) {
 // which can help to understand the first time
 func Test_12(t *testing.T) { assertResultIs(t, "-4 * ((-2+1) *3)", 12) }
 
-const esc string = "\x1b"
-const reset string = esc + "[0m"
+const (
+	esc   string = "\x1b"
+	reset string = esc + "[0m"
+)
 
 func cyan(s string) string       { return esc + "[36m" + s + reset }
 func yellow(s string) string     { return esc + "[33m" + s + reset }

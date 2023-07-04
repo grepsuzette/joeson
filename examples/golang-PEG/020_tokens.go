@@ -11,7 +11,8 @@ import (
 // TODO String literals
 
 // "Tokens form the vocabulary of the Go language. There are four classes:
-// identifiers, keywords, operators and punctuation, and literals. White space,
+// identifiers, keywords, operators and punctuation, and literals (SIC: that
+// makes 5). White space,
 // formed from spaces (U+0020), horizontal tabs (U+0009), carriage returns
 // (U+000D), and newlines (U+000A), is ignored except as it separates tokens
 // that would otherwise combine into a single token. Also, a newline or end of

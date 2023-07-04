@@ -3,4 +3,6 @@ joeson
 tmp.html
 *.prof
 .vscode/
+stash/
 __debug_bin
+examples/golang-peg/DRAFT

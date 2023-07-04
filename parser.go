@@ -1,6 +1,6 @@
 package joeson
 
-// Parser objects are able to parse a ParseContext producing Ast.
+// Parser objects are able to parse a ParseContext, producing Ast.
 //
 // Choice, Existential, Lookahead, Not, Pattern, Ref,
 // Regex, Sequence, and joeson also have Rank and Str are built-in Parsers

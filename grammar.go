@@ -19,19 +19,31 @@ type Grammar struct {
 }
 
 type GrammarOptions struct {
-	// Options governing what is traced or not during the initialization or the parsing
+	// Govern what is traced during initialization or parsing
 	TraceOptions TraceOptions
 
-	// Leave this nil unless you know. Nil specifies the joeson_handcompiled grammar.
-	// This lazy function must return the (compiled) grammar to use when some uncompiled
-	// string rules (sLine) are encountered. Once a grammar has been compiled, it can
-	// parse and therefore be used here.
+	// Leave this nil unless you know what you're doing.
+	// This lazy function must return the grammar to use when some uncompiled
+	// string rules (sLine) are encountered. This is internally used to bootstrap
+	// the grammar. `nil` will have the grammar use the joeson_handcompiled
+	// grammar to parse the given grammar.
 	LazyGrammar *helpers.Lazy[*Grammar]
 }
 
-// Make a new grammar from the rules in `lines`.
-// A Rank will be internally created.
-// Options can be omitted.
+// Prepare a new grammar from the rules in `lines`.
+// The way to pass options will need to be reworked at some point.
+// Here is an example:
+// ```
+//
+//	gm := joeson.GrammarFromLines([]joeson.Line{
+//			o(named("Input", "expr:Expression")),
+//			i(named("Expression", "Expression _ binary_op _ Expression | UnaryExpr")),
+//			i(named("binary_op", "'+'")),
+//			i(named("UnaryExpr", "[0-9]+")),
+//			i(named("_", "[ \t]*")),
+//		}, "leftRecursion", joeson.GrammarOptions{TraceOptions: joeson.Verbose()})
+//
+// ```
 func GrammarFromLines(lines []Line, name string, options ...GrammarOptions) *Grammar {
 	var opts GrammarOptions
 	if len(options) > 0 {
@@ -53,19 +65,22 @@ func GrammarFromLines(lines []Line, name string, options ...GrammarOptions) *Gra
 func (gm *Grammar) CountRules() int { return gm.numrules }
 
 // Parse functions don't panic.
-// A parser returns nil when declining to parse. When there is an error
+// A parser returns nil when it cannot to parse. When there is an error
 // but the parser takes the responsability (denying any other parser the
-// chance to parse), it returns a ParseError.
+// chance to parse), it returns a ParseError instead.
 func (gm *Grammar) ParseString(sCode string) Ast {
 	return gm.ParseCode(NewCodeStream(sCode))
 }
 
+// CodeStream comes from original Joeson implementation
+// Prefer to use ParseString() or ParseTokens()
 func (gm *Grammar) ParseCode(code *CodeStream) Ast {
 	return gm.Parse(newParseContext(code, gm.numrules, gm.TraceOptions))
 }
 
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	var oldTrace bool
+	ctx.GrammarName = gm.Name()
 	if ctx.parseOptions.Debug {
 		// temporarily enable stack tracing
 		oldTrace = gm.TraceOptions.Stack
@@ -114,7 +129,7 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	return result
 }
 
-// -- after this are the lower level stuffs --
+// lower level stuffs
 
 func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTraceOptions()) }
 
@@ -167,7 +182,7 @@ func (gm *Grammar) ForEachChild(f func(Parser) Parser) Parser {
 }
 
 // after Rank has already been set,
-// collect and collect rules, simplify the rule tree etc.
+// collect and collect rules, simplify the rule tree, set wasInitialized.
 func (gm *Grammar) postinit() {
 	if gm.rank == nil {
 		panic("grammar.rank is nil")

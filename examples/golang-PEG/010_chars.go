@@ -39,13 +39,14 @@ var rules_chars = rules(
 	i(named("unicode_digit", "[0-9]"), x("unicode_digit")),      // "a Unicode code point categorized as "Number, decimal digit""
 	//                         ^^^
 	// For now we'll stick to ANSI for letters and digits. It can later be improved
-	// That's because https://www.unicode.org/versions/Unicode8.0.0/ch04.pdf <- Section 4.5
-	//   does not define them.
+	// We looked into unicode specs for them but there are not defined
+	// in https://www.unicode.org/versions/Unicode8.0.0/ch04.pdf Section 4.5
 
 	// Letters and digits
+	// FIXME some of these litteral definitions are needlessly slow and precise
 	i(named("letter", "unicode_letter | '_'")), // "The underscore character _ (U+005F) is considered a lowercase letter."
 	i(named("digits", "decimal_digit | binary_digit | octal_digit | hex_digit")),
-	i(named("decimal_digit", "[0-9]"), j.ParseOptions{Debug:true}),
+	i(named("decimal_digit", "[0-9]"), j.ParseOptions{Debug: true}),
 	i(named("binary_digit", "[01]")),
 	i(named("octal_digit", "[0-7]")),
 	i(named("hex_digit", "[0-9A-Fa-f]")),
