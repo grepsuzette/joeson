@@ -58,3 +58,12 @@ To fix it:
 4. Edit tests/joeson_test.coffee. Add a backslash at the end of lines 85 and 86. Save.
 5. Test it: `coffee -c src/joeson.coffee && coffee tests/joeson_test.coffee`, it should work.
 
+# debugging methodology
+
+1. Compare the traces of the coffeescript and this implementation (TRACE=stack,grammar environment, see the README.md).
+2. If there is trully a divergence, go on below.
+3. Note the Counter at which point there is a divergence, the Counter comes last for instance for the following trace `0,0	     123 + 456           ] | |  * UnaryExpr: /([0-9])/g*{1,} 2` it would be ctx.Counter == 2.
+4. Using the debugger of your choice (e.g. Visual Code), add a Conditional breakpoint in packrat.go, inside the callback in loopify(), and enter a condition like this: `ctx.Counter >= 2 && ctx.GrammarName == "<the name of your grammar>"`. This helps to avoid the breakpoint to be called when the joeson grammar itself or your own grammar is being parsed, and will save you a lot of time.
+5. Actually find the problem.
+
+

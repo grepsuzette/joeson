@@ -226,22 +226,22 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 			}
 			if frame.wipemask == nil {
 				frame.wipemask = make([]bool, ctx.numRules)
-				for i := ctx.stackLength - 2; i >= 0; i-- {
-					i_frame := ctx.stack[i]
-					if i_frame.pos > startPos {
-						panic("assert failed: i_frame.pos > startPos")
-					}
-					if i_frame.pos < startPos || i_frame.id == x.getgnode().id {
-						break
-					}
-					frame.wipemask[i_frame.id] = true
-				}
-				// Step 2: Return whatever was cacheSet.
-				if frame.endpos.IsSet {
-					ctx.Code.Pos = frame.endpos.Int
-				}
-				return frame.result
 			}
+			for i := ctx.stackLength - 2; i >= 0; i-- {
+				i_frame := ctx.stack[i]
+				if i_frame.pos > startPos {
+					panic("assert failed: i_frame.pos > startPos")
+				}
+				if i_frame.pos < startPos || i_frame.id == x.getgnode().id {
+					break
+				}
+				frame.wipemask[i_frame.id] = true
+			}
+			// Step 2: Return whatever was cacheSet.
+			if frame.endpos.IsSet {
+				ctx.Code.Pos = frame.endpos.Int
+			}
+			return frame.result
 		default:
 			panic("Unexpected stage " + strconv.Itoa(frame.loopstage.Int) + " (B)")
 		}

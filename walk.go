@@ -13,7 +13,7 @@ type WalkPrepost struct {
 // father of `ast` or nil).
 func Walk(ast Parser, parent Parser, prepost WalkPrepost) Parser {
 	if prepost.Pre != nil {
-		var stop = prepost.Pre(ast, parent)
+		stop := prepost.Pre(ast, parent)
 		if stop == "__stop__" {
 			return ast
 		}
@@ -37,6 +37,7 @@ func ForEachChild_Array(a []Parser, f func(Parser) Parser) []Parser {
 	}
 	return anew
 }
+
 func ForEachChild_ArrayParser(a []Parser, f func(Parser) Parser) []Parser {
 	anew := []Parser{}
 	for _, child := range a {
@@ -55,28 +56,14 @@ func ForEachChild_InRules(x Parser, f func(Parser) Parser) map[string]Parser {
 	if gn.rules == nil {
 		return nil
 	}
-	for k, v := range gn.rules {
-		if r := f(v); r != nil {
-			hnew[k] = r
+	for _, name := range gn.rulesK {
+		if parser, exists := gn.rules[name]; !exists {
+			panic("assert")
+		} else {
+			if r := f(parser); r != nil {
+				hnew[name] = r
+			}
 		}
 	}
 	return hnew
 }
-
-// Following is commented out, maps not being ordered in golang.
-// Use ForEachChild_InRules() above if possible
-
-// func ForEachChild_MapString(h map[string]Parser, f func(Parser) Parser) map[string]Parser {
-// 	hnew := map[string]Parser{}
-// 	sortedKeys := []string{}
-// 	for k := range h {
-// 		sortedKeys = append(sortedKeys, k)
-// 	}
-// 	sort.Strings(sortedKeys)
-// 	for _, k := range sortedKeys {
-// 		if r := f(h[k]); r != nil {
-// 			hnew[k] = r
-// 		} // else, removed
-// 	}
-// 	return hnew
-// }

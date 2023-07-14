@@ -32,12 +32,25 @@ go test examples/calculator/calculator_test.go --run test_12 -v
 
 # Enable and control verbosity
 
-The `$TRACE` environment variable is read from the tests and allows controlling the tracing. By default, there is no tracing done.
+Verbosity is controlled by `TraceOptions`:
 
-`$TRACE` affects the `TraceOptions` in the code. To enable it from your own programs there is nothing to do, as
-`GrammarFromLines()` by default uses `DefaultTraceOptions()` which checks environment. If on the other hand you do not want to read the `$TRACE` environment variable, call it like this GrammarFromLines(<rules>, <name>, Mute())`. It will disable reading the `$TRACE` environment variable (Use `Verbose()` instead of `Mute()` if you want). 
+```go
+type TraceOptions struct {
+	Stack      bool // print detailed parsing steps
+	Loop       bool // print all rules
+	Grammar    bool // print grammar information and all rules
+	FilterLine int  // to filter only the Nth line to parse when n != -1 and Stack is true
+	SkipSetup  bool // mute traces during the setup of the joeson grammar
+}
+```
 
-So from the CLI, here is one way to enable traces: `TRACE=all,skipsetup go test . --run=TestSquareroot -v`
+The first way to enable some verbosity is to build a specific TraceOptions as shown before:
+
+```go
+gm := joeson.GrammarFromLines(rules, "myGrammarTitle", joeson.GrammarOptions{TraceOptions: joeson.Verbose()})
+```
+
+The second way is to set the environment, using `$TRACE` which is read from the tests and controls the tracing. So from the CLI, here is one way to enable traces: `TRACE=all,skipsetup go test . --run=TestSquareroot -v`
 
 Here are the possible values:
 
@@ -68,6 +81,17 @@ $ TRACE=loop,grammar go test examples/calculator/calculator_test.go --run Test_1
 ```
 
 ![calculator_test3](https://user-images.githubusercontent.com/350354/216583710-3a9fe967-2264-4b6a-8786-46a0f7d3edfc.png)
+
+To disable the usage of environment, pass some TraceOptions of your choice to GrammarFromLines().
+
+Here is a table to help:
+
+| Function                                                         | Stack | Grammar | Read env? |
+| ---------------------------------------------------------------- | ----- | ------- | --------- |
+| DefaultTraceOptions() TraceOptions                               | 0     | 1       | yes       |
+| TraceOptionsFromEnvironmentOrUse(opts TraceOptions) TraceOptions | 0     | 0       | yes       |
+| Mute() TraceOptions                                              | 0     | 0       | no        |
+| Verbose() TraceOptions                                           | 1     | 1       | no        |
 
 # Error handling
 

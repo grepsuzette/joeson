@@ -6,7 +6,7 @@ import "sort"
 
 func SortIntKeys[V any](h map[int]V) []int {
 	a := []int{}
-	for k, _ := range h {
+	for k := range h {
 		a = append(a, k)
 	}
 	sort.Ints(a)
@@ -15,7 +15,7 @@ func SortIntKeys[V any](h map[int]V) []int {
 
 func SortStringKeys[V any](h map[string]V) []string {
 	a := []string{}
-	for k, _ := range h {
+	for k := range h {
 		a = append(a, k)
 	}
 	sort.Strings(a)

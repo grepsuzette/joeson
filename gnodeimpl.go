@@ -5,24 +5,26 @@ import "github.com/grepsuzette/joeson/helpers"
 // gnodeimpl holds the data for a grammar node
 type gnodeimpl struct {
 	ParseOptions
-	parent    Parser                  // A grammar must be a DAG, which implies 1 Parent at most (root.Parent being nil)
-	name      string                  // rule name if IsRule(), empty otherwise. E.g. "AddOp" in `i(named("AddOp", "'+' | '-'"))`
-	label     string                  // example "l" when this is `l:list` in `i(named("expr", "l:list | s:string | n:number | operator:operator"), parseExpr),`
-	capture   bool                    // helps determining in which way to collect things higher up (see for instance Sequence.calculateType())
+	parent    Parser                  // A grammar must be a DAG (root.Parent being nil)
+	name      string                  // rule name if IsRule(). E.g. "AddOp" in `i(Named("AddOp", "'+' | '-'"))`
+	label     string                  // e.g. "l" in `l:list` in `i(named("expr", "l:list | s:string"), parseExpr),`
+	capture   bool                    // determines in which way to collect things higher up (see for instance Sequence.calculateType())
 	labels_   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate GNode behavior in the original coffeescript impl. See NewGNode() doc below.
 	captures_ *helpers.Lazy[[]Ast]    // the lazy captures getter, ditto.
-	rules     map[string]Parser       // Treelike. Grammar collects all rules in its post walk
-	id        int                     // rule number in a grammar. They start on 0. See also map grammar.id2Rule.
-	rule      Parser                  // what's the rule for the node with this gnode. When Rule == node, it means node is a rule of a grammar (in which case node.IsRule() is true)
+	rules     map[string]Parser       // key is the rule name.
+	rulesK    []string                // golang maps are unsorted, this keeps the insertion order
+	id        int                     // rule number in a grammar. They start on 0. Use TRACE=grammar to list the rules and their ids. See also map grammar.id2Rule.
+	rule      Parser                  // what's the Parser to use to parse this gnode
 	grammar   *Grammar                // the grammar itself
-	node      Parser                  // node containing this impl. Hackish. Only used by GNode.Captures_ default implementation.
-	origin    Origin                  // records the start-end in the source of where this gnode originates from. Unused as of now.
+	node      Parser                  // node containing this impl. Hack. Only used by GNode.Captures_ default implementation.
+	origin    Origin                  // records where this gnode originates from. Unused for now.
 }
 
 func NewGNode() *gnodeimpl {
 	gn := &gnodeimpl{
 		capture: true,
 		rules:   map[string]Parser{},
+		rulesK:  []string{},
 	}
 	// labels_ and captures_ callbacks can be redefined by individual parsers
 	// such as Sequence, Not etc.
@@ -50,6 +52,7 @@ func NewGNode() *gnodeimpl {
 
 func (gn *gnodeimpl) Include(name string, rule Parser) {
 	rule.SetNameWhenEmpty(name)
+	gn.rulesK = append(gn.rulesK, name)
 	gn.rules[name] = rule
 }
 
@@ -72,4 +75,3 @@ func (gn *gnodeimpl) SetLabels(v []string)            { gn.labels_.Set(v) }
 func (gn *gnodeimpl) SetCaptures(v []Ast)             { gn.captures_.Set(v) }
 func (gn *gnodeimpl) SetLazyLabels(f func() []string) { gn.labels_ = helpers.NewLazyFromFunc(f) }
 func (gn *gnodeimpl) SetLazyCaptures(f func() []Ast)  { gn.captures_ = helpers.NewLazyFromFunc(f) }
-

@@ -20,7 +20,7 @@ type TraceOptions struct {
 // starting from a Mute() state. If $TRACE is not specified, we only show succint
 // trace to be beginner-friendly.
 func DefaultTraceOptions() TraceOptions {
-	return CheckEnvironmentForTraceOptionsOrUse(TraceOptions{
+	return TraceOptionsFromEnvironmentOrUse(TraceOptions{
 		Stack:      false, // why default is false: too verbose
 		Loop:       false, // why default is false: prefer to use grammar
 		Grammar:    true,
@@ -42,7 +42,7 @@ func Verbose() TraceOptions {
 // If $TRACE (or $trace) environment variable is defined, derive the
 // trace options from it, starting from a Mute() initial state. If
 // the envvar is missing, defaultOpts is returned instead.
-func CheckEnvironmentForTraceOptionsOrUse(defaultOpts TraceOptions) TraceOptions {
+func TraceOptionsFromEnvironmentOrUse(defaultOpts TraceOptions) TraceOptions {
 	return checkEnvironmentForTraceOptions(Mute())
 }
 

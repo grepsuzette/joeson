@@ -217,6 +217,7 @@ func (gm *Grammar) postinit() {
 				// Merge included rules
 				for k, v := range choice.GetGNode().rules {
 					mono.rules[k] = v
+					mono.rulesK = append(mono.rulesK, k)
 				}
 				// grandchild becomes the child
 				return monochoice
@@ -263,6 +264,7 @@ func (gm *Grammar) postinit() {
 		Post: func(node Parser, parent Parser) string {
 			gnode := node.getgnode()
 			if IsRule(node) {
+				gm.GetGNode().rulesK = append(gm.GetGNode().rulesK, gnode.name)
 				gm.GetGNode().rules[gnode.name] = node
 				gnode.id = gm.numrules
 				gm.numrules++
