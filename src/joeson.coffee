@@ -148,6 +148,9 @@ showtype = (result) ->
     if result?
         # if true # show as go types, for diff_go_vs_coffee
             # feel free to edit if notice discrepancies
+            fields = Object.keys(result)
+            # when result is like { expr: xx, _origin: ..}, just have result = xx
+            result = result["expr"] if ("expr" in fields and fields.length == 1) or ("expr" in fields and "_origin" in fields and fields.length == 2)
             return "<NativeUndefined>" if result is undefined
             return "*joeson.NativeArray" if Array.isArray(result)
             return "joeson.Grammar" if result.rank?
@@ -202,6 +205,9 @@ showcontent = (result) ->
     if result == null
         "nil"
     else
+        fields = Object.keys(result)
+        # when result is like { expr: xx, _origin: ..}, just have result = xx
+        result = result["expr"] if ("expr" in fields and fields.length == 1) or ("expr" in fields and "_origin" in fields and fields.length == 2)
         if Array.isArray(result) # so output is similar to golang
             return "[" + result + "] " + cyan showtype result
         else if (result + "") == "[object Object]" # ditto
