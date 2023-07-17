@@ -101,7 +101,7 @@ In custom parsing callbacks,
 
 * return `nil` whenever parsing failed and the parser declines the responsability for what is being parsed. 
   * This will pass on the hand to the next rule in a rank.
-* return `ParseError` whenever there is a problem in what is being parsed (`ParseError` satisfies `Ast`).
+* return `ParseError` whenever there is a problem in what is being parsed (`ParseError` implements `Ast`).
 * return a regular `Ast` otherwise.
 
 ## Example: handle error to parse an octal byte value that must NOT exceed 255

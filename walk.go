@@ -38,21 +38,11 @@ func ForEachChild_Array(a []Parser, f func(Parser) Parser) []Parser {
 	return anew
 }
 
-func ForEachChild_ArrayParser(a []Parser, f func(Parser) Parser) []Parser {
-	anew := []Parser{}
-	for _, child := range a {
-		if r := f(child); r != nil {
-			anew = append(anew, r)
-		} // else removed
-	}
-	return anew
-}
-
 // ForEachChild specialization for Parser's Rules
 // working with RulesK will guarantee they are processed in order
-func ForEachChild_InRules(x Parser, f func(Parser) Parser) map[string]Parser {
+func ForEachChildInRules(x Parser, f func(Parser) Parser) map[string]Parser {
 	hnew := map[string]Parser{}
-	gn := x.getgnode()
+	gn := x.gnode()
 	if gn.rules == nil {
 		return nil
 	}

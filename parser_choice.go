@@ -1,8 +1,9 @@
 package joeson
 
 import (
-	"github.com/grepsuzette/joeson/helpers"
 	"strings"
+
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 type choice struct {
@@ -15,6 +16,7 @@ func newEmptyChoice() *choice {
 	ch.gnodeimpl.node = ch
 	return ch
 }
+
 func newChoice(it Ast) *choice {
 	if a, ok := it.(*NativeArray); ok {
 		ch := &choice{NewGNode(), helpers.AMap(a.Array, func(ast Ast) Parser { return ast.(Parser) })}
@@ -27,7 +29,7 @@ func newChoice(it Ast) *choice {
 
 func (ch *choice) isMonoChoice() bool      { return len(ch.choices) == 1 }
 func (ch *choice) Append(node Parser)      { ch.choices = append(ch.choices, node) }
-func (ch *choice) getgnode() *gnodeimpl    { return ch.gnodeimpl }
+func (ch *choice) gnode() *gnodeimpl       { return ch.gnodeimpl }
 func (ch *choice) HandlesChildLabel() bool { return false }
 
 func (ch *choice) Prepare() {
@@ -69,7 +71,7 @@ func (ch *choice) ForEachChild(f func(Parser) Parser) Parser {
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}
 	// we must first walk through rules, and then only through choices
-	ch.GetGNode().rules = ForEachChild_InRules(ch, f)
-	ch.choices = ForEachChild_ArrayParser(ch.choices, f)
+	ch.rules = ForEachChildInRules(ch, f)
+	ch.choices = ForEachChild_Array(ch.choices, f)
 	return ch
 }

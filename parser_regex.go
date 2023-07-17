@@ -20,7 +20,7 @@ func newRegexFromString(sRegex string) *regex {
 	}
 }
 
-func (re *regex) getgnode() *gnodeimpl { return re.gnodeimpl }
+func (re *regex) gnode() *gnodeimpl { return re.gnodeimpl }
 func (re *regex) ContentString() string {
 	// below /g is purely for output conformance to original coffee impl.
 	return magenta("/" + re.re.String() + "/g")
@@ -41,6 +41,6 @@ func (re *regex) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Ref, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
-	re.getgnode().rules = ForEachChild_InRules(re, f)
+	re.gnode().rules = ForEachChildInRules(re, f)
 	return re
 }

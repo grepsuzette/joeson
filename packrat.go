@@ -6,7 +6,7 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// refer to the original joeson.coffee
+// packrat parsing algorithm. From original joeson.coffee
 
 type (
 	frame struct {
@@ -84,7 +84,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 		if opts.Stack {
 			ctx.log(blue("*")+" "+String(x)+" "+boldBlack(strconv.Itoa(ctx.Counter)), opts)
 		}
-		if x.getgnode().SkipCache {
+		if x.gnode().SkipCache {
 			result := fparse(ctx)
 			if opts.Stack {
 				ctx.log(cyan("`->:")+" "+helpers.Escape(result.ContentString())+" "+boldBlack(helpers.TypeOfToString(result)), opts)
@@ -232,7 +232,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 				if i_frame.pos > startPos {
 					panic("assert failed: i_frame.pos > startPos")
 				}
-				if i_frame.pos < startPos || i_frame.id == x.getgnode().id {
+				if i_frame.pos < startPos || i_frame.id == x.gnode().id {
 					break
 				}
 				frame.wipemask[i_frame.id] = true
@@ -260,7 +260,7 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 		result := fparse2(ctx, caller)
 		if result != nil {
 			// handle labels for standalone nodes
-			gn := caller.getgnode()
+			gn := caller.gnode()
 			if gn.label != "" && gn.parent != nil && !gn.parent.HandlesChildLabel() {
 				result = NewNativeMap(map[string]Ast{gn.label: result})
 			}
@@ -274,7 +274,7 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 						start: start,
 						end:   end,
 					}
-					x.getgnode().origin = origin
+					x.gnode().origin = origin
 				default:
 				}
 				result = gn.CbBuilder(result, ctx, caller)
@@ -287,7 +287,7 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 func wrap(fparse2 parseFunc2, node Parser) parseFunc {
 	wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 	wrapped2 := prepareResult(fparse2, node)
-	gn := node.getgnode()
+	gn := node.gnode()
 	return func(ctx *ParseContext) Ast {
 		if IsRule(node) {
 			return wrapped1(ctx)

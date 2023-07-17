@@ -7,16 +7,12 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// A rank is created from lines of rules. A grammar contains such a rank of rules.
-// rank satisfies Ast and in the original implementation inherits from Choice.
-// This special relationship with choice is kept artificially here (see ForEachChild(), Parse()).
+// A rank is created from lines of rule. A grammar contains a rank.
 type rank struct {
 	*choice
 }
 
-// Create a Rank from the provided lines of rules.
-// So, why is this function private?
-// Because you should use the higher level GrammarFromLines().
+// Create a Rank from the provided lines of rules. Use GrammarFromLines().
 //
 //	`optionalLazyGrammar` is a lazy callback specifying how to create or retrieve a grammar
 //	from its cache, should the `lines` contain some string rules (SLine) needing to be compiled.
@@ -42,7 +38,7 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 			ranke.Append(choice)
 		} else if il, ok := line.(ILine); ok {
 			name, rule := il.toRule(ranke, ranke, options.TraceOptions, lazyGm)
-			ranke.getgnode().Include(name, rule)
+			ranke.gnode().Include(name, rule)
 		} else {
 			panic("Unknown type line, expected 'o' or 'i' line, got '" + line.stringIndent(0) + "' (" + reflect.TypeOf(line).String() + ")")
 		}
@@ -53,7 +49,7 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 func newEmptyRank(name string) *rank {
 	x := &rank{newEmptyChoice()}
 	x.SetName(name)
-	x.getgnode().node = x
+	x.gnode().node = x
 	return x
 }
 
@@ -64,7 +60,7 @@ func (ranke *rank) Length() int {
 }
 
 func (ranke *rank) Append(node Parser)      { ranke.choice.Append(node) }
-func (ranke *rank) getgnode() *gnodeimpl    { return ranke.choice.getgnode() }
+func (ranke *rank) gnode() *gnodeimpl       { return ranke.choice.gnode() }
 func (ranke *rank) Prepare()                { ranke.choice.Prepare() }
 func (ranke *rank) HandlesChildLabel() bool { return false }
 

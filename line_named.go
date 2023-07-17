@@ -14,7 +14,8 @@ import (
 // i(Named("LABEL", "'&' | '@' | WORD")),
 //
 // For i, it is necessary for len(lines) == 1
-//   this is to be enforcedby the caller.
+//
+//	this is to be enforcedby the caller.
 func Named(name string, lineStringOrAst any) NamedRule {
 	switch v := lineStringOrAst.(type) {
 	case Line:
@@ -32,7 +33,7 @@ func Named(name string, lineStringOrAst any) NamedRule {
 }
 
 // NamedRule is produced by Named().
-// Note NamedRule technically satisfies Ast.
+// NamedRule technically implements Ast.
 // There is no much reason to keep it public.
 type NamedRule struct {
 	name string

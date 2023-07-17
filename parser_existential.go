@@ -21,27 +21,25 @@ func (ex *existential) HandlesChildLabel() bool {
 	}
 }
 
-func (ex *existential) getgnode() *gnodeimpl { return ex.gnodeimpl }
+func (ex *existential) gnode() *gnodeimpl { return ex.gnodeimpl }
 
 func (ex *existential) Prepare() {
-	gn := ex.GetGNode()
-	var lbls = ex.calculateLabels()
-	gn.labels_.Set(lbls)
-	if len(lbls) > 0 && gn.label == "" {
-		gn.label = "@"
+	lbls := ex.calculateLabels()
+	ex.labels_.Set(lbls)
+	if len(lbls) > 0 && ex.label == "" {
+		ex.label = "@"
 	}
-	var caps = ex.it.getgnode().captures_.Get()
-	gn.captures_.Set(caps)
-	gn.capture = len(caps) > 0
+	caps := ex.it.gnode().captures_.Get()
+	ex.captures_.Set(caps)
+	ex.capture = len(caps) > 0
 }
 
 func (ex *existential) calculateLabels() []string {
-	gn := ex.GetGNode()
-	lbl := gn.label
+	lbl := ex.label
 	if lbl != "" && lbl != "@" && lbl != "&" {
 		return []string{lbl}
 	} else {
-		return ex.it.getgnode().labels_.Get()
+		return ex.it.gnode().labels_.Get()
 	}
 }
 
@@ -61,11 +59,12 @@ func (ex *existential) Parse(ctx *ParseContext) Ast {
 		}
 	}, ex)(ctx)
 }
+
 func (ex *existential) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}
-	ex.GetGNode().rules = ForEachChild_InRules(ex, f)
+	ex.rules = ForEachChildInRules(ex, f)
 	if ex.it != nil {
 		ex.it = f(ex.it)
 	}

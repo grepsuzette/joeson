@@ -4,12 +4,12 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// str is a simple Parser that tries to parse the string it was built with.
-// Let p := newStr("foo").
-// p.Parse("fool") will parse as NewNativeString("foo"),
-// p.Parse("fbar") will fail.
-//
-// See also NativeString which is a terminal node, not a Parser.
+// str is one of the most simple Parser, it tries to parse the string it was built with.
+// ```
+// p := newStr("foo").
+// p.Parse("fool") -> NewNativeString("foo"),
+// p.Parse("fbar") -> nil.
+// ```
 type str struct {
 	*gnodeimpl
 	Str string
@@ -22,11 +22,6 @@ func newStr(s string) str {
 	return str
 }
 
-// Given a rule such as o(named("interpreted_string_lit", "'\"' ( !(?'"+`"`+"') (unicode_value | byte_value) )* '\"'"))
-// the part `(?")` is a lookahead.
-// `newLookahead(Ast)` receives a NativeMap{expr:`"`} in that case, whereas it
-// should be built with an object satisfying Parser.
-// Hence the call `la := &lookahead{gn, newStrFromAst(ast)}`, which builds the `str` parser for `"`.
 func newStrFromAst(ast Ast) str {
 	switch v := ast.(type) {
 	case NativeMap:
@@ -59,7 +54,7 @@ func newStrFromAst(ast Ast) str {
 	}
 }
 
-func (s str) getgnode() *gnodeimpl    { return s.gnodeimpl }
+func (s str) gnode() *gnodeimpl       { return s.gnodeimpl }
 func (s str) Prepare()                {}
 func (s str) HandlesChildLabel() bool { return false }
 func (s str) ContentString() string {
@@ -82,6 +77,6 @@ func (s str) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Str, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
-	s.getgnode().rules = ForEachChild_InRules(s, f)
+	s.gnode().rules = ForEachChildInRules(s, f)
 	return s
 }

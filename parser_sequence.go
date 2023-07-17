@@ -2,8 +2,9 @@ package joeson
 
 import (
 	"fmt"
-	"github.com/grepsuzette/joeson/helpers"
 	"strings"
+
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 type sequenceRepr int
@@ -37,21 +38,22 @@ func newSequence(it Ast) *sequence {
 	}
 }
 
-func (seq *sequence) getgnode() *gnodeimpl    { return seq.gnodeimpl }
+func (seq *sequence) gnode() *gnodeimpl       { return seq.gnodeimpl }
 func (seq *sequence) HandlesChildLabel() bool { return true }
 func (seq *sequence) Prepare()                {}
 
 func (seq *sequence) calculateLabels() []string {
 	a := []string{}
 	for _, child := range seq.sequence {
-		a = append(a, child.getgnode().labels_.Get()...)
+		a = append(a, child.gnode().labels_.Get()...)
 	}
 	return a
 }
+
 func (seq *sequence) calculateCaptures() []Ast {
 	a := []Ast{}
 	for _, child := range seq.sequence {
-		a = append(a, child.getgnode().captures_.Get()...)
+		a = append(a, child.gnode().captures_.Get()...)
 	}
 	return a
 }
@@ -60,8 +62,8 @@ func (seq *sequence) calculateCaptures() []Ast {
 // otherwise, if at least 1 capture, it is Array
 // otherwise a Single
 func (seq *sequence) calculateType() sequenceRepr {
-	if len(seq.getgnode().labels_.Get()) == 0 {
-		if len(seq.getgnode().captures_.Get()) > 1 {
+	if len(seq.gnode().labels_.Get()) == 0 {
+		if len(seq.gnode().captures_.Get()) > 1 {
 			return Array
 		} else {
 			return Single
@@ -175,7 +177,7 @@ func (seq *sequence) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   sequence:   {type:[type:GNode]}
-	seq.getgnode().rules = ForEachChild_InRules(seq, f)
+	seq.gnode().rules = ForEachChildInRules(seq, f)
 	if seq.sequence != nil {
 		seq.sequence = ForEachChild_Array(seq.sequence, f)
 	}

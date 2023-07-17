@@ -13,7 +13,7 @@ func newNot(it Ast) *not {
 	return x
 }
 
-func (no *not) getgnode() *gnodeimpl    { return no.gnodeimpl }
+func (no *not) gnode() *gnodeimpl       { return no.gnodeimpl }
 func (no *not) Prepare()                {}
 func (no *not) HandlesChildLabel() bool { return false }
 
@@ -33,11 +33,12 @@ func (no *not) Parse(ctx *ParseContext) Ast {
 func (no *not) ContentString() string {
 	return yellow("!") + String(no.it)
 }
+
 func (no *not) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}
-	no.GetGNode().rules = ForEachChild_InRules(no, f)
+	no.rules = ForEachChildInRules(no, f)
 	if no.it != nil {
 		no.it = f(no.it)
 	}

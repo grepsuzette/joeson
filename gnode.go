@@ -1,15 +1,8 @@
 package joeson
 
-/*
-   In addition to the attributes defined by subclasses,
-     the following attributes exist for all nodes.
-   node.rule = The topmost node of a rule.
-   node.rule = rule # sometimes true.
-   node.name = name of the rule, if this is @rule.
-*/
-
+// gnode helps writing parsers.
 type gnode interface {
-	getgnode() *gnodeimpl
+	gnode() *gnodeimpl
 	Name() string
 	Label() string
 	Capture() bool
@@ -19,8 +12,8 @@ type gnode interface {
 	SetLabel(string)
 	SetCapture(bool)
 
-	// The following funcs are cached and work with a helpers.Lazy that
-	//  can be set (optionally) by each Parser type:
+	// The following functions are cached.
+	// They work with an helpers.Lazy and can be optionally set by each Parser:
 
 	Labels() []string
 	Captures() []Ast

@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-// NativeInt is an `int` but also an object that satisfies the `Ast` interface.
+// NativeInt is an `int` that implements `Ast`.
 type NativeInt int
 
 func NewNativeInt(n int) NativeInt { return NativeInt(n) }

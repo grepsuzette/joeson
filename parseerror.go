@@ -1,6 +1,6 @@
 package joeson
 
-// ParseError satisfies Ast and indicates a fatal parse error.
+// ParseError implements Ast and indicates a fatal parse error.
 //
 // It doesn't panic. After `ast := myGrammar.ParseString("FOO")`,
 // the correct way to check for error is with `IsParseError(ast)`.

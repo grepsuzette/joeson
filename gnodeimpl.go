@@ -2,7 +2,6 @@ package joeson
 
 import "github.com/grepsuzette/joeson/helpers"
 
-// gnodeimpl holds the data for a grammar node
 type gnodeimpl struct {
 	ParseOptions
 	parent    Parser                  // A grammar must be a DAG (root.Parent being nil)
@@ -56,11 +55,10 @@ func (gn *gnodeimpl) Include(name string, rule Parser) {
 	gn.rules[name] = rule
 }
 
-func (gn *gnodeimpl) GetGNode() *gnodeimpl { return gn }
-func (gn *gnodeimpl) Name() string         { return gn.name }
-func (gn *gnodeimpl) Label() string        { return gn.label }
-func (gn *gnodeimpl) Capture() bool        { return gn.capture }
-func (gn *gnodeimpl) SetName(name string)  { gn.name = name }
+func (gn *gnodeimpl) Name() string        { return gn.name }
+func (gn *gnodeimpl) Label() string       { return gn.label }
+func (gn *gnodeimpl) Capture() bool       { return gn.capture }
+func (gn *gnodeimpl) SetName(name string) { gn.name = name }
 func (gn *gnodeimpl) SetNameWhenEmpty(name string) {
 	if gn.name == "" {
 		gn.name = name

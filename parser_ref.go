@@ -2,8 +2,9 @@ package joeson
 
 import (
 	"fmt"
-	"github.com/grepsuzette/joeson/helpers"
 	"strconv"
+
+	"github.com/grepsuzette/joeson/helpers"
 )
 
 type ref struct {
@@ -13,9 +14,11 @@ type ref struct {
 }
 
 // `it` can be a NativeString ("WORD")
-//      or NativeArray with 1 element (["WORD"])
-//      or NativeArray with 2 elements (["WORD", "EXPR"])
-//         That last case is built with
+//
+//	or NativeArray with 1 element (["WORD"])
+//	or NativeArray with 2 elements (["WORD", "EXPR"])
+//	   That last case is built with
+//
 // o(s(r("WORD"), st("("), r("EXPR"), st(")")), func(it Ast) Ast {
 func newRef(it Ast) *ref {
 	var name string
@@ -47,7 +50,7 @@ func newRef(it Ast) *ref {
 			if referenced == nil {
 				panic("ref " + ref.ref + " was not found in grammar.Rules")
 			} else {
-				return referenced.getgnode().labels_.Get()
+				return referenced.gnode().labels_.Get()
 			}
 		} else if ref.Label() != "" {
 			return []string{ref.Label()}
@@ -58,14 +61,14 @@ func newRef(it Ast) *ref {
 	return ref
 }
 
-func (x *ref) getgnode() *gnodeimpl    { return x.gnodeimpl }
+func (x *ref) gnode() *gnodeimpl       { return x.gnodeimpl }
 func (x *ref) HandlesChildLabel() bool { return false }
 func (x *ref) Prepare()                {}
 func (x *ref) Parse(ctx *ParseContext) Ast {
 	return wrap(func(ctx *ParseContext, _ Parser) Ast {
 		node := x.grammar.getRule(x.ref)
 		if node == nil {
-			panic("Unknown reference " + x.ref + ". Grammar has " + strconv.Itoa(len(x.grammar.GetGNode().rules)) + " rules. ")
+			panic("Unknown reference " + x.ref + ". Grammar has " + strconv.Itoa(len(x.grammar.rules)) + " rules. ")
 		}
 		ctx.stackPeek(0).param = x.param
 		return node.Parse(ctx)
@@ -77,6 +80,6 @@ func (x *ref) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Ref, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
-	x.GetGNode().rules = ForEachChild_InRules(x, f)
+	x.rules = ForEachChildInRules(x, f)
 	return x
 }

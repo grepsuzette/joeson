@@ -1,6 +1,6 @@
 package joeson
 
-// NativeString is a `string` wrapped in an object that satisfies the `Ast` interface.
+// NativeString wraps `string` and implements Ast.
 type NativeString struct {
 	Str string
 }

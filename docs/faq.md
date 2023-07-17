@@ -46,7 +46,7 @@ grammar or any valid grammar written in joeson.
 In the same way strings can be used for almost anything, AST can be used for almost anything. In the multitude of AST usages however, compiling grammars do output very special AST nodes:
 
 * A *compiling grammar* is able to take, as an **input**, *string rules*.  
-* A *compiling grammar* **outputs** AST capable of parsing, they have a `func Parse(ctx) Ast`, but that `Ast` is in fact a `Parser`, which is an interface satisfying `Ast`.
+* A *compiling grammar* **outputs** AST capable of parsing, they have a `func Parse(ctx) Ast` (Parser implements Ast).
 
 In the beginning, we need one *stringless* grammar, one that *does not need to be compiled*. Otherwise, we never can compile anything. 
 

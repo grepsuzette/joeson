@@ -25,7 +25,7 @@ type Parser interface {
 }
 
 func IsRule(parser Parser) bool {
-	return parser.getgnode().rule == parser
+	return parser.gnode().rule == parser
 }
 
 // Return a prefix consisting of a name or a label when appropriate.

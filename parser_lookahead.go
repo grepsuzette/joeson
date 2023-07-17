@@ -14,7 +14,7 @@ func newLookahead(it Ast) *lookahead {
 }
 
 func (look *lookahead) Prepare()                {}
-func (look *lookahead) getgnode() *gnodeimpl    { return look.gnodeimpl }
+func (look *lookahead) gnode() *gnodeimpl       { return look.gnodeimpl }
 func (look *lookahead) HandlesChildLabel() bool { return false }
 func (look *lookahead) ContentString() string {
 	return blue("(?") + String(look.expr) + blue(")")
@@ -33,7 +33,7 @@ func (look *lookahead) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   expr:       {type:GNode}
-	look.GetGNode().rules = ForEachChild_InRules(look, f)
+	look.rules = ForEachChildInRules(look, f)
 	if look.expr != nil {
 		look.expr = f(look.expr)
 	}

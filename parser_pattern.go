@@ -56,7 +56,7 @@ func newPattern(it Ast) *pattern {
 	}
 	return patt
 }
-func (patt *pattern) getgnode() *gnodeimpl { return patt.gnodeimpl }
+func (patt *pattern) gnode() *gnodeimpl { return patt.gnodeimpl }
 func (patt *pattern) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos
@@ -129,7 +129,7 @@ func (patt *pattern) ForEachChild(f func(Parser) Parser) Parser {
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   value:      {type:GNode}
 	//   join:       {type:GNode}
-	patt.GetGNode().rules = ForEachChild_InRules(patt, f)
+	patt.rules = ForEachChildInRules(patt, f)
 	if patt.Value != nil {
 		patt.Value = f(patt.Value)
 	}
