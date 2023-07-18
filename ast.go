@@ -20,10 +20,21 @@ package joeson
 // Note: Parsers such as sequence, choice, not, pattern are also Ast,
 // they are produced when parsing a valid joeson grammar; and they in turn help
 // parsing that grammar.
-type Ast interface {
-	Node
-	String() string // text representation of this ast.
-}
+type (
+	Ast interface {
+		Locator
+		String() string // text representation of this ast.
+	}
+	Locator interface {
+		GetLocation() Origin
+		SetLocation(Origin)
+	}
+	Origin struct {
+		Code  *CodeStream
+		Start int
+		End   int
+	}
+)
 
 var (
 	_ Ast = &Grammar{}
@@ -37,73 +48,17 @@ var (
 	_ Ast = &sequence{}
 	_ Ast = &str{}
 	_ Ast = &NativeArray{}
-	_ Ast = NewNativeInt(0)
+	_ Ast = &NativeInt{}
 	_ Ast = &NativeMap{}
 	_ Ast = &NativeString{}
 	_ Ast = &NativeUndefined{}
 	_ Ast = &ParseError{}
 )
 
-// WIP: we are converging towards gnolang.Node
-// TODO there are some dubious aspects indicated by comments. Line and Label
-// seem too narrow for joeson, gnolang being a bit more specific
-type (
-	Name string
-	Node interface {
-		assertNode()
-		String() string
-		Copy() Node
-		GetLine() int // line is probably insufficient for joeson
-		SetLine(int)
-		GetLabel() Name // different from GetRuleLabel()
-		SetLabel(Name)
-		HasAttribute(key any) bool
-		GetAttribute(key any) any
-		SetAttribute(key any, value any)
-	}
-)
+type Attributes struct{ Location Origin }
 
-type Origin struct {
-	Code  *CodeStream
-	Start int
-	End   int
-}
-
-// Attributes (from gnolang)
-// All nodes have attributes for general analysis purposes.
-type Attributes struct {
-	Line int
-	// Origin Origin
-	Label Name
-	data  map[interface{}]interface{}
-}
-
-// can delete this i think :(
-// func (attr *Attributes) GetOrigin() Origin { return attr.Origin }
-// func (attr *Attributes) SetOrigin(code *CodeStream, start int, end int) {
-// 	attr.Origin = Origin{Code: code, Start: start, End: end}
-// }
-
-func (attr *Attributes) assertNode() {}
-func (attr *Attributes) Copy() Node  { panic("Copy() not yet implemented") }
-
-//	func (attr *Attributes) GetLine() int {
-//		return attr.Origin.Code.PosToLine(attr.Origin.Start)
-//	}
-//
-// func (attr *Attributes) SetLine(line int)                         { panic("use SetOrigin instead") } // { attr.Line = line }
-func (attr *Attributes) GetLine() int                             { return attr.Line }
-func (attr *Attributes) SetLine(line int)                         { attr.Line = line }
-func (attr *Attributes) GetLabel() Name                           { return attr.Label }
-func (attr *Attributes) SetLabel(label Name)                      { attr.Label = label }
-func (attr *Attributes) HasAttribute(key interface{}) bool        { _, ok := attr.data[key]; return ok }
-func (attr *Attributes) GetAttribute(key interface{}) interface{} { return attr.data[key] }
-func (attr *Attributes) SetAttribute(key interface{}, value interface{}) {
-	if attr.data == nil {
-		attr.data = make(map[interface{}]interface{})
-	}
-	attr.data[key] = value
-}
+func (attr *Attributes) GetLocation() Origin  { return attr.Location }
+func (attr *Attributes) SetLocation(o Origin) { attr.Location = o }
 
 // prefix(x) + x.String(x)
 func String(ast Ast) string {

@@ -11,6 +11,7 @@ func eq_int(t *testing.T, a int, b int) {
 		t.Errorf("assert %d == %d", a, b)
 	}
 }
+
 func eq_str(t *testing.T, a string, b string) {
 	t.Helper()
 	if a != b {

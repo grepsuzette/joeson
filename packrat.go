@@ -264,7 +264,13 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 			if gn.label != "" && gn.parent != nil && !gn.parent.handlesChildLabel() {
 				result = NewNativeMap(map[string]Ast{gn.label: result})
 			}
-			result.SetLine(ctx.Code.PosToLine(ctx.Code.Pos))
+			start := ctx.stackPeek(0).pos
+			end := ctx.Code.Pos
+			result.SetLocation(Origin{
+				Code:  ctx.Code,
+				Start: start,
+				End:   end,
+			})
 			if gn.CbBuilder != nil {
 				// switch x := result.(type) {
 				// case Parser:
