@@ -65,10 +65,10 @@ func (m Machine) Eval(expr Expr) Expr {
 		// Operator may appear to make no sense if not at the start of a list,
 		return expr // but anything goes in FP...
 	case kindList:
-		if len(expr.List) == 0 {
+		if len(expr.List.List) == 0 {
 			return empty()
 		}
-		first := expr.List[0]
+		first := expr.List.List[0]
 		switch first.Kind {
 		case kindList, kindNumber, kindString:
 			return expr
@@ -84,7 +84,7 @@ func (m Machine) Eval(expr Expr) Expr {
 				}
 			}
 			if f, exists := (*m.funcs)[op]; exists {
-				return f(m, expr.List[1:])
+				return f(m, list(expr.List.List[1:]...))
 			} else {
 				funcs := []string{}
 				aliases := []string{}

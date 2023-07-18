@@ -46,20 +46,20 @@ func parseExpr(it j.Ast) j.Ast {
 	} else {
 		if v, ok := h.GetExists("s"); ok {
 			if ns, ok := v.(j.NativeString); ok {
-				return Expr{kindString, ns.Str, 0, nil, ""}
+				return Expr{&j.Attributes{}, kindString, ns.Str, 0, nilList(), ""}
 			} else {
 				panic("24942")
 			}
 		} else if v, ok := h.GetExists("n"); ok {
 			if n, ok := v.(j.NativeInt); ok {
-				return Expr{kindNumber, "", float64(n), nil, ""}
+				return Expr{&j.Attributes{}, kindNumber, "", float64(n.Int()), nilList(), ""}
 			} else {
 				panic("24942")
 			}
 		} else if v, ok := h.GetExists("l"); ok {
-			return Expr{kindList, "", 0, v.(List), ""}
+			return Expr{&j.Attributes{}, kindList, "", 0, v.(List), ""}
 		} else if v, ok := h.GetExists("operator"); ok {
-			return Expr{kindOperator, "", 0, nil, v.(j.NativeString).Str}
+			return Expr{&j.Attributes{}, kindOperator, "", 0, nilList(), v.(j.NativeString).Str}
 		} else {
 			panic(h.String())
 		}
@@ -76,7 +76,7 @@ func parseList(it j.Ast) j.Ast {
 			panic("f9439393")
 		}
 	}
-	return List(exprs)
+	return list(exprs...)
 }
 
 func parseOperator(it j.Ast) j.Ast {

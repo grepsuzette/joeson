@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+
+	j "github.com/grepsuzette/joeson"
 )
 
 // for internal usage
@@ -26,7 +28,7 @@ func boolFromExpr(m Machine, item Expr) bool { return numberFromExpr(m, item) !=
 func apply(f func(Machine, List) List) func(Machine, List) Expr {
 	return func(m Machine, list List) Expr {
 		var a List = f(m, list)
-		return Expr{kindList, "", 0, a, ""}
+		return Expr{&j.Attributes{}, kindList, "", 0, a, ""}
 	}
 }
 
@@ -36,31 +38,31 @@ func apply(f func(Machine, List) List) func(Machine, List) Expr {
 // Contract: that element is a List
 // Contract: that List is returned
 func unnestListEval(m Machine, rest List) Expr {
-	if len(rest) != 1 {
+	if rest.Length() != 1 {
 		fmt.Println(rest.String())
-		fmt.Println(len(rest))
+		fmt.Println(rest.Length())
 		panic(E)
 	}
-	switch rest[0].Kind {
+	switch rest.List[0].Kind {
 	case kindList:
-		switch rest[0].List[0].Kind {
+		switch ((rest.List[0]).List.List)[0].Kind {
 		case kindOperator:
-			return m.Eval(rest[0])
+			return m.Eval(rest.List[0])
 		default:
 		}
-		return rest[0]
+		return rest.List[0]
 	default:
-		fmt.Println(rest[0])
+		fmt.Println(rest.List[0])
 		panic("unexpected kind, expected List")
 	}
 }
 
 func cmpNum(m Machine, a List, pred func(x, y float64) bool) Expr {
-	if len(a) < 2 {
+	if a.Length() < 2 {
 		panic("needs at least 2 args")
 	}
-	x := numberFromExpr(m, a[0])
-	for _, v := range a[1:] {
+	x := numberFromExpr(m, a.List[0])
+	for _, v := range a.List[1:] {
 		y := numberFromExpr(m, v)
 		if !pred(x, y) {
 			return False()

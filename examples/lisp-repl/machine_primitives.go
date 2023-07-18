@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	j "github.com/grepsuzette/joeson"
 	"github.com/grepsuzette/joeson/helpers"
 )
 
@@ -14,8 +15,8 @@ func car(m Machine, rest List) Expr {
 		panic("car must operates on a list, got " + expr.String())
 	}
 	list := expr.MustList()
-	if len(list) > 0 {
-		return list[0]
+	if list.Length() > 0 {
+		return list.List[0]
 	} else {
 		panic("car of empty list")
 	}
@@ -29,27 +30,27 @@ func cdr(m Machine, rest List) List {
 		panic("cdr must operates on a list, got " + expr.String())
 	}
 	l := expr.MustList()
-	if len(l) <= 1 {
+	if l.Length() <= 1 {
 		return list()
 	} else {
-		return l[1:]
+		return list(l.List[1:]...)
 	}
 }
 
 func add(m Machine, a List) Expr {
 	r := 0.
-	for _, item := range a {
+	for _, item := range a.List {
 		r += numberFromExpr(m, item)
 	}
 	return number(r)
 }
 
 func sub(m Machine, a List) Expr {
-	if len(a) < 2 {
+	if a.Length() < 2 {
 		panic("not enough args for sub (-). Needs at least 2")
 	} else {
-		r := numberFromExpr(m, a[0])
-		for _, item := range a[1:] {
+		r := numberFromExpr(m, a.List[0])
+		for _, item := range a.List[1:] {
 			r -= numberFromExpr(m, item)
 		}
 		return number(r)
@@ -58,17 +59,17 @@ func sub(m Machine, a List) Expr {
 
 func mul(m Machine, a List) Expr {
 	r := 1.
-	for _, item := range a {
+	for _, item := range a.List {
 		r *= numberFromExpr(m, item)
 	}
 	return number(r)
 }
 
 func remainder(m Machine, a List) Expr {
-	if len(a) != 2 {
+	if a.Length() != 2 {
 		panic("% (remainder) expects 2 args")
 	} else {
-		return number(math.Mod(numberFromExpr(m, a[0]), numberFromExpr(m, a[1])))
+		return number(math.Mod(numberFromExpr(m, a.List[0]), numberFromExpr(m, a.List[1])))
 	}
 }
 
@@ -86,7 +87,7 @@ func ge(m Machine, a List) Expr  { return cmpNum(m, a, func(x, y float64) bool {
 // (and false false) meaning it evalutes to false. But it's TODO
 // We just evaluate the (and a b c d ) form for now
 func and(m Machine, a List) Expr {
-	for _, v := range a {
+	for _, v := range a.List {
 		if !boolFromExpr(m, v) {
 			return False()
 		}
@@ -96,7 +97,7 @@ func and(m Machine, a List) Expr {
 
 // if there is one true, it's true. Otherwise false. Even (or ()) is false.
 func or(m Machine, a List) Expr {
-	for _, v := range a {
+	for _, v := range a.List {
 		if boolFromExpr(m, v) {
 			return True()
 		}
@@ -106,21 +107,21 @@ func or(m Machine, a List) Expr {
 
 // (not (eq 7)) is like (neq 7). Contract: exactly 1 argument.
 func not(m Machine, rest List) Expr {
-	if len(rest) != 1 {
+	if rest.Length() != 1 {
 		panic("`not` admits only 1 arg")
 	}
-	return Bool(boolFromExpr(m, rest[0]))
+	return Bool(boolFromExpr(m, rest.List[0]))
 }
 
 // (if <predicate> <then-expr> <else-expr>)
 // <predicate> is evaluated as boolean,
 func _if(m Machine, rest List) Expr {
-	if len(rest) != 3 {
+	if rest.Length() != 3 {
 		panic("if expects exactly 3 args")
 	}
-	pred := rest[0]
-	thenexpr := rest[1]
-	elseexpr := rest[2]
+	pred := rest.List[0]
+	thenexpr := rest.List[1]
+	elseexpr := rest.List[2]
 	if boolFromExpr(m, pred) {
 		return m.Eval(thenexpr)
 	} else {
@@ -138,13 +139,13 @@ func _if(m Machine, rest List) Expr {
 // note `else` will simply be substituted by a true condition
 // an empty list is returned if no branch is matched.
 func cond(m Machine, rest List) Expr {
-	for _, branch := range rest {
+	for _, branch := range rest.List {
 		a := branch.MustList()
-		if len(a) != 2 {
+		if a.Length() != 2 {
 			panic("(cond (<pred> <action>) ...): each branch requires 2 args, but branch is " + branch.String())
 		}
-		pred := a[0]
-		action := a[1]
+		pred := a.List[0]
+		action := a.List[1]
 		if pred.Kind == kindOperator && pred.Operator == "else" {
 			return m.Eval(action)
 		} else if pred.Kind == kindList {
@@ -169,10 +170,10 @@ func cond(m Machine, rest List) Expr {
 // (list? (+ 1 2 3)) -> false
 // TODO (list? '(+ 1 2 3)) -> true
 func isList(m Machine, rest List) Expr {
-	if len(rest) != 1 {
+	if rest.Length() != 1 {
 		panic("list? requires 1 arg")
 	}
-	return Bool(rest[0].Kind == kindList)
+	return Bool(rest.List[0].Kind == kindList)
 }
 
 // Define function aliases. Modifies the machine. Returns empty().
@@ -182,11 +183,11 @@ func isList(m Machine, rest List) Expr {
 // Then (== 4 2) will be executed as (eq? 4 2)
 func alias(m Machine, rest List) Expr {
 	a := rest
-	if len(a) != 2 {
+	if a.Length() != 2 {
 		panic("alias arg1 arg2")
 	}
-	alias := a[0].MustStringOrOperator()
-	aliased := a[1].MustStringOrOperator()
+	alias := a.List[0].MustStringOrOperator()
+	aliased := a.List[1].MustStringOrOperator()
 	if _, has := (*m.funcs)[aliased]; has {
 		(*m.aliases)[alias] = aliased
 	} else {
@@ -205,28 +206,28 @@ func alias(m Machine, rest List) Expr {
 //	a[1] is an expression, that can contain symbols declared as args in a[0].
 func define(m Machine, a List) Expr {
 	syntax := "define (funName [arg1 [arg2 [...]]]) (expr)"
-	if len(a) != 2 {
+	if a.Length() != 2 {
 		panic(syntax)
 	}
-	def := a[0].MustList()
-	if len(def) < 1 {
+	def := a.List[0].MustList()
+	if def.Length() < 1 {
 		panic(syntax + ": missing funName")
 	}
-	funName := def[0].MustStringOrOperator()
-	argNames := helpers.AMap(def[1:], func(x Expr) string { return x.MustStringOrOperator() })
-	expr := a[1]
+	funName := def.List[0].MustStringOrOperator()
+	argNames := helpers.AMap(def.List[1:], func(x Expr) string { return x.MustStringOrOperator() })
+	expr := a.List[1]
 	delete((*m.aliases), funName) // Contract: If an alias exists with this name, it will be deleted before.
 	// when funName is called, we are to return evaluation of expr,
 	// substituting named parameters
 	(*m.funcs)[funName] = func(_ Machine, rest List) Expr {
 		// rest is given by the caller.
 		// first need to check if number of given arguments is that of argNames
-		if len(rest) != len(argNames) {
+		if rest.Length() != len(argNames) {
 			panic(fmt.Sprintf("%s expecting args %v but got (%v)\n", funName, argNames, rest))
 		}
 		args := map[string]Expr{}
 		for i := range argNames {
-			args[argNames[i]] = rest[i]
+			args[argNames[i]] = rest.List[i]
 		}
 		return m.Eval(substArgsInExpr(args, expr))
 	}
@@ -244,9 +245,10 @@ func substArgsInExpr(args map[string]Expr, expr Expr) Expr {
 			return expr
 		}
 	case kindList:
-		return Expr{kindList, "", 0, helpers.AMap(expr.List, func(subexpr Expr) Expr {
+		us := helpers.AMap(expr.List.List, func(subexpr Expr) Expr {
 			return substArgsInExpr(args, subexpr)
-		}), ""}
+		})
+		return Expr{&j.Attributes{}, kindList, "", 0, list(us...), ""}
 	default:
 		panic("unhandled kind")
 	}

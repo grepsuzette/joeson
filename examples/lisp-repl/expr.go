@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"strings"
+
+	j "github.com/grepsuzette/joeson"
 )
 
 // -- uLisp AST
@@ -18,18 +20,19 @@ const (
 
 type (
 	Expr struct {
+		*j.Attributes
 		Kind     exprKind
-		String   string
+		Str      string
 		Number   float64
 		List     List
 		Operator string
 	}
 )
 
-func empty() Expr              { return Expr{kindList, "", 0, list(), ""} }
-func number(f float64) Expr    { return Expr{kindNumber, "", f, nil, ""} }
-func str(s string) Expr        { return Expr{kindString, s, 0, nil, ""} }
-func operator(fun string) Expr { return Expr{kindOperator, "", 0, nil, fun} }
+func empty() Expr              { return Expr{&j.Attributes{}, kindList, "", 0, list(), ""} }
+func number(f float64) Expr    { return Expr{&j.Attributes{}, kindNumber, "", f, nilList(), ""} }
+func str(s string) Expr        { return Expr{&j.Attributes{}, kindString, s, 0, nilList(), ""} }
+func operator(fun string) Expr { return Expr{&j.Attributes{}, kindOperator, "", 0, nilList(), fun} }
 func True() Expr               { return number(1) }
 func False() Expr              { return number(0) }
 func Bool(b bool) Expr {
@@ -40,10 +43,11 @@ func Bool(b bool) Expr {
 	}
 }
 
+func (o Expr) assertNode() {}
 func (o Expr) MustString() string {
 	switch o.Kind {
 	case kindString:
-		return o.String
+		return o.Str
 	case kindOperator:
 		panic("Expected a string, got an operator instead: " + o.String() + ". Did you mean MustStringOrOperator()?")
 	default:
@@ -55,7 +59,7 @@ func (o Expr) MustString() string {
 func (o Expr) MustStringOrOperator() string {
 	switch o.Kind {
 	case kindString:
-		return o.String
+		return o.Str
 	case kindOperator:
 		// fmt.Println("warn: Expected a string, got an operator instead: " + o.String() + ". Using as string.")
 		return o.Operator
@@ -77,14 +81,14 @@ func (o Expr) MustList() List {
 func (o Expr) String() string {
 	switch o.Kind {
 	case kindString:
-		return quoted(o.String)
+		return quoted(o.Str)
 	case kindNumber:
 		return fmt.Sprintf(bold_magenta("%f"), o.Number)
 	case kindOperator:
 		return bold_cyan(o.Operator)
 	case kindList:
 		a := []string{}
-		for _, expr := range o.List {
+		for _, expr := range o.List.List {
 			a = append(a, expr.String()) // beware, cycles will produce infinite loops here
 		}
 		return colorParen("(") + strings.Join(a, " ") + colorParen(")")
