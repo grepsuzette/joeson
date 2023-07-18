@@ -11,12 +11,13 @@ import (
 // p.Parse("fbar") -> nil.
 // ```
 type str struct {
+	Attributes
 	*gnodeimpl
 	Str string
 }
 
 func newStr(s string) str {
-	str := str{NewGNode(), s}
+	str := str{Attributes{}, NewGNode(), s}
 	str.gnodeimpl.capture = false
 	str.gnodeimpl.node = str
 	return str
@@ -28,7 +29,7 @@ func newStrFromAst(ast Ast) str {
 		// try to convert to Str iif it has only one key
 		keys := v.Keys()
 		if len(keys) < 1 {
-			panic("assert Parser expected, got NativeMap but it's got more than one key so can not convert to Str: " + v.ContentString())
+			panic("assert Parser expected, got NativeMap but it's got more than one key so can not convert to Str: " + v.String())
 		} else {
 			if ast, ok := v.GetExists(keys[0]); !ok {
 				panic("should not happen")
@@ -41,7 +42,7 @@ func newStrFromAst(ast Ast) str {
 				case *NativeArray:
 					return newStr(stringFromNativeArray(v))
 				default:
-					panic("Could not create a Parser from NativeMap " + v.ContentString())
+					panic("Could not create a Parser from NativeMap " + v.String())
 				}
 			}
 		}
@@ -50,14 +51,14 @@ func newStrFromAst(ast Ast) str {
 	case str:
 		return v
 	default:
-		panic("Could not create str from " + v.ContentString())
+		panic("Could not create str from " + v.String())
 	}
 }
 
 func (s str) gnode() *gnodeimpl       { return s.gnodeimpl }
 func (s str) prepare()                {}
 func (s str) handlesChildLabel() bool { return false }
-func (s str) ContentString() string {
+func (s str) String() string {
 	return green("'" + helpers.Escape(s.Str) + "'")
 }
 

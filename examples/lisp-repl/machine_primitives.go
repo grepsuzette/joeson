@@ -11,7 +11,7 @@ import (
 func car(m Machine, rest List) Expr {
 	expr := unnestListEval(m, rest)
 	if expr.Kind != kindList {
-		panic("car must operates on a list, got " + expr.ContentString())
+		panic("car must operates on a list, got " + expr.String())
 	}
 	list := expr.MustList()
 	if len(list) > 0 {
@@ -26,7 +26,7 @@ func car(m Machine, rest List) Expr {
 func cdr(m Machine, rest List) List {
 	expr := unnestListEval(m, rest)
 	if expr.Kind != kindList {
-		panic("cdr must operates on a list, got " + expr.ContentString())
+		panic("cdr must operates on a list, got " + expr.String())
 	}
 	l := expr.MustList()
 	if len(l) <= 1 {
@@ -129,9 +129,11 @@ func _if(m Machine, rest List) Expr {
 }
 
 // (cond
-//   ((>= x 9) <action1>)
-//   ((>= x 5) <action2>)
-//   (else <action3>)
+//
+//	((>= x 9) <action1>)
+//	((>= x 5) <action2>)
+//	(else <action3>)
+//
 // )
 // note `else` will simply be substituted by a true condition
 // an empty list is returned if no branch is matched.
@@ -139,7 +141,7 @@ func cond(m Machine, rest List) Expr {
 	for _, branch := range rest {
 		a := branch.MustList()
 		if len(a) != 2 {
-			panic("(cond (<pred> <action>) ...): each branch requires 2 args, but branch is " + branch.ContentString())
+			panic("(cond (<pred> <action>) ...): each branch requires 2 args, but branch is " + branch.String())
 		}
 		pred := a[0]
 		action := a[1]
@@ -198,6 +200,7 @@ func alias(m Machine, rest List) Expr {
 // Contract: If an alias exists with this name, it will be deleted before.
 // E.g. in lisp: `(define ("square" n) (* n n))`
 // Thus:
+//
 //	a[0] is a list with: the new function name, followed by named arguments.
 //	a[1] is an expression, that can contain symbols declared as args in a[0].
 func define(m Machine, a List) Expr {

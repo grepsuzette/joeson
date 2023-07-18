@@ -64,7 +64,7 @@ func extractResult(t *testing.T, x joeson.Ast) int {
 	if n, exists := x.(joeson.NativeMap).GetIntExists("expr"); exists {
 		return n
 	} else {
-		t.Errorf("Failed to find a result like NativeMap{expr:<INT>} in " + x.ContentString())
+		t.Errorf("Failed to find a result like NativeMap{expr:<INT>} in " + x.String())
 	}
 	t.FailNow()
 	return 0 // so it compiles
@@ -83,7 +83,7 @@ func eval(first joeson.Ast, rest joeson.Ast) joeson.Ast {
 			lhs = joeson.NewNativeInt(ops[op](lhs.(joeson.NativeInt).Int(), rhs.Int()))
 		}
 	} else {
-		panic("expected NativeArray, got " + rest.ContentString())
+		panic("expected NativeArray, got " + rest.String())
 	}
 	return lhs
 }
@@ -97,7 +97,7 @@ func Test_failing(t *testing.T) {
 	for s, sExpectedError := range h {
 		res := gm.ParseString(s)
 		if !joeson.IsParseError(res) {
-			t.Error("expected error but got none, for: " + s + ". Res: " + res.ContentString())
+			t.Error("expected error but got none, for: " + s + ". Res: " + res.String())
 		} else {
 			sError := res.(joeson.ParseError).ErrorString
 			if strings.Index(sError, sExpectedError) == 0 {
@@ -129,7 +129,7 @@ func Test_calc(t *testing.T) {
 	for s, nExpectedResult := range h {
 		res := gm.ParseString(s)
 		if joeson.IsParseError(res) {
-			t.Error(res.ContentString())
+			t.Error(res.String())
 		} else {
 			if extractResult(t, res) != nExpectedResult {
 				t.Fail()
@@ -159,12 +159,12 @@ func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
 	// if res, error := joeson.GrammarFromLines(linesCalc, "calc").ParseString(sExpression); error == nil {
 	res := joeson.GrammarFromLines(linesCalc, "calc").ParseString(sExpression)
 	if joeson.IsParseError(res) {
-		t.Error(res.ContentString())
+		t.Error(res.String())
 	} else {
 		fmt.Println(
 			cyan(sExpression),
 			" --> ",
-			yellow(res.ContentString()),
+			yellow(res.String()),
 			" --> ",
 			boldYellow(strconv.Itoa(extractResult(t, res))),
 		)

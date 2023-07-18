@@ -11,7 +11,7 @@ type NativeMap map[string]Ast
 func NewEmptyNativeMap() NativeMap            { return NewNativeMap(map[string]Ast{}) }
 func NewNativeMap(h map[string]Ast) NativeMap { return h }
 
-func (nm NativeMap) ContentString() string {
+func (nm NativeMap) String() string {
 	var b strings.Builder
 	b.WriteString("NativeMap{")
 	first := true
@@ -19,7 +19,7 @@ func (nm NativeMap) ContentString() string {
 		if !first {
 			b.WriteString(", ")
 		}
-		b.WriteString(k + ":" + nm.GetOrPanic(k).ContentString())
+		b.WriteString(k + ":" + nm.GetOrPanic(k).String())
 		first = false
 	}
 	b.WriteString("}")
@@ -119,7 +119,7 @@ func (nm NativeMap) GetParser(k string) Parser {
 	case Parser:
 		return x
 	case Ast:
-		panic("assert Parser expected, not Ast: " + x.ContentString())
+		panic("assert Parser expected, not Ast: " + x.String())
 	default:
 		panic("assert")
 	}

@@ -9,5 +9,5 @@ type cLine struct {
 func newCLine(x Parser) cLine     { return cLine{x} }
 func (cl cLine) lineType() string { return "c" }
 func (cl cLine) stringIndent(nIndent int) string {
-	return cl.Parser.ContentString()
+	return cl.Parser.String()
 }

@@ -5,6 +5,7 @@ import (
 )
 
 type regex struct {
+	Attributes
 	*gnodeimpl
 	reStr string
 	re    regexp.Regexp
@@ -14,14 +15,14 @@ func newRegexFromString(sRegex string) *regex {
 	if compiledRegexp, e := regexp.Compile("(" + sRegex + ")"); e != nil {
 		panic("Invalid regex: " + sRegex)
 	} else {
-		re := &regex{NewGNode(), sRegex, *compiledRegexp}
+		re := &regex{Attributes{}, NewGNode(), sRegex, *compiledRegexp}
 		re.gnodeimpl.node = re
 		return re
 	}
 }
 
 func (re *regex) gnode() *gnodeimpl { return re.gnodeimpl }
-func (re *regex) ContentString() string {
+func (re *regex) String() string {
 	// below /g is purely for output conformance to original coffee impl.
 	return magenta("/" + re.re.String() + "/g")
 }

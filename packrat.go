@@ -87,7 +87,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 		if x.gnode().SkipCache {
 			result := fparse(ctx)
 			if opts.Stack {
-				ctx.log(cyan("`->:")+" "+helpers.Escape(result.ContentString())+" "+boldBlack(helpers.TypeOfToString(result)), opts)
+				ctx.log(cyan("`->:")+" "+helpers.Escape(result.String())+" "+boldBlack(helpers.TypeOfToString(result)), opts)
 			}
 			return result
 		}
@@ -103,7 +103,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 				if opts.Stack {
 					if frame.result != nil {
 						s := ""
-						s += helpers.Escape(frame.result.ContentString())
+						s += helpers.Escape(frame.result.String())
 						s += " "
 						s += cyan(helpers.TypeOfToString(frame.result))
 						ctx.log(cyan("`-hit:")+" "+s, opts)
@@ -126,7 +126,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 					if result == nil {
 						s += "nil"
 					} else {
-						s += helpers.Escape(result.ContentString())
+						s += helpers.Escape(result.String())
 						s += " "
 						s += cyan(helpers.TypeOfToString(result))
 					}
@@ -169,7 +169,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 						// 		s += red(strconv.Itoa(frame.id))
 						// 	}
 						// 	s += " - " + strings.Join(ctx.loopStack, ", ")
-						// 	s += " - " + yellow(helpers.Escape(result.ContentString()))
+						// 	s += " - " + yellow(helpers.Escape(result.String()))
 						// 	s += ": " + blue(helpers.Escape(ctx.Code.Peek(NewPeek().BeforeChars(10).AfterChars(10))))
 						// 	fmt.Println(s) // also this way in original joeson.coffee
 						// }
@@ -201,7 +201,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 					ctx.restoreWith(bestStash)
 					ctx.Code.Pos = bestEndPos
 					if opts.Stack {
-						ctx.log(yellow("`--- loop done! --- ")+"best result: "+helpers.Escape(bestResult.ContentString()), opts)
+						ctx.log(yellow("`--- loop done! --- ")+"best result: "+helpers.Escape(bestResult.String()), opts)
 					}
 					// Step 4: return best result, which will get cached
 					frame.loopstage.Set(0)
@@ -219,7 +219,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 			if opts.Stack {
 				cs := "nil"
 				if frame.result != nil {
-					cs = frame.result.ContentString()
+					cs = frame.result.String()
 				}
 				ctx.log(yellow("`-base: ")+
 					helpers.Escape(cs)+" "+boldBlack(helpers.TypeOfToString(frame.result)), opts)

@@ -10,6 +10,7 @@ import (
 )
 
 type Grammar struct {
+	Attributes
 	*gnodeimpl
 	rank     Parser         // a *Rank or a Ref to a rank
 	numrules int            // Each Ast can have rules, recursively. This however is the total count in the grammar
@@ -135,7 +136,7 @@ func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTrace
 
 func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
 	name := "__empty__"
-	gm := &Grammar{NewGNode(), nil, 0, map[int]Parser{}, opts, false}
+	gm := &Grammar{Attributes{}, NewGNode(), nil, 0, map[int]Parser{}, opts, false}
 	gm.gnodeimpl.name = name
 	gm.gnodeimpl.node = gm
 	return gm
@@ -162,7 +163,7 @@ func (gm *Grammar) getRule(name string) Parser {
 
 func (gm *Grammar) prepare()                {}
 func (gm *Grammar) handlesChildLabel() bool { return false }
-func (gm *Grammar) ContentString() string {
+func (gm *Grammar) String() string {
 	if gm.rank == nil {
 		return magenta("GRAMMAR{}")
 	} else {
@@ -294,7 +295,7 @@ func (gm *Grammar) postinit() {
 func (gm *Grammar) PrintRules() {
 	fmt.Println("+--------------- Grammar.Debug() ----------------------------------")
 	fmt.Println("| name         : " + bold(gm.Name()))
-	fmt.Println("| contentString: " + gm.ContentString())
+	fmt.Println("| contentString: " + gm.String())
 	fmt.Println("| rules        : " + strconv.Itoa(gm.numrules))
 	fmt.Println("| ")
 	if gm.numrules <= 0 {
@@ -342,7 +343,7 @@ func (gm *Grammar) PrintRules() {
 			helpers.PadLeft(v.Label(), 7),
 			helpers.PadLeft(strings.Join(v.gnode().labels_.Get(), ","), 21),
 			helpers.PadLeft(sParentName, 16),
-			helpers.PadLeft(v.ContentString(), 30),
+			helpers.PadLeft(v.String(), 30),
 		)
 	}
 	fmt.Println("| ")

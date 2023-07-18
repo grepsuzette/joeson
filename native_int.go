@@ -33,10 +33,9 @@ func NewNativeIntFrom(x Ast) NativeInt {
 		}
 		return NewNativeIntFromString(s)
 	default:
-		panic("Unable to make NativeInt from " + x.ContentString())
+		panic("Unable to make NativeInt from " + x.String())
 	}
 }
 
-func (n NativeInt) String() string        { return strconv.Itoa(int(n)) }
-func (n NativeInt) Int() int              { return int(n) }
-func (n NativeInt) ContentString() string { return strconv.Itoa(int(n)) }
+func (n NativeInt) Int() int       { return int(n) }
+func (n NativeInt) String() string { return strconv.Itoa(int(n)) }

@@ -7,19 +7,20 @@ import (
 )
 
 type choice struct {
+	Attributes
 	*gnodeimpl
 	choices []Parser
 }
 
 func newEmptyChoice() *choice {
-	ch := &choice{NewGNode(), []Parser{}}
+	ch := &choice{Attributes{}, NewGNode(), []Parser{}}
 	ch.gnodeimpl.node = ch
 	return ch
 }
 
 func newChoice(it Ast) *choice {
 	if a, ok := it.(*NativeArray); ok {
-		ch := &choice{NewGNode(), helpers.AMap(a.Array, func(ast Ast) Parser { return ast.(Parser) })}
+		ch := &choice{Attributes{}, NewGNode(), helpers.AMap(a.Array, func(ast Ast) Parser { return ast.(Parser) })}
 		ch.gnodeimpl.node = ch
 		return ch
 	} else {
@@ -57,7 +58,7 @@ func (ch *choice) Parse(ctx *ParseContext) Ast {
 	}, ch)(ctx)
 }
 
-func (ch *choice) ContentString() string {
+func (ch *choice) String() string {
 	var b strings.Builder
 	b.WriteString(blue("("))
 	a := helpers.AMap(ch.choices, func(x Parser) string { return String(x) })

@@ -8,6 +8,7 @@ import (
 )
 
 type ref struct {
+	Attributes
 	*gnodeimpl
 	ref   string // ref because joeson.coffee used @ref, because @name was reserved
 	param Parser
@@ -33,13 +34,13 @@ func newRef(it Ast) *ref {
 		}
 		name = na.Get(0).(NativeString).Str
 		if na.Length() > 1 {
-			// fmt.Printf("ref param %s %T\n", na.Get(1).ContentString(), na.Get(1))
+			// fmt.Printf("ref param %s %T\n", na.Get(1).String(), na.Get(1))
 			param = na.Get(1).(Parser)
 		}
 	default:
 		panic(fmt.Sprintf("unexpected type for NewRef: %T %v\n", it, it))
 	}
-	ref := &ref{gnodeimpl: NewGNode(), ref: name, param: param}
+	ref := &ref{Attributes: Attributes{}, gnodeimpl: NewGNode(), ref: name, param: param}
 	ref.gnodeimpl.node = ref
 	if name[0:1] == "_" {
 		ref.SetCapture(false)
@@ -75,7 +76,7 @@ func (x *ref) Parse(ctx *ParseContext) Ast {
 	}, x)(ctx)
 }
 
-func (x *ref) ContentString() string { return red(x.ref) }
+func (x *ref) String() string { return red(x.ref) }
 func (x *ref) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Ref, but GNode has:
 	// @defineChildren

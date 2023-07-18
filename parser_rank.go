@@ -29,21 +29,21 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 			return NewJoesonWithOptions(options.TraceOptions)
 		})
 	}
-	ranke := newEmptyRank(rankname)
+	rank := newEmptyRank(rankname)
 	for _, line := range lines {
 		if ol, ok := line.(OLine); ok {
-			choice := ol.toRule(ranke, ranke, oLineByIndexOrName{
-				index: helpers.NewNilableInt(ranke.Length()),
+			choice := ol.toRule(rank, rank, oLineByIndexOrName{
+				index: helpers.NewNilableInt(rank.Length()),
 			}, options.TraceOptions, lazyGm)
-			ranke.Append(choice)
+			rank.Append(choice)
 		} else if il, ok := line.(ILine); ok {
-			name, rule := il.toRule(ranke, ranke, options.TraceOptions, lazyGm)
-			ranke.gnode().Include(name, rule)
+			name, rule := il.toRule(rank, rank, options.TraceOptions, lazyGm)
+			rank.gnode().Include(name, rule)
 		} else {
 			panic("Unknown type line, expected 'o' or 'i' line, got '" + line.stringIndent(0) + "' (" + reflect.TypeOf(line).String() + ")")
 		}
 	}
-	return ranke
+	return rank
 }
 
 func newEmptyRank(name string) *rank {
@@ -64,7 +64,7 @@ func (rank *rank) gnode() *gnodeimpl       { return rank.choice.gnode() }
 func (rank *rank) prepare()                { rank.choice.prepare() }
 func (rank *rank) handlesChildLabel() bool { return false }
 
-func (rank *rank) ContentString() string {
+func (rank *rank) String() string {
 	var b strings.Builder
 	b.WriteString(blue("Rank("))
 	a := helpers.AMap(rank.choice.choices, func(x Parser) string {

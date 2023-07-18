@@ -77,7 +77,7 @@ Instead we use `Ast` and `Parser` interfaces.
 
 * `Ast` 
   - the product of a grammar parsing a string (`func Parse(ctx *ParseContext) Ast`). 
-  - it is an **interface** defining ContentString()string (`type Ast interface { ContentString() string }`). 
+  - it is an **interface** defining String()string (`type Ast interface { ContentString() string }`). 
 
 * `Parser` 
   - a special `Ast` produced by a joeson grammar (`Ref, Rank, Sequence, LookAhead, Choice, Not, Pattern, Regex`...). 
@@ -92,7 +92,7 @@ Instead we use `Ast` and `Parser` interfaces.
 
 They are used for the returns. 
 
-Since every parser must return an `Ast`, we can not directly return an int, string, map, or array. Instead we have wrappers that also implement `ContentString()`. They are `NativeMap`, `NativeArray`, `NativeInt`, `NativeString` and are all `Ast`.
+Since every parser must return an `Ast`, we can not directly return an int, string, map, or array. Instead we have wrappers that also implement `String()`. They are `NativeMap`, `NativeArray`, `NativeInt`, `NativeString` and are all `Ast`.
 
 How does it work?
 
@@ -140,7 +140,7 @@ type ParseError struct {
 	ErrorString string
 }
 
-func (pe ParseError) ContentString() string {
+func (pe ParseError) String() string {
 	return "ERROR " + pe.ErrorString + " " + pe.ctx.String()
 }
 

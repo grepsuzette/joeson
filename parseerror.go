@@ -13,7 +13,7 @@ type ParseError struct {
 	ErrorString string
 }
 
-func (pe ParseError) ContentString() string {
+func (pe ParseError) String() string {
 	return "ERROR " + pe.ErrorString + " " + pe.ctx.String()
 }
 

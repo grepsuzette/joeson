@@ -45,7 +45,7 @@ func (o Expr) MustString() string {
 	case kindString:
 		return o.String
 	case kindOperator:
-		panic("Expected a string, got an operator instead: " + o.ContentString() + ". Did you mean MustStringOrOperator()?")
+		panic("Expected a string, got an operator instead: " + o.String() + ". Did you mean MustStringOrOperator()?")
 	default:
 		fmt.Println(o)
 		panic(E)
@@ -57,7 +57,7 @@ func (o Expr) MustStringOrOperator() string {
 	case kindString:
 		return o.String
 	case kindOperator:
-		// fmt.Println("warn: Expected a string, got an operator instead: " + o.ContentString() + ". Using as string.")
+		// fmt.Println("warn: Expected a string, got an operator instead: " + o.String() + ". Using as string.")
 		return o.Operator
 	default:
 		fmt.Println(o)
@@ -70,11 +70,11 @@ func (o Expr) MustList() List {
 	case kindList:
 		return o.List
 	default:
-		panic("Expected a List, got: " + o.ContentString())
+		panic("Expected a List, got: " + o.String())
 	}
 }
 
-func (o Expr) ContentString() string {
+func (o Expr) String() string {
 	switch o.Kind {
 	case kindString:
 		return quoted(o.String)
@@ -85,9 +85,9 @@ func (o Expr) ContentString() string {
 	case kindList:
 		a := []string{}
 		for _, expr := range o.List {
-			a = append(a, expr.ContentString()) // beware, cycles will produce infinite loops here
+			a = append(a, expr.String()) // beware, cycles will produce infinite loops here
 		}
 		return colorParen("(") + strings.Join(a, " ") + colorParen(")")
 	}
-	panic("Expr.ContentString() missing case")
+	panic("Expr.String() missing case")
 }

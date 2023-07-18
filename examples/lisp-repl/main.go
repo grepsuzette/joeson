@@ -20,7 +20,8 @@ const E = "should not happen" // panic(E)
 func grammar() *j.Grammar { return j.GrammarFromLines(grammarRules, "uLisp") }
 
 // REPL using joeson grammar to parse inputs,
-//  and feeding a VM with that ast
+//
+//	and feeding a VM with that ast
 func main() {
 	gm := grammar()
 	vm := NewMachine()
@@ -44,14 +45,14 @@ func main() {
 			}
 			ast := gm.ParseString(s)
 			if j.IsParseError(ast) {
-				fmt.Println("Parse error: " + ast.ContentString())
+				fmt.Println("Parse error: " + ast.String())
 			} else {
 				if expr, ok := ast.(Expr); ok {
 					evaluatedExpr := vm.Eval(expr)
 					// if evaluatedExpr == nil {
 					// 	fmt.Println(yellow("nil"))
 					// } else {
-					fmt.Println(evaluatedExpr.ContentString())
+					fmt.Println(evaluatedExpr.String())
 					// }
 				} else {
 					panic(E)

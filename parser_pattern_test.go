@@ -5,7 +5,7 @@ import (
 )
 
 func TestPattern(t *testing.T) {
-	var f = func(patt *pattern, tcase string, expectedMin int, expectedMax int, expectedContent string) {
+	f := func(patt *pattern, tcase string, expectedMin int, expectedMax int, expectedContent string) {
 		if patt.Value == nil || patt.Value.(str).Str != "foo" {
 			t.Error(tcase + " patt.Value expected foo")
 		}
@@ -15,8 +15,8 @@ func TestPattern(t *testing.T) {
 		if int(patt.Max) != expectedMax {
 			t.Errorf(tcase+" patt.Max expected %d, got %d", expectedMax, patt.Max)
 		}
-		if patt.ContentString() != expectedContent {
-			t.Errorf(tcase+" patt.ContentString() expected %s, got %s", expectedContent, patt.ContentString())
+		if patt.String() != expectedContent {
+			t.Errorf(tcase+" patt.String() expected %s, got %s", expectedContent, patt.ContentString())
 		}
 	}
 	tcase := "TestPattern case#1"

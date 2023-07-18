@@ -61,7 +61,7 @@ func parseExpr(it j.Ast) j.Ast {
 		} else if v, ok := h.GetExists("operator"); ok {
 			return Expr{kindOperator, "", 0, nil, v.(j.NativeString).Str}
 		} else {
-			panic(h.ContentString())
+			panic(h.String())
 		}
 	}
 }

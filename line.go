@@ -162,7 +162,7 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 		ctx := newParseContext(NewCodeStream(v.Str), gm.numrules, traceOptions).setParseOptions(attrs)
 		ast := gm.Parse(ctx)
 		if IsParseError(ast) {
-			panic(ast.(ParseError).ContentString())
+			panic(ast.(ParseError).String())
 		} else {
 			answer = ast.(Parser)
 		}

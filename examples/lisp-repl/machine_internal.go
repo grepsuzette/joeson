@@ -37,7 +37,7 @@ func apply(f func(Machine, List) List) func(Machine, List) Expr {
 // Contract: that List is returned
 func unnestListEval(m Machine, rest List) Expr {
 	if len(rest) != 1 {
-		fmt.Println(rest.ContentString())
+		fmt.Println(rest.String())
 		fmt.Println(len(rest))
 		panic(E)
 	}

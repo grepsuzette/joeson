@@ -1,13 +1,14 @@
 package joeson
 
 type not struct {
+	Attributes
 	*gnodeimpl
 	it Parser
 }
 
 func newNot(it Ast) *not {
 	gn := NewGNode()
-	x := &not{gn, it.(Parser)}
+	x := &not{Attributes{}, gn, it.(Parser)}
 	gn.capture = false
 	gn.node = x
 	return x
@@ -30,7 +31,7 @@ func (no *not) Parse(ctx *ParseContext) Ast {
 	}, no)(ctx)
 }
 
-func (no *not) ContentString() string {
+func (no *not) String() string {
 	return yellow("!") + String(no.it)
 }
 

@@ -7,7 +7,7 @@ type NativeUndefined struct{ *gnodeimpl }
 func NewNativeUndefined() NativeUndefined {
 	return NativeUndefined{NewGNode()}
 }
-func (nu NativeUndefined) ContentString() string { return "<NativeUndefined>" }
+func (nu NativeUndefined) String() string { return "<NativeUndefined>" }
 
 func (nu NativeUndefined) Parse(ctx *ParseContext) Ast               { return nu }
 func (nu NativeUndefined) gnode() *gnodeimpl                         { return nu.gnodeimpl }

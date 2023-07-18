@@ -1,12 +1,13 @@
 package joeson
 
 type existential struct {
+	Attributes
 	*gnodeimpl
 	it Parser
 }
 
 func newExistential(it Ast) *existential {
-	ex := &existential{gnodeimpl: NewGNode(), it: it.(Parser)}
+	ex := &existential{Attributes: Attributes{}, gnodeimpl: NewGNode(), it: it.(Parser)}
 	ex.gnodeimpl.node = ex
 	return ex
 }
@@ -43,7 +44,7 @@ func (ex *existential) calculateLabels() []string {
 	}
 }
 
-func (ex *existential) ContentString() string {
+func (ex *existential) String() string {
 	return String(ex.it) + blue("?")
 }
 

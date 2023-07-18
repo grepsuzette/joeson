@@ -24,16 +24,16 @@ func TestDecls(t *testing.T) {
 	// 	if strings.HasPrefix(pair.b, "ERROR") {
 	// 		fmt.Printf("[32m%s[0m gave an error as expected [32m✓[0m\n", pair.a)
 	// 	} else {
-	// 		t.Fatalf("Error parsing %s. Expected ast.ContentString() to contain '%s', got '%s'", pair.a, pair.b, e.Error())
+	// 		t.Fatalf("Error parsing %s. Expected ast.String() to contain '%s', got '%s'", pair.a, pair.b, e.Error())
 	// 	}
 	// } else {
-	// 	if strings.Contains(ast.ContentString(), pair.b) {
-	// 		fmt.Printf("[32m%s[0m parsed as [33m%s[0m [32m✓[0m %s\n", pair.a, ast.ContentString(), pair.b)
+	// 	if strings.Contains(ast.String(), pair.b) {
+	// 		fmt.Printf("[32m%s[0m parsed as [33m%s[0m [32m✓[0m %s\n", pair.a, ast.String(), pair.b)
 	// 	} else {
 	// 		t.Fatalf(
 	// 			"Error, \"[1m%s[0m\" [1;31mparsed[0m as %s [1;31mbut expected [0;31m%s[0m",
 	// 			pair.a,
-	// 			ast.ContentString(),
+	// 			ast.String(),
 	// 			pair.b,
 	// 		)
 	// 	}

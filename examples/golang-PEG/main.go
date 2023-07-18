@@ -22,7 +22,7 @@ func main() {
 	for _, s := range []string{"345678", "aaegeagr", "_"} {
 		ast := gm_chars.ParseString(s)
 		if j.IsParseError(ast) {
-			panic(ast.ContentString())
+			panic(ast.String())
 		}
 	}
 	gm_tokens := j.GrammarFromLines(rules_tokens, "go-tokens")
@@ -41,7 +41,7 @@ func testParse(t *testing.T, gm *j.Grammar, h map[string]string) {
 // Parse `s` using grammar `gm`, asserts `s` is parsed
 // with an ast type beginning with string `expect`.
 //
-// That last one is given using `ast.ContentString()`, where `ast` is the
+// That last one is given using `ast.String()`, where `ast` is the
 // result of `gm.ParseString(s)`.
 //
 // Two special cases:
@@ -57,16 +57,16 @@ func test(t *testing.T, gm *j.Grammar, s string, expect string) {
 		if strings.HasPrefix(expect, "ERROR") {
 			fmt.Printf("[32m%s[0m gave an error as expected [32m✓[0m\n", s)
 		} else {
-			t.Fatalf("Error parsing %s. Expected ast.ContentString() to contain '%s', got '%s'", s, expect, ast.ContentString())
+			t.Fatalf("Error parsing %s. Expected ast.String() to contain '%s', got '%s'", s, expect, ast.ContentString())
 		}
 	} else {
-		if strings.Contains(ast.ContentString(), expect) {
-			fmt.Printf("[32m%s[0m parsed as [33m%s[0m [32m✓[0m %s\n", s, ast.ContentString(), expect)
+		if strings.Contains(ast.String(), expect) {
+			fmt.Printf("[32m%s[0m parsed as [33m%s[0m [32m✓[0m %s\n", s, ast.String(), expect)
 		} else {
 			t.Fatalf(
 				"Error, \"[1m%s[0m\" [1;31mparsed[0m as %s [1;31mbut expected [0;31m%s[0m",
 				s,
-				ast.ContentString(),
+				ast.String(),
 				expect,
 			)
 		}

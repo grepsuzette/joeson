@@ -109,9 +109,9 @@ func Test(t *testing.T) {
 		t.Run(fmt.Sprintf("eval %s expected to give %s", k, v), func(t *testing.T) {
 			ast := gm.ParseString(k)
 			if joeson.IsParseError(ast) {
-				t.Errorf("%s expect to eval as %s did not even parse! error = %s\n", k, v, ast.ContentString())
+				t.Errorf("%s expect to eval as %s did not even parse! error = %s\n", k, v, ast.String())
 			} else {
-				s := helpers.StripAnsi(m.Eval(ast.(Expr)).ContentString())
+				s := helpers.StripAnsi(m.Eval(ast.(Expr)).String())
 				if s != v {
 					t.Errorf("%s expected to eval as %s gave %s instead\n", k, v, s)
 				}

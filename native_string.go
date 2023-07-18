@@ -5,5 +5,5 @@ type NativeString struct {
 	Str string
 }
 
-func NewNativeString(s string) NativeString   { return NativeString{s} }
-func (ns NativeString) ContentString() string { return ns.Str }
+func NewNativeString(s string) NativeString { return NativeString{s} }
+func (ns NativeString) String() string      { return ns.Str }

@@ -4,7 +4,7 @@ import "github.com/grepsuzette/joeson"
 
 // function x() helps to quickly write a grammar.
 // Calling x("foo") returns a callback `func(τ Ast) Ast`.
-// Calling cb.ContentString() gives "<foo:" + τ.ContentString() + ">"
+// Calling cb.String() gives "<foo:" + τ.ContentString() + ">"
 //
 // For example:
 //
@@ -19,7 +19,7 @@ import "github.com/grepsuzette/joeson"
 // )
 //
 // Here, whichever of keyword, identifier etc gets built,
-// its ContentString() will be like "<token:keyword>", "<token:identifier>" etc.
+// its String() will be like "<token:keyword>", "<token:identifier>" etc.
 func x(typename string) func(joeson.Ast) joeson.Ast {
 	return func(ast joeson.Ast) joeson.Ast {
 		return dumb{typename, ast}
@@ -29,8 +29,8 @@ func x(typename string) func(joeson.Ast) joeson.Ast {
 // ParseError is an ast denoting parse errors
 type ParseError struct{ string }
 
-func NewParseError(s string) ParseError    { return ParseError{s} }
-func (e ParseError) ContentString() string { return e.string }
+func NewParseError(s string) ParseError { return ParseError{s} }
+func (e ParseError) String() string     { return e.string }
 
 // type dumb is used by x(). As the name hints, it's nothing too exciting
 type dumb struct {
@@ -38,6 +38,6 @@ type dumb struct {
 	ast      joeson.Ast
 }
 
-func (dumb dumb) ContentString() string {
-	return "<" + dumb.typename + ":" + dumb.ast.ContentString() + ">"
+func (dumb dumb) String() string {
+	return "<" + dumb.typename + ":" + dumb.ast.String() + ">"
 }

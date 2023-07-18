@@ -25,19 +25,20 @@ import (
 // undefined is something else).
 
 type NativeArray struct {
+	Attributes
 	Array []Ast
 }
 
 func NewNativeArray(a []Ast) *NativeArray {
 	if a == nil {
-		return &NativeArray{[]Ast{}}
+		return &NativeArray{Attributes{}, []Ast{}}
 	} else {
-		return &NativeArray{a}
+		return &NativeArray{Attributes{}, a}
 	}
 }
 
 func (na *NativeArray) Get(i int) Ast { return na.Array[i] }
 func (na *NativeArray) Length() int   { return len(na.Array) }
-func (na *NativeArray) ContentString() string {
-	return "[" + strings.Join(helpers.AMap(na.Array, func(x Ast) string { return x.ContentString() }), ",") + "]"
+func (na *NativeArray) String() string {
+	return "[" + strings.Join(helpers.AMap(na.Array, func(x Ast) string { return x.String() }), ",") + "]"
 }
