@@ -6,14 +6,14 @@ import (
 
 // NativeInt is an `int` that implements `Ast`.
 type NativeInt struct {
-	*Attributes
+	*Origin
 	int
 }
 
-func NewNativeInt(n int) NativeInt { return NativeInt{&Attributes{}, n} }
+func NewNativeInt(n int) NativeInt { return NativeInt{&Origin{}, n} }
 func NewNativeIntFromString(s string) NativeInt {
 	if n, e := strconv.Atoi(s); e == nil {
-		return NativeInt{&Attributes{}, n}
+		return NativeInt{&Origin{}, n}
 	} else {
 		panic("can not convert string " + s + " to NativeInt")
 	}

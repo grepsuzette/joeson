@@ -36,6 +36,14 @@ type (
 	}
 )
 
+// For object having *Origin to automatically implement Locator
+func (o *Origin) SetLocation(n Origin) {
+	o.Code = n.Code
+	o.Start = n.Start
+	o.End = n.End
+}
+func (o *Origin) GetLocation() Origin { return *o }
+
 var (
 	_ Ast = &Grammar{}
 	_ Ast = &choice{}
@@ -54,11 +62,6 @@ var (
 	_ Ast = &NativeUndefined{}
 	_ Ast = &ParseError{}
 )
-
-type Attributes struct{ Location Origin }
-
-func (attr *Attributes) GetLocation() Origin  { return attr.Location }
-func (attr *Attributes) SetLocation(o Origin) { attr.Location = o }
 
 // prefix(x) + x.String(x)
 func String(ast Ast) string {

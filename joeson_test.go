@@ -118,7 +118,7 @@ func TestDebugLabel(t *testing.T) {
 		t.Error(ast.String())
 	} else {
 		if nm, isNativeMap := ast.(NativeMap); !isNativeMap {
-			t.Errorf("expected NativeMap, got %T. String: %s\n", ast, ast.ContentString())
+			t.Errorf("expected NativeMap, got %T. String: %s\n", ast, ast.String())
 		} else {
 			// in two operations...
 			if label, exists := nm.GetExists("l"); !exists {

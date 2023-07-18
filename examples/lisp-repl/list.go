@@ -5,15 +5,15 @@ import (
 )
 
 type List struct {
-	*j.Attributes
+	*j.Origin
 	List []Expr
 }
 
-func list(a ...Expr) List { return List{&j.Attributes{}, a} }
-func nilList() List       { return List{&j.Attributes{}, []Expr{}} }
+func list(a ...Expr) List { return List{&j.Origin{}, a} }
+func nilList() List       { return List{&j.Origin{}, []Expr{}} }
 
 func (o List) assertNode() {}
-func (o List) Expr() Expr  { return Expr{&j.Attributes{}, kindList, "", 0, o, ""} }
+func (o List) Expr() Expr  { return Expr{&j.Origin{}, kindList, "", 0, o, ""} }
 func (o List) Length() int { return len(o.List) }
 func (o List) String() string {
 	s := "("

@@ -16,7 +16,7 @@ func TestPattern(t *testing.T) {
 			t.Errorf(tcase+" patt.Max expected %d, got %d", expectedMax, patt.Max)
 		}
 		if patt.String() != expectedContent {
-			t.Errorf(tcase+" patt.String() expected %s, got %s", expectedContent, patt.ContentString())
+			t.Errorf(tcase+" patt.String() expected %s, got %s", expectedContent, patt.String())
 		}
 	}
 	tcase := "TestPattern case#1"

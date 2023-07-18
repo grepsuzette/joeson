@@ -16,7 +16,7 @@ const (
 )
 
 type sequence struct {
-	*Attributes
+	*Origin
 	*gnodeimpl
 	sequence []Parser
 	type_    *helpers.Lazy[sequenceRepr] // internal cache for internalType()
@@ -30,7 +30,7 @@ func newSequence(it Ast) *sequence {
 			panic("expecting non nil array")
 		}
 		gn := NewGNode()
-		seq := &sequence{Attributes: &Attributes{}, gnodeimpl: gn, sequence: helpers.AMap(a.Array, func(a Ast) Parser { return a.(Parser) })}
+		seq := &sequence{Origin: &Origin{}, gnodeimpl: gn, sequence: helpers.AMap(a.Array, func(a Ast) Parser { return a.(Parser) })}
 		gn.node = seq
 		gn.labels_ = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
 		gn.captures_ = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })

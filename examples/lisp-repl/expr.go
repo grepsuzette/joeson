@@ -20,7 +20,7 @@ const (
 
 type (
 	Expr struct {
-		*j.Attributes
+		*j.Origin
 		Kind     exprKind
 		Str      string
 		Number   float64
@@ -29,10 +29,10 @@ type (
 	}
 )
 
-func empty() Expr              { return Expr{&j.Attributes{}, kindList, "", 0, list(), ""} }
-func number(f float64) Expr    { return Expr{&j.Attributes{}, kindNumber, "", f, nilList(), ""} }
-func str(s string) Expr        { return Expr{&j.Attributes{}, kindString, s, 0, nilList(), ""} }
-func operator(fun string) Expr { return Expr{&j.Attributes{}, kindOperator, "", 0, nilList(), fun} }
+func empty() Expr              { return Expr{&j.Origin{}, kindList, "", 0, list(), ""} }
+func number(f float64) Expr    { return Expr{&j.Origin{}, kindNumber, "", f, nilList(), ""} }
+func str(s string) Expr        { return Expr{&j.Origin{}, kindString, s, 0, nilList(), ""} }
+func operator(fun string) Expr { return Expr{&j.Origin{}, kindOperator, "", 0, nilList(), fun} }
 func True() Expr               { return number(1) }
 func False() Expr              { return number(0) }
 func Bool(b bool) Expr {

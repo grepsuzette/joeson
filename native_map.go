@@ -7,12 +7,12 @@ import (
 )
 
 type NativeMap struct {
-	*Attributes
+	*Origin
 	Map map[string]Ast
 }
 
 func NewEmptyNativeMap() NativeMap            { return NewNativeMap(map[string]Ast{}) }
-func NewNativeMap(h map[string]Ast) NativeMap { return NativeMap{&Attributes{}, h} }
+func NewNativeMap(h map[string]Ast) NativeMap { return NativeMap{&Origin{}, h} }
 
 func (nm NativeMap) assertNode() {}
 func (nm NativeMap) String() string {

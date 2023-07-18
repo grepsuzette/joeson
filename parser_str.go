@@ -11,13 +11,13 @@ import (
 // p.Parse("fbar") -> nil.
 // ```
 type str struct {
-	*Attributes
+	*Origin
 	*gnodeimpl
 	Str string
 }
 
 func newStr(s string) str {
-	str := str{&Attributes{}, NewGNode(), s}
+	str := str{&Origin{}, NewGNode(), s}
 	str.gnodeimpl.capture = false
 	str.gnodeimpl.node = str
 	return str

@@ -8,7 +8,7 @@ import (
 )
 
 type ref struct {
-	*Attributes
+	*Origin
 	*gnodeimpl
 	ref   string // ref because joeson.coffee used @ref, because @name was reserved
 	param Parser
@@ -40,7 +40,7 @@ func newRef(it Ast) *ref {
 	default:
 		panic(fmt.Sprintf("unexpected type for NewRef: %T %v\n", it, it))
 	}
-	ref := &ref{Attributes: &Attributes{}, gnodeimpl: NewGNode(), ref: name, param: param}
+	ref := &ref{Origin: &Origin{}, gnodeimpl: NewGNode(), ref: name, param: param}
 	ref.gnodeimpl.node = ref
 	if name[0:1] == "_" {
 		ref.SetCapture(false)

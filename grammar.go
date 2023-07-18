@@ -10,7 +10,7 @@ import (
 )
 
 type Grammar struct {
-	Attributes
+	*Origin
 	*gnodeimpl
 	rank     Parser         // a *Rank or a Ref to a rank
 	numrules int            // Each Ast can have rules, recursively. This however is the total count in the grammar
@@ -137,7 +137,7 @@ func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTrace
 
 func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
 	name := "__empty__"
-	gm := &Grammar{Attributes{}, NewGNode(), nil, 0, map[int]Parser{}, opts, false}
+	gm := &Grammar{&Origin{}, NewGNode(), nil, 0, map[int]Parser{}, opts, false}
 	gm.gnodeimpl.name = name
 	gm.gnodeimpl.node = gm
 	return gm

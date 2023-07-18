@@ -9,7 +9,7 @@ package joeson
 // in another way. When a ParseError Ast is returned instead,
 // the parsing will fail immediately. See examples.
 type ParseError struct {
-	*Attributes
+	*Origin
 	ctx         *ParseContext
 	ErrorString string
 }
@@ -20,7 +20,7 @@ func (pe ParseError) String() string {
 }
 
 func NewParseError(ctx *ParseContext, s string) ParseError {
-	return ParseError{&Attributes{}, ctx, s}
+	return ParseError{&Origin{}, ctx, s}
 }
 
 func IsParseError(ast Ast) bool {

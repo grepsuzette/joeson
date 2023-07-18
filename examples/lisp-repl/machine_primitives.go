@@ -248,7 +248,7 @@ func substArgsInExpr(args map[string]Expr, expr Expr) Expr {
 		us := helpers.AMap(expr.List.List, func(subexpr Expr) Expr {
 			return substArgsInExpr(args, subexpr)
 		})
-		return Expr{&j.Attributes{}, kindList, "", 0, list(us...), ""}
+		return Expr{&j.Origin{}, kindList, "", 0, list(us...), ""}
 	default:
 		panic("unhandled kind")
 	}

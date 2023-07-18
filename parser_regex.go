@@ -5,7 +5,7 @@ import (
 )
 
 type regex struct {
-	*Attributes
+	*Origin
 	*gnodeimpl
 	reStr string
 	re    regexp.Regexp
@@ -15,7 +15,7 @@ func newRegexFromString(sRegex string) *regex {
 	if compiledRegexp, e := regexp.Compile("(" + sRegex + ")"); e != nil {
 		panic("Invalid regex: " + sRegex)
 	} else {
-		re := &regex{&Attributes{}, NewGNode(), sRegex, *compiledRegexp}
+		re := &regex{&Origin{}, NewGNode(), sRegex, *compiledRegexp}
 		re.gnodeimpl.node = re
 		return re
 	}

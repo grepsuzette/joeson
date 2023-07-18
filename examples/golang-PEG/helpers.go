@@ -22,7 +22,7 @@ import "github.com/grepsuzette/joeson"
 // its String() will be like "<token:keyword>", "<token:identifier>" etc.
 func x(typename string) func(joeson.Ast) joeson.Ast {
 	return func(ast joeson.Ast) joeson.Ast {
-		return dumb{typename, ast, &joeson.Attributes{}}
+		return dumb{typename, ast, &joeson.Origin{}}
 	}
 }
 
@@ -36,7 +36,7 @@ func (e ParseError) String() string     { return e.string }
 type dumb struct {
 	typename string
 	ast      joeson.Ast
-	*joeson.Attributes
+	*joeson.Origin
 }
 
 func (dumb dumb) assertNode()    {}
