@@ -24,7 +24,7 @@ func NewJoesonWithOptions(opts TraceOptions) *Grammar {
 
 func c(a ...Ast) *choice                 { return newChoice(NewNativeArray(a)) }
 func e(it Ast) *existential              { return newExistential(it) }
-func l(label string, node Parser) Parser { node.SetLabel(label); return node }
+func l(label string, node Parser) Parser { node.SetRuleLabel(label); return node }
 func n(it Parser) *not                   { return newNot(it) }
 func r(s string) *ref                    { return newRef(NewNativeString(s)) }
 func re(s string) *regex                 { return newRegexFromString(s) }
@@ -48,8 +48,10 @@ func p(value, join Parser, minmax ...int) *pattern {
 	return p
 }
 
-const JoesonNbRules int = 35
-const JoesonGrammarName = "__joeson__"
+const (
+	JoesonNbRules     int = 35
+	JoesonGrammarName     = "__joeson__"
+)
 
 func o(a ...any) OLine { return O(a...) }
 func i(a ...any) ILine { return I(a...) }

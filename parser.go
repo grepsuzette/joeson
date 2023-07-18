@@ -42,9 +42,9 @@ func IsRule(parser Parser) bool {
 // Return a prefix consisting of a name or a label when appropriate.
 func prefix(parser Parser) string {
 	if IsRule(parser) {
-		return red(parser.Name() + ": ")
-	} else if parser.Label() != "" {
-		return cyan(parser.Label() + ":")
+		return red(parser.GetRuleName() + ": ")
+	} else if parser.GetRuleLabel() != "" {
+		return cyan(parser.GetRuleLabel() + ":")
 	} else {
 		return ""
 	}

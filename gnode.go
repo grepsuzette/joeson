@@ -3,13 +3,13 @@ package joeson
 // gnode helps writing parsers.
 type gnode interface {
 	gnode() *gnodeimpl
-	Name() string
-	Label() string
+	GetRuleName() string
+	GetRuleLabel() string
+	SetRuleLabel(string)
 	Capture() bool
 
-	SetName(string)
-	SetNameWhenEmpty(string)
-	SetLabel(string)
+	SetRuleName(string)
+	SetRuleNameWhenEmpty(string)
 	SetCapture(bool)
 
 	// The following functions are cached.

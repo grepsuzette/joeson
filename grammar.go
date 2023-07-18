@@ -55,14 +55,15 @@ func GrammarFromLines(lines []Line, name string, options ...GrammarOptions) *Gra
 			LazyGrammar:  nil,
 		}
 	}
-	ranke := rankFromLines(lines, name, opts)
+	rank := rankFromLines(lines, name, opts)
 	newgm := newEmptyGrammarWithOptions(opts.TraceOptions)
-	newgm.rank = ranke
-	newgm.SetName(name)
+	newgm.rank = rank
+	newgm.SetRuleName(name)
 	newgm.postinit()
 	return newgm
 }
 
+func (gm *Grammar) assertNode()     {}
 func (gm *Grammar) CountRules() int { return gm.numrules }
 
 // Parse functions don't panic.
@@ -81,7 +82,7 @@ func (gm *Grammar) ParseCode(code *CodeStream) Ast {
 
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	var oldTrace bool
-	ctx.GrammarName = gm.Name()
+	ctx.GrammarName = gm.GetRuleName()
 	if ctx.parseOptions.Debug {
 		// temporarily enable stack tracing
 		oldTrace = gm.TraceOptions.Stack
@@ -213,7 +214,7 @@ func (gm *Grammar) postinit() {
 				mono := monochoice.gnode()
 				// Merge label
 				if mono.label == "" {
-					mono.label = choice.Label()
+					mono.label = choice.GetRuleLabel()
 				}
 				// Merge included rules
 				for k, v := range choice.rules {
@@ -294,7 +295,7 @@ func (gm *Grammar) postinit() {
 
 func (gm *Grammar) PrintRules() {
 	fmt.Println("+--------------- Grammar.Debug() ----------------------------------")
-	fmt.Println("| name         : " + bold(gm.Name()))
+	fmt.Println("| name         : " + bold(gm.GetRuleName()))
 	fmt.Println("| contentString: " + gm.String())
 	fmt.Println("| rules        : " + strconv.Itoa(gm.numrules))
 	fmt.Println("| ")
@@ -327,20 +328,20 @@ func (gm *Grammar) PrintRules() {
 				case *Grammar:
 					sParentName = "__grammar__" // instead show name, use same as js for diffing
 				default:
-					sParentName = father.Name()
+					sParentName = father.GetRuleName()
 				}
 			default:
 				// sParentName = fmt.Sprintf("%T", v)
-				sParentName = v.Name()
+				sParentName = v.GetRuleName()
 			}
 			// sParentName = v.Parent.Name
 		}
 		fmt.Println("|  ",
-			helpers.PadLeft(v.Name(), 14),
+			helpers.PadLeft(v.GetRuleName(), 14),
 			helpers.PadLeft(strconv.Itoa(v.gnode().id), 3),
 			helpers.PadLeft(helpers.TypeOfToString(v), 20),
 			helpers.PadLeft(helpers.BoolToString(v.Capture()), 3),
-			helpers.PadLeft(v.Label(), 7),
+			helpers.PadLeft(v.GetRuleLabel(), 7),
 			helpers.PadLeft(strings.Join(v.gnode().labels_.Get(), ","), 21),
 			helpers.PadLeft(sParentName, 16),
 			helpers.PadLeft(v.String(), 30),

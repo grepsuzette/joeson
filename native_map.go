@@ -6,16 +6,20 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-type NativeMap map[string]Ast
+type NativeMap struct {
+	*Attributes
+	Map map[string]Ast
+}
 
 func NewEmptyNativeMap() NativeMap            { return NewNativeMap(map[string]Ast{}) }
-func NewNativeMap(h map[string]Ast) NativeMap { return h }
+func NewNativeMap(h map[string]Ast) NativeMap { return NativeMap{&Attributes{}, h} }
 
+func (nm NativeMap) assertNode() {}
 func (nm NativeMap) String() string {
 	var b strings.Builder
 	b.WriteString("NativeMap{")
 	first := true
-	for _, k := range helpers.SortStringKeys(nm) {
+	for _, k := range helpers.SortStringKeys(nm.Map) {
 		if !first {
 			b.WriteString(", ")
 		}
@@ -28,21 +32,21 @@ func (nm NativeMap) String() string {
 
 func (nm NativeMap) Keys() []string {
 	a := []string{}
-	for k := range nm {
+	for k := range nm.Map {
 		a = append(a, k)
 	}
 	return a
 }
 
 func (nm NativeMap) IsEmpty() bool {
-	for range nm {
+	for range nm.Map {
 		return true
 	}
 	return false
 }
 
 func (nm NativeMap) GetExists(k string) (Ast, bool) {
-	v, exists := nm[k]
+	v, exists := nm.Map[k]
 	return v, exists
 }
 
@@ -51,7 +55,7 @@ func (nm NativeMap) GetExists(k string) (Ast, bool) {
 // It panics when it is NOT a NativeString. The returned bool is
 // false whenever the given string is not a key.
 func (nm NativeMap) GetStringExists(k string) (string, bool) {
-	if vv, exists := nm[k]; exists {
+	if vv, exists := nm.Map[k]; exists {
 		switch v := vv.(type) {
 		case NativeString:
 			return v.Str, true
@@ -69,8 +73,8 @@ func (nm NativeMap) GetStringExists(k string) (string, bool) {
 // It panics when it is NOT a NativeInt. The returned bool is
 // false whenever the given string is not a key.
 func (nm NativeMap) GetIntExists(k string) (int, bool) {
-	if v, exists := nm[k]; exists {
-		return int(v.(NativeInt)), true
+	if v, exists := nm.Map[k]; exists {
+		return v.(NativeInt).Int(), true
 	} else {
 		return 0, false
 	}
@@ -79,7 +83,7 @@ func (nm NativeMap) GetIntExists(k string) (int, bool) {
 // true when key is not defined or when its value is NativeUndefined.
 // Note: successfully parsed Ast can't possibly return nil.
 func (nm NativeMap) IsUndefined(k string) bool {
-	if v, exists := nm[k]; exists {
+	if v, exists := nm.Map[k]; exists {
 		if _, ok := v.(NativeUndefined); ok {
 			return true
 		} else {
@@ -90,7 +94,7 @@ func (nm NativeMap) IsUndefined(k string) bool {
 }
 
 func (nm NativeMap) GetOrPanic(k string) Ast {
-	if r, ok := nm[k]; ok {
+	if r, ok := nm.Map[k]; ok {
 		return r
 	} else {
 		panic("assert")
@@ -108,12 +112,12 @@ func (nm NativeMap) GetWhicheverOrPanic(a []string) Ast {
 }
 
 func (nm NativeMap) Get(k string) Ast {
-	return nm[k]
+	return nm.Map[k]
 }
 
 // if key doesn't exist return nil, otherwise forces a Parser or panic.
 func (nm NativeMap) GetParser(k string) Parser {
-	switch x := nm[k].(type) {
+	switch x := nm.Map[k].(type) {
 	case nil:
 		return nil
 	case Parser:
@@ -126,10 +130,10 @@ func (nm NativeMap) GetParser(k string) Parser {
 }
 
 func (nm NativeMap) Set(k string, v Ast) {
-	nm[k] = v
+	nm.Map[k] = v
 }
 
 func (nm NativeMap) Exists(k string) bool {
-	_, ok := nm[k]
+	_, ok := nm.Map[k]
 	return ok
 }

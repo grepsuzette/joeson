@@ -9,16 +9,18 @@ package joeson
 // in another way. When a ParseError Ast is returned instead,
 // the parsing will fail immediately. See examples.
 type ParseError struct {
+	*Attributes
 	ctx         *ParseContext
 	ErrorString string
 }
 
+func (pe ParseError) assertNode() {}
 func (pe ParseError) String() string {
 	return "ERROR " + pe.ErrorString + " " + pe.ctx.String()
 }
 
 func NewParseError(ctx *ParseContext, s string) ParseError {
-	return ParseError{ctx, s}
+	return ParseError{&Attributes{}, ctx, s}
 }
 
 func IsParseError(ast Ast) bool {

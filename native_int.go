@@ -1,18 +1,19 @@
 package joeson
 
 import (
-	"fmt"
 	"strconv"
 )
 
 // NativeInt is an `int` that implements `Ast`.
-type NativeInt int
+type NativeInt struct {
+	*Attributes
+	int
+}
 
-func NewNativeInt(n int) NativeInt { return NativeInt(n) }
+func NewNativeInt(n int) NativeInt { return NativeInt{&Attributes{}, n} }
 func NewNativeIntFromString(s string) NativeInt {
-	fmt.Println(s)
 	if n, e := strconv.Atoi(s); e == nil {
-		return NativeInt(n)
+		return NativeInt{&Attributes{}, n}
 	} else {
 		panic("can not convert string " + s + " to NativeInt")
 	}
@@ -37,5 +38,6 @@ func NewNativeIntFrom(x Ast) NativeInt {
 	}
 }
 
-func (n NativeInt) Int() int       { return int(n) }
-func (n NativeInt) String() string { return strconv.Itoa(int(n)) }
+func (n NativeInt) assertNode()    {}
+func (n NativeInt) Int() int       { return n.int }
+func (n NativeInt) String() string { return strconv.Itoa(n.int) }

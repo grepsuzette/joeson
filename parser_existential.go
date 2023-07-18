@@ -1,13 +1,13 @@
 package joeson
 
 type existential struct {
-	Attributes
+	*Attributes
 	*gnodeimpl
 	it Parser
 }
 
 func newExistential(it Ast) *existential {
-	ex := &existential{Attributes: Attributes{}, gnodeimpl: NewGNode(), it: it.(Parser)}
+	ex := &existential{Attributes: &Attributes{}, gnodeimpl: NewGNode(), it: it.(Parser)}
 	ex.gnodeimpl.node = ex
 	return ex
 }

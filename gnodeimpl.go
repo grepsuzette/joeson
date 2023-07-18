@@ -5,8 +5,8 @@ import "github.com/grepsuzette/joeson/helpers"
 type gnodeimpl struct {
 	ParseOptions
 	parent    Parser                  // A grammar must be a DAG (root.Parent being nil)
-	name      string                  // rule name if IsRule(). E.g. "AddOp" in `i(Named("AddOp", "'+' | '-'"))`
-	label     string                  // e.g. "l" in `l:list` in `i(named("expr", "l:list | s:string"), parseExpr),`
+	name      string                  // rule name, if IsRule(). E.g. "AddOp" in `i(Named("AddOp", "'+' | '-'"))`
+	label     string                  // rule label, e.g. "l" in `l:list` in `i(named("expr", "l:list | s:string"), parseExpr),`
 	capture   bool                    // determines in which way to collect things higher up (see for instance Sequence.calculateType())
 	labels_   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate GNode behavior in the original coffeescript impl. See NewGNode() doc below.
 	captures_ *helpers.Lazy[[]Ast]    // the lazy captures getter, ditto.
@@ -16,7 +16,6 @@ type gnodeimpl struct {
 	rule      Parser                  // what's the Parser to use to parse this gnode
 	grammar   *Grammar                // the grammar itself
 	node      Parser                  // node containing this impl. Hack. Only used by GNode.Captures_ default implementation.
-	origin    Origin                  // records where this gnode originates from. Unused for now.
 }
 
 func NewGNode() *gnodeimpl {
@@ -50,22 +49,22 @@ func NewGNode() *gnodeimpl {
 }
 
 func (gn *gnodeimpl) Include(name string, rule Parser) {
-	rule.SetNameWhenEmpty(name)
+	rule.SetRuleNameWhenEmpty(name)
 	gn.rulesK = append(gn.rulesK, name)
 	gn.rules[name] = rule
 }
 
-func (gn *gnodeimpl) Name() string        { return gn.name }
-func (gn *gnodeimpl) Label() string       { return gn.label }
-func (gn *gnodeimpl) Capture() bool       { return gn.capture }
-func (gn *gnodeimpl) SetName(name string) { gn.name = name }
-func (gn *gnodeimpl) SetNameWhenEmpty(name string) {
+func (gn *gnodeimpl) GetRuleName() string     { return gn.name }
+func (gn *gnodeimpl) SetRuleName(name string) { gn.name = name }
+func (gn *gnodeimpl) SetRuleNameWhenEmpty(name string) {
 	if gn.name == "" {
 		gn.name = name
 	}
 }
-func (gn *gnodeimpl) SetLabel(label string) { gn.label = label }
-func (gn *gnodeimpl) SetCapture(b bool)     { gn.capture = b }
+func (gn *gnodeimpl) GetRuleLabel() string      { return gn.label }
+func (gn *gnodeimpl) SetRuleLabel(label string) { gn.label = label }
+func (gn *gnodeimpl) Capture() bool             { return gn.capture }
+func (gn *gnodeimpl) SetCapture(b bool)         { gn.capture = b }
 
 func (gn *gnodeimpl) Labels() []string                { return gn.labels_.Get() }
 func (gn *gnodeimpl) Captures() []Ast                 { return gn.captures_.Get() }

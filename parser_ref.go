@@ -8,7 +8,7 @@ import (
 )
 
 type ref struct {
-	Attributes
+	*Attributes
 	*gnodeimpl
 	ref   string // ref because joeson.coffee used @ref, because @name was reserved
 	param Parser
@@ -40,21 +40,21 @@ func newRef(it Ast) *ref {
 	default:
 		panic(fmt.Sprintf("unexpected type for NewRef: %T %v\n", it, it))
 	}
-	ref := &ref{Attributes: Attributes{}, gnodeimpl: NewGNode(), ref: name, param: param}
+	ref := &ref{Attributes: &Attributes{}, gnodeimpl: NewGNode(), ref: name, param: param}
 	ref.gnodeimpl.node = ref
 	if name[0:1] == "_" {
 		ref.SetCapture(false)
 	}
 	ref.gnodeimpl.labels_ = helpers.NewLazyFromFunc(func() []string {
-		if ref.Label() == "@" {
+		if ref.GetRuleLabel() == "@" {
 			referenced := ref.grammar.getRule(ref.ref)
 			if referenced == nil {
 				panic("ref " + ref.ref + " was not found in grammar.Rules")
 			} else {
 				return referenced.gnode().labels_.Get()
 			}
-		} else if ref.Label() != "" {
-			return []string{ref.Label()}
+		} else if ref.GetRuleLabel() != "" {
+			return []string{ref.GetRuleLabel()}
 		} else {
 			return []string{}
 		}

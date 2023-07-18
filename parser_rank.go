@@ -48,12 +48,10 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 
 func newEmptyRank(name string) *rank {
 	x := &rank{newEmptyChoice()}
-	x.SetName(name)
+	x.SetRuleName(name)
 	x.gnode().node = x
 	return x
 }
-
-// ranke is used below to differentiate the var from the type. It means nothing special.
 
 func (rank *rank) Length() int {
 	return len(rank.choice.choices)
@@ -68,7 +66,7 @@ func (rank *rank) String() string {
 	var b strings.Builder
 	b.WriteString(blue("Rank("))
 	a := helpers.AMap(rank.choice.choices, func(x Parser) string {
-		return red(x.Name())
+		return red(x.GetRuleName())
 	})
 	b.WriteString(strings.Join(a, blue(",")))
 	b.WriteString(blue(")"))

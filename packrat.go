@@ -144,7 +144,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 				} else {
 					frame.loopstage.Set(3)
 					if opts.Loop && ((opts.FilterLine < 0) || ctx.Code.Line() == opts.FilterLine) {
-						ctx.loopStackPush(x.Name())
+						ctx.loopStackPush(x.GetRuleName())
 						// if false {
 						//  line := ctx.Code.Line()
 						// 	var paintInColor func(string) string = nil
@@ -252,7 +252,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 // prepares the following postparsing operations:
 // - increment ctx.counter (used for debugging and to prevent infinite recursion)
 // - handle labels for standalone nodes
-// - set GNode.Origin
+// - call SetLine
 // - call GNode.CbBuilder(result, ctx, caller), if CbBuilder != nil
 func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 	return func(ctx *ParseContext) Ast {
@@ -264,19 +264,20 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 			if gn.label != "" && gn.parent != nil && !gn.parent.handlesChildLabel() {
 				result = NewNativeMap(map[string]Ast{gn.label: result})
 			}
+			result.SetLine(ctx.Code.PosToLine(ctx.Code.Pos))
 			if gn.CbBuilder != nil {
-				switch x := result.(type) {
-				case Parser:
-					start := ctx.stackPeek(0).pos
-					end := ctx.Code.Pos
-					origin := Origin{
-						code:  ctx.Code.text,
-						start: start,
-						end:   end,
-					}
-					x.gnode().origin = origin
-				default:
-				}
+				// switch x := result.(type) {
+				// case Parser:
+				// 	start := ctx.stackPeek(0).pos
+				// 	end := ctx.Code.Pos
+				// 	origin := Origin{
+				// 		code:  ctx.Code.text,
+				// 		start: start,
+				// 		end:   end,
+				// 	}
+				// 	x.gnode().origin = origin
+				// default:
+				// }
 				result = gn.CbBuilder(result, ctx, caller)
 			}
 		}

@@ -2,17 +2,12 @@ package joeson
 
 import (
 	"fmt"
-	"github.com/grepsuzette/joeson/helpers"
 	"regexp"
 	"strconv"
 	"strings"
-)
 
-type Origin struct {
-	code  string
-	start int
-	end   int
-}
+	"github.com/grepsuzette/joeson/helpers"
+)
 
 // E.g. NewPeek().BeforeLines(2).AfterLines(4)
 type peekOper struct {
@@ -57,6 +52,7 @@ func (code *CodeStream) Length() int { return len(code.text) }
 // Get until the string `end` is encountered.
 // Change code.pos accordingly, including the `end`.
 func (code *CodeStream) GetUntil(end string) string { return code.GetUntilWithIgnoreEOF(end, true) }
+
 func (code *CodeStream) GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string {
 	index := strings.Index(code.text[code.Pos:], end)
 	if index == -1 {
@@ -120,7 +116,7 @@ func (code *CodeStream) MatchString(s string) (didMatch bool, m string) {
 
 // Match regex `re` against current code.Pos.
 // didMatch indicates whether is succeeded
-// in which case the match[0] is in `m`, which may be ''
+// in which case the match[0] is in `m`, which may be ”
 func (code *CodeStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string) {
 	if firstMatchLoc := re.FindStringIndex(code.text[code.Pos:]); firstMatchLoc == nil {
 		return false, ""

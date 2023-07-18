@@ -2,21 +2,22 @@ package joeson
 
 import (
 	"reflect"
+	"strconv"
 	"strings"
 )
 
 type pattern struct {
-	Attributes
+	*Attributes
 	*gnodeimpl
 	Value Parser
 	Join  Parser
-	Min   NativeInt // -1 for unspec.
-	Max   NativeInt // -1 for unspec.
+	Min   int // -1 for unspec.
+	Max   int // -1 for unspec.
 }
 
 // `it` must be a NativeMap with keys like 'value', 'join', 'min', 'max'
 func newPattern(it Ast) *pattern {
-	patt := &pattern{Attributes{}, NewGNode(), nil, nil, -1, -1}
+	patt := &pattern{&Attributes{}, NewGNode(), nil, nil, -1, -1}
 	patt.node = patt
 	if nativemap, ok := it.(NativeMap); !ok {
 		panic("Pattern expecting a map with value, join")
@@ -28,16 +29,16 @@ func newPattern(it Ast) *pattern {
 			patt.SetCapture(patt.Value.Capture())
 		}
 		patt.Join = nativemap.GetParser("join") // can be nil
-		patt.Min = NewNativeInt(-1)
-		patt.Max = NewNativeInt(-1)
+		patt.Min = -1
+		patt.Max = -1
 		if min, exists := nativemap.GetExists("min"); exists {
 			switch v := min.(type) {
 			case NativeUndefined:
-				patt.Min = NewNativeInt(-1)
+				patt.Min = -1
 			case NativeInt:
-				patt.Min = v
+				patt.Min = v.Int()
 			case NativeString:
-				patt.Min = NewNativeIntFromString(v.Str)
+				patt.Min = NewNativeIntFromString(v.Str).Int()
 			default:
 				panic("NewPattern unhandled type for min: " + reflect.TypeOf(min).String())
 			}
@@ -45,11 +46,11 @@ func newPattern(it Ast) *pattern {
 		if max, exists := nativemap.GetExists("max"); exists {
 			switch v := max.(type) {
 			case NativeUndefined:
-				patt.Max = NewNativeInt(-1)
+				patt.Max = -1
 			case NativeInt:
-				patt.Max = v
+				patt.Max = v.Int()
 			case NativeString:
-				patt.Max = NewNativeIntFromString(v.Str)
+				patt.Max = NewNativeIntFromString(v.Str).Int()
 			default:
 				panic("NewPattern unhandled type for max: " + reflect.TypeOf(max).String())
 			}
@@ -114,11 +115,11 @@ func (patt *pattern) String() string {
 	} else {
 		sCyan := "{"
 		if patt.Min > -1 {
-			sCyan += patt.Min.String()
+			sCyan += strconv.Itoa(patt.Min)
 		}
 		sCyan += ","
 		if patt.Max > -1 {
-			sCyan += patt.Max.String()
+			sCyan += strconv.Itoa(patt.Max)
 		}
 		sCyan += "}"
 		return b.String() + cyan(sCyan)

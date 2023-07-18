@@ -1,14 +1,14 @@
 package joeson
 
 type not struct {
-	Attributes
+	*Attributes
 	*gnodeimpl
 	it Parser
 }
 
 func newNot(it Ast) *not {
 	gn := NewGNode()
-	x := &not{Attributes{}, gn, it.(Parser)}
+	x := &not{&Attributes{}, gn, it.(Parser)}
 	gn.capture = false
 	gn.node = x
 	return x
