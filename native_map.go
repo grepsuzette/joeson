@@ -97,6 +97,16 @@ func (nm NativeMap) GetOrPanic(k string) Ast {
 	}
 }
 
+// returns whichever of the first keys exist, or panic.
+func (nm NativeMap) GetWhicheverOrPanic(a []string) Ast {
+	for _, k := range a {
+		if v, yes := nm.GetExists(k); yes {
+			return v
+		}
+	}
+	panic("No key found")
+}
+
 func (nm NativeMap) Get(k string) Ast {
 	return nm[k]
 }

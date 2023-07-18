@@ -261,7 +261,7 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 		if result != nil {
 			// handle labels for standalone nodes
 			gn := caller.gnode()
-			if gn.label != "" && gn.parent != nil && !gn.parent.HandlesChildLabel() {
+			if gn.label != "" && gn.parent != nil && !gn.parent.handlesChildLabel() {
 				result = NewNativeMap(map[string]Ast{gn.label: result})
 			}
 			if gn.CbBuilder != nil {
@@ -292,7 +292,7 @@ func wrap(fparse2 parseFunc2, node Parser) parseFunc {
 		if IsRule(node) {
 			return wrapped1(ctx)
 		} else if gn.label != "" &&
-			(gn.parent != nil && !gn.parent.HandlesChildLabel()) ||
+			(gn.parent != nil && !gn.parent.handlesChildLabel()) ||
 			gn.CbBuilder != nil {
 			return wrapped2(ctx)
 		} else {

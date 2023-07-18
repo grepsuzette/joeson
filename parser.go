@@ -1,11 +1,7 @@
 package joeson
 
-// Parser objects are able to parse a ParseContext, producing Ast.
-//
-// Choice, Existential, Lookahead, Not, Pattern, Ref,
-// Regex, Sequence, and joeson also have Rank and Str are built-in Parsers
-// in joeson, though arguably and in a way any rule or any callback rule is
-// a kind of parser.
+// Parser objects are normally built by the joeson grammar
+// and are able in turn to parse a ParseContext, producing Ast nodes.
 //
 // = Errors =
 // Parse() should return nil when the current parser failed to recognize
@@ -19,10 +15,25 @@ type Parser interface {
 	Ast
 	gnode
 	Parse(ctx *ParseContext) Ast
-	Prepare()
-	HandlesChildLabel() bool
-	ForEachChild(f func(Parser) Parser) Parser // depth-first walk enabler
+	ForEachChild(func(Parser) Parser) Parser // depth-first walk mapper
+	prepare()
+	handlesChildLabel() bool
 }
+
+var (
+	_ Parser = &choice{}
+	_ Parser = &existential{}
+	_ Parser = &lookahead{}
+	_ Parser = &not{}
+	_ Parser = &pattern{}
+	_ Parser = &rank{}
+	_ Parser = &regex{}
+	_ Parser = &sequence{}
+	_ Parser = &str{}
+	_ Parser = &Grammar{}
+	_ Parser = &cLine{}
+	_ Parser = &NativeUndefined{}
+)
 
 func IsRule(parser Parser) bool {
 	return parser.gnode().rule == parser

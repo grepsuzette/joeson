@@ -160,8 +160,8 @@ func (gm *Grammar) getRule(name string) Parser {
 	}
 }
 
-func (gm *Grammar) Prepare()                {}
-func (gm *Grammar) HandlesChildLabel() bool { return false }
+func (gm *Grammar) prepare()                {}
+func (gm *Grammar) handlesChildLabel() bool { return false }
 func (gm *Grammar) ContentString() string {
 	if gm.rank == nil {
 		return magenta("GRAMMAR{}")
@@ -280,7 +280,7 @@ func (gm *Grammar) postinit() {
 	// Prepare all the nodes, children first.
 	Walk(gm, nil, WalkPrepost{
 		Post: func(node Parser, parent Parser) string {
-			node.Prepare()
+			node.prepare()
 			return ""
 		},
 	})

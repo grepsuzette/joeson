@@ -55,19 +55,19 @@ func newEmptyRank(name string) *rank {
 
 // ranke is used below to differentiate the var from the type. It means nothing special.
 
-func (ranke *rank) Length() int {
-	return len(ranke.choice.choices)
+func (rank *rank) Length() int {
+	return len(rank.choice.choices)
 }
 
-func (ranke *rank) Append(node Parser)      { ranke.choice.Append(node) }
-func (ranke *rank) gnode() *gnodeimpl       { return ranke.choice.gnode() }
-func (ranke *rank) Prepare()                { ranke.choice.Prepare() }
-func (ranke *rank) HandlesChildLabel() bool { return false }
+func (rank *rank) Append(node Parser)      { rank.choice.Append(node) }
+func (rank *rank) gnode() *gnodeimpl       { return rank.choice.gnode() }
+func (rank *rank) prepare()                { rank.choice.prepare() }
+func (rank *rank) handlesChildLabel() bool { return false }
 
-func (ranke *rank) ContentString() string {
+func (rank *rank) ContentString() string {
 	var b strings.Builder
 	b.WriteString(blue("Rank("))
-	a := helpers.AMap(ranke.choice.choices, func(x Parser) string {
+	a := helpers.AMap(rank.choice.choices, func(x Parser) string {
 		return red(x.Name())
 	})
 	b.WriteString(strings.Join(a, blue(",")))
@@ -75,18 +75,18 @@ func (ranke *rank) ContentString() string {
 	return b.String()
 }
 
-func (ranke *rank) ForEachChild(f func(Parser) Parser) Parser {
+func (rank *rank) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}
-	ch := ranke.choice.ForEachChild(f) // see Choice.ForEachChild, which have the same @defineChildren
-	ranke.choice = ch.(*choice)
-	return ranke
+	ch := rank.choice.ForEachChild(f) // see Choice.ForEachChild, which have the same @defineChildren
+	rank.choice = ch.(*choice)
+	return rank
 }
 
-func (ranke *rank) Parse(ctx *ParseContext) Ast {
+func (rank *rank) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
-		for _, choice := range ranke.choice.choices {
+		for _, choice := range rank.choice.choices {
 			pos := ctx.Code.Pos
 			// Rank inherits from Choice in the original coffee implementation.
 			// In coffee, the Parse function of Rank is bound to Rank,
@@ -99,5 +99,5 @@ func (ranke *rank) Parse(ctx *ParseContext) Ast {
 			}
 		}
 		return nil
-	}, ranke)(ctx)
+	}, rank)(ctx)
 }

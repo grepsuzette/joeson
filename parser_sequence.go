@@ -39,8 +39,8 @@ func newSequence(it Ast) *sequence {
 }
 
 func (seq *sequence) gnode() *gnodeimpl       { return seq.gnodeimpl }
-func (seq *sequence) HandlesChildLabel() bool { return true }
-func (seq *sequence) Prepare()                {}
+func (seq *sequence) handlesChildLabel() bool { return true }
+func (seq *sequence) prepare()                {}
 
 func (seq *sequence) calculateLabels() []string {
 	a := []string{}

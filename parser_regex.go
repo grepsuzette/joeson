@@ -25,8 +25,8 @@ func (re *regex) ContentString() string {
 	// below /g is purely for output conformance to original coffee impl.
 	return magenta("/" + re.re.String() + "/g")
 }
-func (re *regex) HandlesChildLabel() bool { return false }
-func (re *regex) Prepare()                {}
+func (re *regex) handlesChildLabel() bool { return false }
+func (re *regex) prepare()                {}
 func (re *regex) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		if didMatch, sMatch := ctx.Code.MatchRegexp(re.re); !didMatch {

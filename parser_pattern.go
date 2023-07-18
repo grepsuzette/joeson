@@ -98,8 +98,8 @@ func (patt *pattern) Parse(ctx *ParseContext) Ast {
 	}, patt)(ctx)
 }
 
-func (patt *pattern) HandlesChildLabel() bool { return false }
-func (patt *pattern) Prepare()                {}
+func (patt *pattern) handlesChildLabel() bool { return false }
+func (patt *pattern) prepare()                {}
 func (patt *pattern) ContentString() string {
 	var b strings.Builder
 	b.WriteString(String(patt.Value))

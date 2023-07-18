@@ -24,6 +24,24 @@ type Ast interface {
 	ContentString() string // text representation of this ast.
 }
 
+var (
+	_ Ast = &Grammar{}
+	_ Ast = &choice{}
+	_ Ast = &existential{}
+	_ Ast = &lookahead{}
+	_ Ast = &not{}
+	_ Ast = &pattern{}
+	_ Ast = &rank{}
+	_ Ast = &regex{}
+	_ Ast = &sequence{}
+	_ Ast = &str{}
+	_ Ast = &NativeArray{}
+	_ Ast = NewNativeInt(0)
+	_ Ast = &NativeMap{}
+	_ Ast = &NativeString{}
+	_ Ast = &NativeUndefined{}
+)
+
 // prefix(x) + x.ContentString(x)
 func String(ast Ast) string {
 	if x, isParser := ast.(Parser); isParser {

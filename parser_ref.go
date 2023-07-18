@@ -62,8 +62,8 @@ func newRef(it Ast) *ref {
 }
 
 func (x *ref) gnode() *gnodeimpl       { return x.gnodeimpl }
-func (x *ref) HandlesChildLabel() bool { return false }
-func (x *ref) Prepare()                {}
+func (x *ref) handlesChildLabel() bool { return false }
+func (x *ref) prepare()                {}
 func (x *ref) Parse(ctx *ParseContext) Ast {
 	return wrap(func(ctx *ParseContext, _ Parser) Ast {
 		node := x.grammar.getRule(x.ref)

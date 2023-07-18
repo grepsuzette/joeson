@@ -13,9 +13,9 @@ func newExistential(it Ast) *existential {
 
 // TODO handlesChildLabel$: get: -> @parent?.handlesChildLabel
 // examine this case^
-func (ex *existential) HandlesChildLabel() bool {
+func (ex *existential) handlesChildLabel() bool {
 	if ex.gnodeimpl.parent != nil {
-		return ex.gnodeimpl.parent.HandlesChildLabel()
+		return ex.gnodeimpl.parent.handlesChildLabel()
 	} else {
 		return false
 	}
@@ -23,7 +23,7 @@ func (ex *existential) HandlesChildLabel() bool {
 
 func (ex *existential) gnode() *gnodeimpl { return ex.gnodeimpl }
 
-func (ex *existential) Prepare() {
+func (ex *existential) prepare() {
 	lbls := ex.calculateLabels()
 	ex.labels_.Set(lbls)
 	if len(lbls) > 0 && ex.label == "" {

@@ -115,7 +115,7 @@ a byte, which a parser would want to detect:
 ```go
 i(named("octal_digit", "[0-7]")),
 i(named("octal_digits", "octal_digit ('_'? octal_digit)+")),
-i(named("octal_byte_value", "'\\\\' octal_digit{3,3}"), func(ast joeson.Ast) joeson.Ast {
+i(named("octal_byte_value", "'\\\\' octal_digit{3,3}"), func(ast joeson.Ast, ctx *joeson.ParseContext) joeson.Ast {
     // check <= 255
     n := joeson.NewNativeIntFrom(ast).Int()
     if n > 255 {
