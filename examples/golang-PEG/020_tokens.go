@@ -34,12 +34,12 @@ var rules_tokens = rules(
 			o("'\\'' ( byte_value | unicode_value ) '\\''"),
 			o(named("byte_value", rules(
 				o("octal_byte_value | hex_byte_value"),
-				i(named("octal_byte_value", "'\\\\' octal_digit{3,3}"), func(ast j.Ast) j.Ast {
+				i(named("octal_byte_value", "'\\\\' octal_digit{3,3}"), func(ast j.Ast, ctx *j.ParseContext) j.Ast {
 					// check <= 255
 					if j.NewNativeIntFrom(ast).Int() > 255 {
-						return NewParseError("ERROR illegal: octal value over 255")
+						return j.NewParseError(ctx, "ERROR illegal: octal value over 255")
 					} else {
-						return dumb{"octal_byte_value", ast}
+						return dumb{"octal_byte_value", ast, &j.Attributes{}}
 					}
 				}),
 				i(named("hex_byte_value", "'\\\\x' hex_digit{2,2}"), x("hex_byte_value")),

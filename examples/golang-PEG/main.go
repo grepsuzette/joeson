@@ -57,7 +57,7 @@ func test(t *testing.T, gm *j.Grammar, s string, expect string) {
 		if strings.HasPrefix(expect, "ERROR") {
 			fmt.Printf("[32m%s[0m gave an error as expected [32m✓[0m\n", s)
 		} else {
-			t.Fatalf("Error parsing %s. Expected ast.String() to contain '%s', got '%s'", s, expect, ast.ContentString())
+			t.Fatalf("Error parsing %s. Expected ast.String() to contain '%s', got '%s'", s, expect, ast.String())
 		}
 	} else {
 		if strings.Contains(ast.String(), expect) {
