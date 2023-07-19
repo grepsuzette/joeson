@@ -23,7 +23,7 @@ func newRegexFromString(sRegex string) *regex {
 
 func (re *regex) gnode() *gnodeimpl { return re.gnodeimpl }
 func (re *regex) String() string {
-	// below /g is purely for output conformance to original coffee impl.
+	// below /g is purely to conform output with original coffee impl.
 	return Magenta("/" + re.re.String() + "/g")
 }
 func (re *regex) handlesChildLabel() bool { return false }
@@ -33,7 +33,14 @@ func (re *regex) Parse(ctx *ParseContext) Ast {
 		if didMatch, sMatch := ctx.Code.MatchRegexp(re.re); !didMatch {
 			return nil
 		} else {
-			return NewNativeString(sMatch)
+			it := NewNativeString(sMatch)
+			it.SetLocation(Origin{
+				RuleName: re.GetRuleName(),
+				Code:     ctx.Code,
+				Start:    ctx.Code.Pos,
+				End:      ctx.Code.Pos,
+			})
+			return it
 		}
 	}, re)(ctx)
 }
