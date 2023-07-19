@@ -82,12 +82,12 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 	return func(ctx *ParseContext) Ast {
 		opts := ctx.TraceOptions
 		if opts.Stack {
-			ctx.log(blue("*")+" "+String(x)+" "+boldBlack(strconv.Itoa(ctx.Counter)), opts)
+			ctx.log(Blue("*")+" "+String(x)+" "+BoldBlack(strconv.Itoa(ctx.Counter)), opts)
 		}
 		if x.gnode().SkipCache {
 			result := fparse(ctx)
 			if opts.Stack {
-				ctx.log(cyan("`->:")+" "+helpers.Escape(result.String())+" "+boldBlack(helpers.TypeOfToString(result)), opts)
+				ctx.log(Cyan("`->:")+" "+helpers.Escape(result.String())+" "+BoldBlack(helpers.TypeOfToString(result)), opts)
 			}
 			return result
 		}
@@ -105,10 +105,10 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 						s := ""
 						s += helpers.Escape(frame.result.String())
 						s += " "
-						s += cyan(helpers.TypeOfToString(frame.result))
-						ctx.log(cyan("`-hit:")+" "+s, opts)
+						s += Cyan(helpers.TypeOfToString(frame.result))
+						ctx.log(Cyan("`-hit:")+" "+s, opts)
 					} else {
-						ctx.log(cyan("`-hit:")+" nil", opts)
+						ctx.log(Cyan("`-hit:")+" nil", opts)
 					}
 				}
 				ctx.Code.Pos = frame.endpos.Int
@@ -122,13 +122,13 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 				frame.loopstage.Set(0)
 				frame.cacheSet(result, ctx.Code.Pos)
 				if opts.Stack {
-					s := cyan("`-set:") + " "
+					s := Cyan("`-set:") + " "
 					if result == nil {
 						s += "nil"
 					} else {
 						s += helpers.Escape(result.String())
 						s += " "
-						s += cyan(helpers.TypeOfToString(result))
+						s += Cyan(helpers.TypeOfToString(result))
 					}
 					ctx.log(s, opts)
 				}
@@ -136,7 +136,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 			case 2: // recursion detected by subroutine above
 				if result == nil {
 					if opts.Stack {
-						ctx.log(yellow("`--- loop nil --- "), opts)
+						ctx.log(Yellow("`--- loop nil --- "), opts)
 					}
 					frame.loopstage.Set(0)
 					// cacheSet(frame, nil) // unneeded (already nil)
@@ -186,7 +186,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 						bestEndPos = ctx.Code.Pos
 						frame.cacheSet(bestResult, bestEndPos)
 						if opts.Stack {
-							ctx.log(yellow("|`--- loop iteration ---")+frame.toString(), opts)
+							ctx.log(Yellow("|`--- loop iteration ---")+frame.toString(), opts)
 						}
 						ctx.Code.Pos = startPos
 						result = fparse(ctx)
@@ -201,7 +201,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 					ctx.restoreWith(bestStash)
 					ctx.Code.Pos = bestEndPos
 					if opts.Stack {
-						ctx.log(yellow("`--- loop done! --- ")+"best result: "+helpers.Escape(bestResult.String()), opts)
+						ctx.log(Yellow("`--- loop done! --- ")+"best result: "+helpers.Escape(bestResult.String()), opts)
 					}
 					// Step 4: return best result, which will get cached
 					frame.loopstage.Set(0)
@@ -221,8 +221,8 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 				if frame.result != nil {
 					cs = frame.result.String()
 				}
-				ctx.log(yellow("`-base: ")+
-					helpers.Escape(cs)+" "+boldBlack(helpers.TypeOfToString(frame.result)), opts)
+				ctx.log(Yellow("`-base: ")+
+					helpers.Escape(cs)+" "+BoldBlack(helpers.TypeOfToString(frame.result)), opts)
 			}
 			if frame.wipemask == nil {
 				frame.wipemask = make([]bool, ctx.numRules)
@@ -264,28 +264,16 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 			if gn.label != "" && gn.parent != nil && !gn.parent.handlesChildLabel() {
 				result = NewNativeMap(map[string]Ast{gn.label: result})
 			}
-			start := ctx.stackPeek(0).pos
-			end := ctx.Code.Pos
-			result.SetLocation(Origin{
-				Code:  ctx.Code,
-				Start: start,
-				End:   end,
-			})
 			if gn.CbBuilder != nil {
-				// switch x := result.(type) {
-				// case Parser:
-				// 	start := ctx.stackPeek(0).pos
-				// 	end := ctx.Code.Pos
-				// 	origin := Origin{
-				// 		code:  ctx.Code.text,
-				// 		start: start,
-				// 		end:   end,
-				// 	}
-				// 	x.gnode().origin = origin
-				// default:
-				// }
 				result = gn.CbBuilder(result, ctx, caller)
 			}
+			// the original impl is not very clear here for me
+			result.SetLocation(Origin{
+				Code:     ctx.Code,
+				Start:    ctx.stackPeek(0).pos,
+				End:      ctx.Code.Pos,
+				RuleName: caller.gnode().rule.GetRuleName(),
+			})
 		}
 		return result
 	}

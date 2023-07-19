@@ -30,9 +30,10 @@ type (
 		SetLocation(Origin)
 	}
 	Origin struct {
-		Code  *CodeStream
-		Start int
-		End   int
+		Code     *CodeStream
+		Start    int
+		End      int
+		RuleName string
 	}
 )
 
@@ -41,6 +42,7 @@ func (o *Origin) SetLocation(n Origin) {
 	o.Code = n.Code
 	o.Start = n.Start
 	o.End = n.End
+	o.RuleName = n.RuleName
 }
 func (o *Origin) GetLocation() Origin { return *o }
 
