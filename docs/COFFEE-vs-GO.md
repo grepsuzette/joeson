@@ -124,7 +124,10 @@ The behavior described above is pretty standard in all PEG parsers. The rules we
 
 Premature optimization is the root of all evil, however some optimization is in order. 
 
-The time it takes for a few things I tested seemed comparable to the implementation in coffeescript, a go implementation should be faster. I believe packrat.go in particular must be slow, as it uses many embedded callbacks (`ParseFunc` and `ParseFunc2`), as was the case in coffeescript. 
+The time it takes for a few things I tested seemed comparable to the implementation in coffeescript, a go implementation should be faster. I believe packrat.go in particular must be slow, as it uses many embedded callbacks (`ParseFunc` and `ParseFunc2`), as was the case in coffeescript. The other slow part, that was
+already somewhat measured is parser_sequence.go (parseAsSingle and parseAsObject are both called 100k times
+to parse the intention grammar, while this is the same number of times as the original implementation, those
+must be considered critical parts).
 
 **Error handling**.
 

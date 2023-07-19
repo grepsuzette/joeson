@@ -101,8 +101,9 @@ func (seq *sequence) Parse(ctx *ParseContext) Ast {
 	}, seq)(ctx)
 }
 
+// OPTIMIZE
 func (seq *sequence) parseAsSingle(ctx *ParseContext) Ast {
-	var result Ast = nil // critical function (about 100k calls to parse the intention grammar), so avoid needless calls to NewNativeUndefined()
+	var result Ast = nil // OPTIMIZE critical function (about 100k calls to parse the intention grammar), so avoid needless calls to NewNativeUndefined()
 	for _, child := range seq.sequence {
 		res := child.Parse(ctx)
 		if res == nil {
@@ -133,9 +134,10 @@ func (seq *sequence) parseAsArray(ctx *ParseContext) Ast {
 	return NewNativeArray(results)
 }
 
+// OPTIMIZE
 func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 	var results Ast
-	results = nil // critical function (about 100k calls to parse the intention grammar), so avoid needless calls to NewNativeUndefined()
+	results = nil // OPTIMIZE critical function (about 100k calls to parse the intention grammar), so avoid needless calls to NewNativeUndefined()
 	for _, child := range seq.sequence {
 		res := child.Parse(ctx)
 		if res == nil {
