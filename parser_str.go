@@ -23,7 +23,7 @@ func newStr(s string) str {
 	return str
 }
 
-// TODO check what it does, and document it if still useful
+// used in newLookahead()
 func newStrFromAst(ast Ast) str {
 	switch v := ast.(type) {
 	case NativeMap:
@@ -41,7 +41,7 @@ func newStrFromAst(ast Ast) str {
 				case str:
 					return w
 				case *NativeArray:
-					return newStr(stringFromNativeArray(v))
+					return newStr(w.Concat())
 				default:
 					panic("Could not create a Parser from NativeMap " + v.String())
 				}

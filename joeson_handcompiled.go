@@ -1,7 +1,5 @@
 package joeson
 
-import "strings"
-
 // NewJoeson() creates a new instance of the handcompiled grammar.
 // You may want to use this with GrammarFromLines(), though
 // with default options NewJoeson() is used anyway by default
@@ -69,15 +67,6 @@ func fCode(it Ast) Ast {
 	return h.GetOrPanic("expr")
 }
 
-func stringFromNativeArray(it Ast) string {
-	var b strings.Builder
-	na := it.(*NativeArray)
-	for _, ns := range na.Array {
-		b.WriteString(ns.(NativeString).Str)
-	}
-	return b.String()
-}
-
 // provide the Lines of the joeson grammar
 func JoesonRules() []Line {
 	return []Line{
@@ -110,9 +99,9 @@ func JoesonRules() []Line {
 								o(r("WORD"), func(it Ast) Ast { return newRef(it) }),
 								o(s(st("("), l("inlineLabel", e(s(r("WORD"), st(": ")))), l("expr", r("EXPR")), st(")"), e(s(r("_"), st("->"), r("_"), l("code", r("CODE"))))), fCode),
 								i(Named("CODE", o(s(st("{"), p(s(n(st("}")), c(r("ESC1"), r("."))), nil, -1, -1), st("}")))), fCode),
-								o(s(st("'"), p(s(n(st("'")), c(r("ESC1"), r("."))), nil), st("'")), func(it Ast) Ast { return newStr(stringFromNativeArray(it)) }),
-								o(s(st("/"), p(s(n(st("/")), c(r("ESC2"), r("."))), nil), st("/")), func(it Ast) Ast { return newRegexFromString(stringFromNativeArray(it)) }),
-								o(s(st("["), p(s(n(st("]")), c(r("ESC2"), r("."))), nil), st("]")), func(it Ast) Ast { return newRegexFromString("[" + stringFromNativeArray(it) + "]") }),
+								o(s(st("'"), p(s(n(st("'")), c(r("ESC1"), r("."))), nil), st("'")), func(it Ast) Ast { return newStr(it.(*NativeArray).Concat()) }),
+								o(s(st("/"), p(s(n(st("/")), c(r("ESC2"), r("."))), nil), st("/")), func(it Ast) Ast { return newRegexFromString(it.(*NativeArray).Concat()) }),
+								o(s(st("["), p(s(n(st("]")), c(r("ESC2"), r("."))), nil), st("]")), func(it Ast) Ast { return newRegexFromString("[" + it.(*NativeArray).Concat() + "]") }),
 							))),
 						))),
 					))),

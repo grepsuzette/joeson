@@ -42,3 +42,13 @@ func (na *NativeArray) Length() int   { return len(na.Array) }
 func (na *NativeArray) String() string {
 	return "[" + strings.Join(helpers.AMap(na.Array, func(x Ast) string { return x.String() }), ",") + "]"
 }
+
+// `["a","","bc"]` -> `"abc"`
+// (with respect to the fact elements of the example are not strings but NativeString)
+func (na *NativeArray) Concat() string {
+	var b strings.Builder
+	for _, ns := range na.Array {
+		b.WriteString(ns.(NativeString).Str)
+	}
+	return b.String()
+}
