@@ -23,6 +23,7 @@ func newStr(s string) str {
 	return str
 }
 
+// TODO check what it does, and document it if still useful
 func newStrFromAst(ast Ast) str {
 	switch v := ast.(type) {
 	case NativeMap:
@@ -59,14 +60,12 @@ func (s str) gnode() *gnodeimpl       { return s.gnodeimpl }
 func (s str) prepare()                {}
 func (s str) handlesChildLabel() bool { return false }
 func (s str) String() string {
-	return green("'" + helpers.Escape(s.Str) + "'")
+	return Green("'" + helpers.Escape(s.Str) + "'")
 }
 
 func (s str) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		if didMatch, sMatch := ctx.Code.MatchString(s.Str); didMatch {
-			// a string is not a terminal element
-			// so return NativeString.
 			return NewNativeString(sMatch)
 		} else {
 			return nil

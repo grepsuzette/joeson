@@ -116,16 +116,16 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 		sErr := fmt.Sprintf("Error parsing at char:%d=(line:%d,col:%d).", maxSuccess, ctx.Code.PosToLine(maxSuccess), ctx.Code.PosToCol(maxSuccess))
 		sErr += "\n" + ctx.Code.Print()
 		sErr += "\nDetails:\n"
-		sErr += green("OK") + "/"
-		sErr += yellow("Parsing") + "/"
-		sErr += red("Suspect") + "/"
-		sErr += white("Unknown") + "\n\n"
-		sErr += green(ctx.Code.Peek(NewPeek().BeforeLines(2)))
-		sErr += yellow(ctx.Code.Peek(NewPeek().AfterChars(maxSuccess - ctx.Code.Pos)))
+		sErr += Green("OK") + "/"
+		sErr += Yellow("Parsing") + "/"
+		sErr += Red("Suspect") + "/"
+		sErr += White("Unknown") + "\n\n"
+		sErr += Green(ctx.Code.Peek(NewPeek().BeforeLines(2)))
+		sErr += Yellow(ctx.Code.Peek(NewPeek().AfterChars(maxSuccess - ctx.Code.Pos)))
 		ctx.Code.Pos = maxSuccess
-		sErr += red(ctx.Code.Peek(NewPeek().AfterChars(maxAttempt-ctx.Code.Pos))) + "/"
+		sErr += Red(ctx.Code.Peek(NewPeek().AfterChars(maxAttempt-ctx.Code.Pos))) + "/"
 		ctx.Code.Pos = maxAttempt
-		sErr += white(ctx.Code.Peek(NewPeek().AfterLines(2))) + "\n"
+		sErr += White(ctx.Code.Peek(NewPeek().AfterLines(2))) + "\n"
 		return NewParseError(ctx, sErr)
 	}
 	return result
@@ -166,9 +166,9 @@ func (gm *Grammar) prepare()                {}
 func (gm *Grammar) handlesChildLabel() bool { return false }
 func (gm *Grammar) String() string {
 	if gm.rank == nil {
-		return magenta("GRAMMAR{}")
+		return Magenta("GRAMMAR{}")
 	} else {
-		return magenta("GRAMMAR{") + String(gm.rank) + magenta("}")
+		return Magenta("GRAMMAR{") + String(gm.rank) + Magenta("}")
 	}
 }
 
@@ -272,7 +272,7 @@ func (gm *Grammar) postinit() {
 				gm.numrules++
 				gm.id2rule[gnode.id] = node
 				if opts.Loop { // print out id->rulename for convenience
-					fmt.Println("Loop " + red(strconv.Itoa(gnode.id)) + ":\t" + String(node))
+					fmt.Println("Loop " + Red(strconv.Itoa(gnode.id)) + ":\t" + String(node))
 				}
 			}
 			return ""
@@ -295,7 +295,7 @@ func (gm *Grammar) postinit() {
 
 func (gm *Grammar) PrintRules() {
 	fmt.Println("+--------------- Grammar.Debug() ----------------------------------")
-	fmt.Println("| name         : " + bold(gm.GetRuleName()))
+	fmt.Println("| name         : " + Bold(gm.GetRuleName()))
 	fmt.Println("| contentString: " + gm.String())
 	fmt.Println("| rules        : " + strconv.Itoa(gm.numrules))
 	fmt.Println("| ")

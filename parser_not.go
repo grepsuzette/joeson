@@ -32,7 +32,7 @@ func (no *not) Parse(ctx *ParseContext) Ast {
 }
 
 func (no *not) String() string {
-	return yellow("!") + String(no.it)
+	return Yellow("!") + String(no.it)
 }
 
 func (no *not) ForEachChild(f func(Parser) Parser) Parser {

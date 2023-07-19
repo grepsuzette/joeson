@@ -78,7 +78,7 @@ func (seq *sequence) String() string {
 	var b strings.Builder
 	as := helpers.AMap(seq.sequence, func(x Parser) string { return String(x) })
 	b.WriteString(strings.Join(as, " "))
-	return blue("(") + b.String() + blue(")")
+	return Blue("(") + b.String() + Blue(")")
 }
 
 func (seq *sequence) Parse(ctx *ParseContext) Ast {

@@ -60,10 +60,10 @@ func (ch *choice) Parse(ctx *ParseContext) Ast {
 
 func (ch *choice) String() string {
 	var b strings.Builder
-	b.WriteString(blue("("))
+	b.WriteString(Blue("("))
 	a := helpers.AMap(ch.choices, func(x Parser) string { return String(x) })
-	b.WriteString(strings.Join(a, blue(" | ")))
-	b.WriteString(blue(")"))
+	b.WriteString(strings.Join(a, Blue(" | ")))
+	b.WriteString(Blue(")"))
 	return b.String()
 }
 

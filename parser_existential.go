@@ -45,7 +45,7 @@ func (ex *existential) calculateLabels() []string {
 }
 
 func (ex *existential) String() string {
-	return String(ex.it) + blue("?")
+	return String(ex.it) + Blue("?")
 }
 
 func (ex *existential) Parse(ctx *ParseContext) Ast {

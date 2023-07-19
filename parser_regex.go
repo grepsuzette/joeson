@@ -24,7 +24,7 @@ func newRegexFromString(sRegex string) *regex {
 func (re *regex) gnode() *gnodeimpl { return re.gnodeimpl }
 func (re *regex) String() string {
 	// below /g is purely for output conformance to original coffee impl.
-	return magenta("/" + re.re.String() + "/g")
+	return Magenta("/" + re.re.String() + "/g")
 }
 func (re *regex) handlesChildLabel() bool { return false }
 func (re *regex) prepare()                {}

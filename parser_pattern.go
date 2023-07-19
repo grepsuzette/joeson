@@ -105,13 +105,13 @@ func (patt *pattern) prepare()                {}
 func (patt *pattern) String() string {
 	var b strings.Builder
 	b.WriteString(String(patt.Value))
-	b.WriteString(cyan("*"))
+	b.WriteString(Cyan("*"))
 	if notNilAndNotNativeUndefined(patt.Join) {
 		b.WriteString(String(patt.Join))
 	}
 	if patt.Min < 0 && patt.Max < 0 {
 		// Cyan("") so output is identical to coffee
-		return b.String() + cyan("")
+		return b.String() + Cyan("")
 	} else {
 		sCyan := "{"
 		if patt.Min > -1 {
@@ -122,7 +122,7 @@ func (patt *pattern) String() string {
 			sCyan += strconv.Itoa(patt.Max)
 		}
 		sCyan += "}"
-		return b.String() + cyan(sCyan)
+		return b.String() + Cyan(sCyan)
 	}
 }
 

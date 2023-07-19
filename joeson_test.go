@@ -62,7 +62,7 @@ func TestManyTimes(t *testing.T) {
 		switch v := rule.(type) {
 		case ALine:
 			if name != "" {
-				fmt.Printf("%s%s\n", helpers.Indent(indent), red(name+":"))
+				fmt.Printf("%s%s\n", helpers.Indent(indent), Red(name+":"))
 			}
 			for _, subline := range v.Array {
 				frecurse(subline, indent+1, "")
@@ -84,13 +84,13 @@ func TestManyTimes(t *testing.T) {
 			} else {
 				sName := ""
 				if name != "" {
-					sName = red(helpers.PadLeft(name+":", 10-indent*2))
+					sName = Red(helpers.PadLeft(name+":", 10-indent*2))
 				}
-				sResult := red("null")
+				sResult := Red("null")
 				if ast != nil {
-					sResult = yellow(String(ast))
+					sResult = Yellow(String(ast))
 				}
-				fmt.Printf("%s%s%s %s\n", helpers.Indent(indent), sName, sResult, white(""))
+				fmt.Printf("%s%s%s %s\n", helpers.Indent(indent), sName, sResult, White(""))
 			}
 
 		default:

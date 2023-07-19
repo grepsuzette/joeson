@@ -17,6 +17,9 @@ func NewNativeMap(h map[string]Ast) NativeMap { return NativeMap{&Origin{}, h} }
 func (nm NativeMap) assertNode() {}
 func (nm NativeMap) String() string {
 	var b strings.Builder
+	if nm.Origin.RuleName != "" {
+		b.WriteString(nm.Origin.RuleName + "=")
+	}
 	b.WriteString("NativeMap{")
 	first := true
 	for _, k := range helpers.SortStringKeys(nm.Map) {

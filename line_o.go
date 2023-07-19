@@ -42,7 +42,7 @@ func (ol OLine) stringIndent(nIndent int) string {
 	re := regexp.MustCompile("^ *o *")
 	s += re.ReplaceAllString(ol.content.stringIndent(nIndent), "o ")
 	if ol.attrs.CbBuilder != nil {
-		s += " " + yellow("𝘧")
+		s += " " + Yellow("𝘧")
 	}
 	return s
 }

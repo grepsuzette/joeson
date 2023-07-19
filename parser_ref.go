@@ -2,7 +2,6 @@ package joeson
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/grepsuzette/joeson/helpers"
 )
@@ -69,14 +68,15 @@ func (x *ref) Parse(ctx *ParseContext) Ast {
 	return wrap(func(ctx *ParseContext, _ Parser) Ast {
 		node := x.grammar.getRule(x.ref)
 		if node == nil {
-			panic("Unknown reference " + x.ref + ". Grammar has " + strconv.Itoa(len(x.grammar.rules)) + " rules. ")
+			return NewParseError(ctx, "Grammar has a reference to a type '"+x.ref+"' which is NOT defined")
+		} else {
+			ctx.stackPeek(0).param = x.param
+			return node.Parse(ctx)
 		}
-		ctx.stackPeek(0).param = x.param
-		return node.Parse(ctx)
 	}, x)(ctx)
 }
 
-func (x *ref) String() string { return red(x.ref) }
+func (x *ref) String() string { return Red(x.ref) }
 func (x *ref) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Ref, but GNode has:
 	// @defineChildren

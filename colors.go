@@ -1,23 +1,25 @@
 package joeson
 
-const esc string = "\x1b"
-const reset string = esc + "[0m"
+const (
+	Esc   string = "\x1b"
+	Reset string = Esc + "[0m"
+)
 
-func black(s string) string       { return esc + "[30m" + s + reset }
-func red(s string) string         { return esc + "[31m" + s + reset }
-func green(s string) string       { return esc + "[32m" + s + reset }
-func yellow(s string) string      { return esc + "[33m" + s + reset }
-func blue(s string) string        { return esc + "[34m" + s + reset }
-func magenta(s string) string     { return esc + "[35m" + s + reset }
-func cyan(s string) string        { return esc + "[36m" + s + reset }
-func white(s string) string       { return esc + "[37m" + s + reset }
-func boldBlack(s string) string   { return esc + "[1;30m" + s + reset }
-func boldRed(s string) string     { return esc + "[1;31m" + s + reset }
-func boldGreen(s string) string   { return esc + "[1;32m" + s + reset }
-func boldYellow(s string) string  { return esc + "[1;33m" + s + reset }
-func boldBlue(s string) string    { return esc + "[1;34m" + s + reset }
-func boldMagenta(s string) string { return esc + "[1;35m" + s + reset }
-func boldCyan(s string) string    { return esc + "[1;36m" + s + reset }
-func boldWhite(s string) string   { return esc + "[1;37m" + s + reset }
+func Black(s string) string       { return Esc + "[30m" + s + Reset }
+func Red(s string) string         { return Esc + "[31m" + s + Reset }
+func Green(s string) string       { return Esc + "[32m" + s + Reset }
+func Yellow(s string) string      { return Esc + "[33m" + s + Reset }
+func Blue(s string) string        { return Esc + "[34m" + s + Reset }
+func Magenta(s string) string     { return Esc + "[35m" + s + Reset }
+func Cyan(s string) string        { return Esc + "[36m" + s + Reset }
+func White(s string) string       { return Esc + "[37m" + s + Reset }
+func BoldBlack(s string) string   { return Esc + "[1;30m" + s + Reset }
+func BoldRed(s string) string     { return Esc + "[1;31m" + s + Reset }
+func BoldGreen(s string) string   { return Esc + "[1;32m" + s + Reset }
+func BoldYellow(s string) string  { return Esc + "[1;33m" + s + Reset }
+func BoldBlue(s string) string    { return Esc + "[1;34m" + s + Reset }
+func BoldMagenta(s string) string { return Esc + "[1;35m" + s + Reset }
+func BoldCyan(s string) string    { return Esc + "[1;36m" + s + Reset }
+func BoldWhite(s string) string   { return Esc + "[1;37m" + s + Reset }
 
-func bold(s string) string { return esc + "[1m" + s + reset }
+func Bold(s string) string { return Esc + "[1m" + s + Reset }

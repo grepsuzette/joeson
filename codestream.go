@@ -132,9 +132,9 @@ func (code *CodeStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string) 
 }
 
 func (code *CodeStream) Print() string {
-	s := "Code at offset " + boldYellow(strconv.Itoa(code.Pos)) + "/" + boldYellow(strconv.Itoa(len(code.text))) + ": '"
-	s += cyan(helpers.SliceString(code.text, helpers.Max(0, code.Pos-20), code.Pos))
-	s += boldCyan("|")
-	s += boldWhite(helpers.SliceString(code.text, code.Pos, code.Pos+40)) + "'"
+	s := "Code at offset " + BoldYellow(strconv.Itoa(code.Pos)) + "/" + BoldYellow(strconv.Itoa(len(code.text))) + ": '"
+	s += Cyan(helpers.SliceString(code.text, helpers.Max(0, code.Pos-20), code.Pos))
+	s += BoldCyan("|")
+	s += BoldWhite(helpers.SliceString(code.text, code.Pos, code.Pos+40)) + "'"
 	return s
 }

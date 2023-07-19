@@ -53,17 +53,17 @@ func (ctx *ParseContext) setParseOptions(opts ParseOptions) *ParseContext {
 
 func (ctx *ParseContext) String() string {
 	line := ctx.Code.Line()
-	codeSgmnt := white(strconv.Itoa(line) + "," + strconv.Itoa(ctx.Code.Col()))
+	codeSgmnt := White(strconv.Itoa(line) + "," + strconv.Itoa(ctx.Code.Col()))
 	p := helpers.Escape(ctx.Code.Peek(NewPeek().BeforeChars(5)))
-	codeSgmnt += "\t" + boldBlack(helpers.PadRight(helpers.SliceString(p, len(p)-5, len(p)), 5))
+	codeSgmnt += "\t" + BoldBlack(helpers.PadRight(helpers.SliceString(p, len(p)-5, len(p)), 5))
 	p = helpers.Escape(ctx.Code.Peek(NewPeek().AfterChars(20)))
-	codeSgmnt += green(helpers.PadLeft(helpers.SliceString(p, 0, 20), 20))
+	codeSgmnt += Green(helpers.PadLeft(helpers.SliceString(p, 0, 20), 20))
 	if ctx.Code.Pos+20 < len(ctx.Code.text) {
-		codeSgmnt += boldBlack(">")
+		codeSgmnt += BoldBlack(">")
 	} else {
-		codeSgmnt += boldBlack("]")
+		codeSgmnt += BoldBlack("]")
 	}
-	return codeSgmnt + " " + cyan(strings.Join(make([]string, ctx.stackLength), "| "))
+	return codeSgmnt + " " + Cyan(strings.Join(make([]string, ctx.stackLength), "| "))
 }
 
 func (ctx *ParseContext) log(message string, opts TraceOptions) {

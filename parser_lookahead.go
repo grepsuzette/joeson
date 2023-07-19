@@ -18,7 +18,7 @@ func (look *lookahead) prepare()                {}
 func (look *lookahead) gnode() *gnodeimpl       { return look.gnodeimpl }
 func (look *lookahead) handlesChildLabel() bool { return false }
 func (look *lookahead) String() string {
-	return blue("(?") + String(look.expr) + blue(")")
+	return Blue("(?") + String(look.expr) + Blue(")")
 }
 
 func (look *lookahead) Parse(ctx *ParseContext) Ast {

@@ -64,12 +64,12 @@ func (rank *rank) handlesChildLabel() bool { return false }
 
 func (rank *rank) String() string {
 	var b strings.Builder
-	b.WriteString(blue("Rank("))
+	b.WriteString(Blue("Rank("))
 	a := helpers.AMap(rank.choice.choices, func(x Parser) string {
-		return red(x.GetRuleName())
+		return Red(x.GetRuleName())
 	})
-	b.WriteString(strings.Join(a, blue(",")))
-	b.WriteString(blue(")"))
+	b.WriteString(strings.Join(a, Blue(",")))
+	b.WriteString(Blue(")"))
 	return b.String()
 }
 
