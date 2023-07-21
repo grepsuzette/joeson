@@ -1,5 +1,9 @@
 package joeson
 
+import (
+	"fmt"
+)
+
 // Ast is the result type of a Parse() operation by a grammar.
 //
 // The return can be:
@@ -45,6 +49,9 @@ func (o *Origin) SetLocation(n Origin) {
 	o.RuleName = n.RuleName
 }
 func (o *Origin) GetLocation() Origin { return *o }
+func (o Origin) String() string {
+	return fmt.Sprintf("Origin=(%d,%d,'rule=%s')", o.Start, o.End, o.RuleName)
+}
 
 var (
 	_ Ast = &Grammar{}

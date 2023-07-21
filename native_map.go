@@ -18,7 +18,8 @@ func (nm NativeMap) assertNode() {}
 func (nm NativeMap) String() string {
 	var b strings.Builder
 	// if nm.Origin.RuleName != "" {
-	// 	b.WriteString(nm.Origin.RuleName + "=")
+	// b.WriteString(BoldBlue("«" + nm.Origin.RuleName + "•"))
+	// b.WriteString(nm.Origin.RuleName + "=")
 	// }
 	b.WriteString("NativeMap{")
 	first := true
@@ -30,6 +31,9 @@ func (nm NativeMap) String() string {
 		first = false
 	}
 	b.WriteString("}")
+	// if nm.Origin.RuleName != "" {
+	// 	b.WriteString(BoldBlue("»"))
+	// }
 	return b.String()
 }
 
@@ -63,7 +67,7 @@ func (nm NativeMap) GetStringExists(k string) (string, bool) {
 		case NativeString:
 			return v.Str, true
 		case *NativeArray:
-			return stringFromNativeArray(v), true
+			return v.Concat(), true
 		default:
 			panic("unexpected type")
 		}

@@ -68,9 +68,8 @@ func (ctx *ParseContext) String() string {
 
 func (ctx *ParseContext) log(message string, opts TraceOptions) {
 	if !ctx.parseOptions.SkipLog {
-		line := ctx.Code.Line()
-		if opts.FilterLine == -1 || line == opts.FilterLine {
-			fmt.Printf("%s %s\n", ctx.String(), message)
+		if opts.FilterLine == -1 || ctx.Code.Line() == opts.FilterLine {
+			fmt.Printf("%s%s\n", ctx.String(), message)
 		}
 	}
 }
@@ -133,4 +132,9 @@ func (ctx *ParseContext) restoreWith(stash_ stash) {
 			ctx.frames[frame.pos][i] = frame
 		}
 	}
+}
+
+// just another way to produce a NewParseError. Perhaps the latter should be unimported
+func (ctx *ParseContext) Error(s string) ParseError {
+	return NewParseError(ctx, s+" - "+ctx.String())
 }

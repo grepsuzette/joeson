@@ -2,8 +2,9 @@ package helpers
 
 import (
 	"fmt"
-	"golang.org/x/exp/constraints"
 	"strings"
+
+	"golang.org/x/exp/constraints"
 )
 
 // escape characters that need to be and filter out non-ascii characters

@@ -55,7 +55,7 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 				fmt.Printf("Error in grammar: lineInit called with OLine %s\n", v.stringIndent(0))
 				panic("assert")
 			case []Line:
-				fmt.Printf("Error in grammar: Arrays of rules AKA rules() are expected to arrive as the 1st argument i.e. i=0) but here i=%d, faulty rule:\n%s\n\n^ Please check that rule ^\nIt normally happens when you forget to wrap the rule name and the array of rules in named().", i, summarizeRule(origArgs, 2))
+				fmt.Printf("Error in grammar: Arrays of rules are expected to arrive as the 1st argument i.e. i=0) but here it came in position i=%d. Here is the faulty rule, you probably forgot to wrap the rule into named():\n%s\n.", i, summarizeRule(origArgs, 2))
 				os.Exit(1)
 			default:
 				fmt.Printf("%s\n", reflect.TypeOf(v).String())

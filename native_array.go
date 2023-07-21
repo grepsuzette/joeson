@@ -14,6 +14,7 @@ a much more dynamic language.
 */
 
 import (
+	"reflect"
 	"strings"
 
 	"github.com/grepsuzette/joeson/helpers"
@@ -44,11 +45,21 @@ func (na *NativeArray) String() string {
 }
 
 // `["a","","bc"]` -> `"abc"`
-// (with respect to the fact elements of the example are not strings but NativeString)
+// (with respect to the fact elements of the example are not strings
+// but either NativeString or embedded *NativeArray)
 func (na *NativeArray) Concat() string {
 	var b strings.Builder
-	for _, ns := range na.Array {
-		b.WriteString(ns.(NativeString).Str)
+	for _, element := range na.Array {
+		switch v := element.(type) {
+		case NativeString:
+			b.WriteString(v.Str)
+		case *NativeArray:
+			b.WriteString(v.Concat())
+		case NativeUndefined:
+			b.WriteString("<NativeUndefined>")
+		default:
+			panic("Expected NativeString or *NativeArray in Concat(), got " + reflect.TypeOf(element).String())
+		}
 	}
 	return b.String()
 }
