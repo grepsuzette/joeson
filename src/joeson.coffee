@@ -639,7 +639,7 @@ showcontent = (result) ->
       throw Error "Regex node expected a string but got: #{@reStr}"
     @re = RegExp '('+@reStr+')', 'g' # TODO document why http://blog.stevenlevithan.com/archives/fixing-javascript-regexp
   parse: @$wrap ($) -> $.code.match regex:@re
-  contentString: -> magenta(''+@re)
+  contentString: -> magenta((''+@re).replace("\t", "\\t"))
 
 # Main external access.
 # I dunno if Grammar should be a GNode or not. It
