@@ -2,6 +2,7 @@ package joeson
 
 import (
 	"regexp"
+	"strings"
 )
 
 type regex struct {
@@ -23,8 +24,7 @@ func newRegexFromString(sRegex string) *regex {
 
 func (re *regex) gnode() *gnodeimpl { return re.gnodeimpl }
 func (re *regex) String() string {
-	// below /g is purely to conform output with original coffee impl.
-	return Magenta("/" + re.re.String() + "/g")
+	return Magenta("/" + strings.NewReplacer("\r", "\\r", "\n", "\\n", "\t", "\\t").Replace(re.re.String()) + "/g")
 }
 func (re *regex) handlesChildLabel() bool { return false }
 func (re *regex) prepare()                {}
