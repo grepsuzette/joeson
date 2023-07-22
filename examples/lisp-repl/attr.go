@@ -6,6 +6,11 @@ import (
 
 type attr j.Origin
 
+func (attr attr) GetLine() int { return attr.Line } func (attr attr) SetLine(n int) {
+	attr.Line = n
+	attr.Start = 0
+	attr.End = 0
+}
 func (attr attr) GetOrigin() j.Origin { return j.Origin(attr) }
 func (attr attr) SetOrigin(o j.Origin) {
 	attr.Code = o.Code

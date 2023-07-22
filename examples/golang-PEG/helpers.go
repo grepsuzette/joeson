@@ -46,3 +46,9 @@ func (dumb dumb) GetAttribute(key interface{}) interface{}        { panic("not i
 func (dumb dumb) SetAttribute(key interface{}, value interface{}) { panic("not implemented") }
 func (dumb dumb) GetOrigin() joeson.Origin                        { return dumb.origin }
 func (dumb dumb) SetOrigin(o joeson.Origin)                       { dumb.origin = o }
+func (dumb dumb) GetLine() int                                    { return dumb.origin.Line }
+func (dumb dumb) SetLine(n int) {
+	dumb.origin.Line = n
+	dumb.origin.Start = 0
+	dumb.origin.End = 0
+}

@@ -30,6 +30,8 @@ type (
 		HasAttribute(key interface{}) bool
 		GetAttribute(key interface{}) interface{}
 		SetAttribute(key interface{}, value interface{})
+		GetLine() int
+		SetLine(int)
 		GetOrigin() Origin
 		SetOrigin(o Origin)
 	}

@@ -16,6 +16,16 @@ func isPredefinedAttr(attr string) bool {
 	return false
 }
 
+func (attr Attr) SetLine(n int) {
+	attr.Line = n
+	attr.Start = 0
+	attr.End = 0
+}
+
+func (attr Attr) GetLine() int {
+	return attr.Line
+}
+
 func (attr Attr) setRuleName(rulename string) {
 	attr.RuleName = rulename
 }
