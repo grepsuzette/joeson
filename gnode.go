@@ -23,3 +23,18 @@ type gnode interface {
 	SetLazyLabels(func() []string)
 	SetLazyCaptures(func() []Ast)
 }
+
+var (
+	_ gnode = &Grammar{}
+	_ gnode = &choice{}
+	_ gnode = &existential{}
+	_ gnode = &lookahead{}
+	_ gnode = &not{}
+	_ gnode = &pattern{}
+	_ gnode = &rank{}
+	_ gnode = &ref{}
+	_ gnode = &regex{}
+	_ gnode = &sequence{}
+	_ gnode = &str{}
+	_ gnode = &NativeUndefined{}
+)
