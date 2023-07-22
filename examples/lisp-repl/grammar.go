@@ -46,20 +46,20 @@ func parseExpr(it j.Ast) j.Ast {
 	} else {
 		if v, ok := h.GetExists("s"); ok {
 			if ns, ok := v.(j.NativeString); ok {
-				return Expr{&j.Origin{}, kindString, ns.Str, 0, nilList(), ""}
+				return Expr{attr{}, kindString, ns.Str, 0, nilList(), ""}
 			} else {
 				panic("24942")
 			}
 		} else if v, ok := h.GetExists("n"); ok {
 			if n, ok := v.(j.NativeInt); ok {
-				return Expr{&j.Origin{}, kindNumber, "", float64(n.Int()), nilList(), ""}
+				return Expr{attr{}, kindNumber, "", float64(n.Int()), nilList(), ""}
 			} else {
 				panic("24942")
 			}
 		} else if v, ok := h.GetExists("l"); ok {
-			return Expr{&j.Origin{}, kindList, "", 0, v.(List), ""}
+			return Expr{attr{}, kindList, "", 0, v.(List), ""}
 		} else if v, ok := h.GetExists("operator"); ok {
-			return Expr{&j.Origin{}, kindOperator, "", 0, nilList(), v.(j.NativeString).Str}
+			return Expr{attr{}, kindOperator, "", 0, nilList(), v.(j.NativeString).Str}
 		} else {
 			panic(h.String())
 		}

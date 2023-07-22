@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"strings"
-
-	j "github.com/grepsuzette/joeson"
 )
 
 // -- uLisp AST
@@ -20,7 +18,7 @@ const (
 
 type (
 	Expr struct {
-		*j.Origin
+		attr
 		Kind     exprKind
 		Str      string
 		Number   float64
@@ -29,10 +27,10 @@ type (
 	}
 )
 
-func empty() Expr              { return Expr{&j.Origin{}, kindList, "", 0, list(), ""} }
-func number(f float64) Expr    { return Expr{&j.Origin{}, kindNumber, "", f, nilList(), ""} }
-func str(s string) Expr        { return Expr{&j.Origin{}, kindString, s, 0, nilList(), ""} }
-func operator(fun string) Expr { return Expr{&j.Origin{}, kindOperator, "", 0, nilList(), fun} }
+func empty() Expr              { return Expr{attr{}, kindList, "", 0, list(), ""} }
+func number(f float64) Expr    { return Expr{attr{}, kindNumber, "", f, nilList(), ""} }
+func str(s string) Expr        { return Expr{attr{}, kindString, s, 0, nilList(), ""} }
+func operator(fun string) Expr { return Expr{attr{}, kindOperator, "", 0, nilList(), fun} }
 func True() Expr               { return number(1) }
 func False() Expr              { return number(0) }
 func Bool(b bool) Expr {
@@ -44,6 +42,7 @@ func Bool(b bool) Expr {
 }
 
 func (o Expr) assertNode() {}
+
 func (o Expr) MustString() string {
 	switch o.Kind {
 	case kindString:

@@ -6,7 +6,7 @@ import (
 )
 
 type regex struct {
-	*Origin
+	Attr
 	*gnodeimpl
 	reStr string
 	re    regexp.Regexp
@@ -16,7 +16,7 @@ func newRegexFromString(sRegex string) *regex {
 	if compiledRegexp, e := regexp.Compile("(" + sRegex + ")"); e != nil {
 		panic("Invalid regex: " + sRegex)
 	} else {
-		re := &regex{&Origin{}, NewGNode(), sRegex, *compiledRegexp}
+		re := &regex{newAttr(), newGNode(), sRegex, *compiledRegexp}
 		re.gnodeimpl.node = re
 		return re
 	}
@@ -34,12 +34,7 @@ func (re *regex) Parse(ctx *ParseContext) Ast {
 			return nil
 		} else {
 			it := NewNativeString(sMatch)
-			it.SetLocation(Origin{
-				RuleName: re.GetRuleName(),
-				Code:     ctx.Code,
-				Start:    ctx.Code.Pos,
-				End:      ctx.Code.Pos,
-			})
+			it.setRuleName(re.Attr.RuleName)
 			return it
 		}
 	}, re)(ctx)

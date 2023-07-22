@@ -18,7 +18,7 @@ type gnodeimpl struct {
 	node      Parser                  // node containing this impl. Hack. Only used by GNode.Captures_ default implementation.
 }
 
-func NewGNode() *gnodeimpl {
+func newGNode() *gnodeimpl {
 	gn := &gnodeimpl{
 		capture: true,
 		rules:   map[string]Parser{},

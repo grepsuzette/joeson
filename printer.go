@@ -29,12 +29,13 @@ var (
 
 func (na NativeArray) Text() string {
 	var b strings.Builder
-	b.WriteString("{")
+	b.WriteString("[")
 	first := true
-	for _, v := range na.Array {
+	for i, v := range na.Array {
 		if !first {
 			b.WriteString(", ")
 		}
+		b.WriteString("(" + strconv.Itoa(i) + ") ")
 		if printer, ok := v.(Printer); ok {
 			b.WriteString(printer.Text())
 		} else {
@@ -42,7 +43,7 @@ func (na NativeArray) Text() string {
 		}
 		first = false
 	}
-	b.WriteString("}")
+	b.WriteString("]")
 	return printRuleName(&na) + b.String()
 }
 
@@ -84,10 +85,9 @@ func (nu NativeUndefined) Text() string {
 }
 
 func printRuleName(ast Ast) string {
-	rule := ast.GetLocation().RuleName
-	if rule == "" {
-		return ""
+	if ast.HasAttribute("RuleName") {
+		return Green(ast.GetAttribute("RuleName").(string) + "=")
 	} else {
-		return Green(rule + "=")
+		return ""
 	}
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type pattern struct {
-	*Origin
+	Attr
 	*gnodeimpl
 	Value Parser
 	Join  Parser
@@ -17,7 +17,7 @@ type pattern struct {
 
 // `it` must be a NativeMap with keys like 'value', 'join', 'min', 'max'
 func newPattern(it Ast) *pattern {
-	patt := &pattern{&Origin{}, NewGNode(), nil, nil, -1, -1}
+	patt := &pattern{newAttr(), newGNode(), nil, nil, -1, -1}
 	patt.node = patt
 	if nativemap, ok := it.(NativeMap); !ok {
 		panic("Pattern expecting a map with value, join")
@@ -73,7 +73,7 @@ func (patt *pattern) Parse(ctx *ParseContext) Ast {
 		var matches []Ast = []Ast{resValue}
 		for {
 			pos2 := ctx.Code.Pos
-			if notNilAndNotNativeUndefined(patt.Join) {
+			if isNotUndefined(patt.Join) {
 				resJoin := patt.Join.Parse(ctx)
 				// return nil to revert pos
 				if resJoin == nil {
@@ -106,7 +106,7 @@ func (patt *pattern) String() string {
 	var b strings.Builder
 	b.WriteString(String(patt.Value))
 	b.WriteString(Cyan("*"))
-	if notNilAndNotNativeUndefined(patt.Join) {
+	if isNotUndefined(patt.Join) {
 		b.WriteString(String(patt.Join))
 	}
 	if patt.Min < 0 && patt.Max < 0 {

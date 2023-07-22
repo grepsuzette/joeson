@@ -7,20 +7,20 @@ import (
 )
 
 type choice struct {
-	*Origin
+	Attr
 	*gnodeimpl
 	choices []Parser
 }
 
 func newEmptyChoice() *choice {
-	ch := &choice{&Origin{}, NewGNode(), []Parser{}}
+	ch := &choice{newAttr(), newGNode(), []Parser{}}
 	ch.gnodeimpl.node = ch
 	return ch
 }
 
 func newChoice(it Ast) *choice {
 	if a, ok := it.(*NativeArray); ok {
-		ch := &choice{&Origin{}, NewGNode(), helpers.AMap(a.Array, func(ast Ast) Parser { return ast.(Parser) })}
+		ch := &choice{newAttr(), newGNode(), helpers.AMap(a.Array, func(ast Ast) Parser { return ast.(Parser) })}
 		ch.gnodeimpl.node = ch
 		return ch
 	} else {

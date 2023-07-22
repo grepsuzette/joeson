@@ -10,7 +10,7 @@ import (
 )
 
 type Grammar struct {
-	*Origin
+	Attr
 	*gnodeimpl
 	rank     Parser         // a *Rank or a Ref to a rank
 	numrules int            // Each Ast can have rules, recursively. This however is the total count in the grammar
@@ -137,7 +137,7 @@ func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTrace
 
 func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
 	name := "__empty__"
-	gm := &Grammar{&Origin{}, NewGNode(), nil, 0, map[int]Parser{}, opts, false}
+	gm := &Grammar{newAttr(), newGNode(), nil, 0, map[int]Parser{}, opts, false}
 	gm.gnodeimpl.name = name
 	gm.gnodeimpl.node = gm
 	return gm
@@ -146,7 +146,7 @@ func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
 // Destroy the grammar. Only tests should use this.
 func (gm *Grammar) Bomb() {
 	gm.rank = newEmptyRank("bombd")
-	gm.gnodeimpl = NewGNode()
+	gm.gnodeimpl = newGNode()
 	gm.numrules = 0
 	gm.id2rule = nil
 	gm.wasInitialized = false

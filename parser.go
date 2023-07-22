@@ -36,6 +36,38 @@ var (
 )
 
 func IsRule(parser Parser) bool {
+	/*
+		// FIXED Hum...
+		// as of July 22, 2023 some changes made
+		// this runtime error happen on str type:
+		// "comparing uncomparable type joeson.str"
+		// This happens when both types are str, and
+		// even if they are similar.
+		// Think it might be related to our refactoring
+		// (we now use Attr, which ~is~was using
+		// map[interface{}]interface{}.
+		// Turns out it makes all our nodes not comparable,
+		// and our algorithm right now needs them to be.
+		//
+		// As confirmed by this blog
+		// https://go.dev/blog/comparable
+		//
+		// So let's remove our map in attr.go until
+		// a good-enough solution presents itself.
+		//
+		if parser.gnode().rule == nil {
+			return false
+		}
+		t1 := reflect.TypeOf(parser.gnode().rule).String()
+		t2 := reflect.TypeOf(parser).String()
+		if t1 != t2 {
+			return false
+		}
+		// if t1 == "joeson.str" && t2 == "joeson.str" {
+		// 	return ............  // let's not do this
+		// }
+		return parser.gnode().rule == parser
+	*/
 	return parser.gnode().rule == parser
 }
 

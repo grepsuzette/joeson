@@ -26,29 +26,22 @@ import (
 // parsing that grammar.
 type (
 	Ast interface {
-		Locator
 		String() string // text representation of this ast.
-	}
-	Locator interface {
-		GetLocation() Origin
-		SetLocation(Origin)
+		HasAttribute(key interface{}) bool
+		GetAttribute(key interface{}) interface{}
+		SetAttribute(key interface{}, value interface{})
+		GetOrigin() Origin
+		SetOrigin(o Origin)
 	}
 	Origin struct {
-		Code     *CodeStream
+		Code     string
+		Line     int
 		Start    int
 		End      int
 		RuleName string
 	}
 )
 
-// For object having *Origin to automatically implement Locator
-func (o *Origin) SetLocation(n Origin) {
-	o.Code = n.Code
-	o.Start = n.Start
-	o.End = n.End
-	o.RuleName = n.RuleName
-}
-func (o *Origin) GetLocation() Origin { return *o }
 func (o Origin) String() string {
 	return fmt.Sprintf("Origin=(%d,%d,'rule=%s')", o.Start, o.End, o.RuleName)
 }

@@ -3,12 +3,12 @@ package joeson
 // Some parsers (namedly Not, Pattern, Sequence, Existential) need
 // a value different from `nil` (which represents parsing failure).
 type NativeUndefined struct {
-	*Origin
+	Attr
 	*gnodeimpl
 }
 
 func NewNativeUndefined() NativeUndefined {
-	return NativeUndefined{&Origin{}, NewGNode()}
+	return NativeUndefined{newAttr(), newGNode()}
 }
 func (nu NativeUndefined) assertNode()    {}
 func (nu NativeUndefined) String() string { return "<NativeUndefined>" }
@@ -19,12 +19,10 @@ func (nu NativeUndefined) prepare()                                  {}
 func (nu NativeUndefined) handlesChildLabel() bool                   { return false }
 func (nu NativeUndefined) ForEachChild(f func(Parser) Parser) Parser { return nu }
 
-func notNilAndNotNativeUndefined(x Ast) bool {
+func isNotUndefined(x Ast) bool {
 	if x == nil {
 		return false
 	}
-	if _, isUndefined := x.(NativeUndefined); isUndefined {
-		return false
-	}
-	return true
+	_, isUndefined := x.(NativeUndefined)
+	return !isUndefined
 }

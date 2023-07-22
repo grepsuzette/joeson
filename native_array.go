@@ -26,15 +26,15 @@ import (
 // undefined is something else).
 
 type NativeArray struct {
-	*Origin
+	Attr
 	Array []Ast
 }
 
 func NewNativeArray(a []Ast) *NativeArray {
 	if a == nil {
-		return &NativeArray{&Origin{}, []Ast{}}
+		return &NativeArray{newAttr(), []Ast{}}
 	} else {
-		return &NativeArray{&Origin{}, a}
+		return &NativeArray{newAttr(), a}
 	}
 }
 

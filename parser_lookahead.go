@@ -1,14 +1,14 @@
 package joeson
 
 type lookahead struct {
-	*Origin
+	Attr
 	*gnodeimpl
 	expr Parser
 }
 
 func newLookahead(it Ast) *lookahead {
-	gn := NewGNode()
-	la := &lookahead{&Origin{}, gn, newStrFromAst(it)}
+	gn := newGNode()
+	la := &lookahead{newAttr(), gn, newStrFromAst(it)}
 	gn.capture = false
 	gn.node = la
 	return la

@@ -267,11 +267,15 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 			if gn.CbBuilder != nil {
 				result = gn.CbBuilder(result, ctx, caller)
 			}
-			// the original impl is not very clear here for me
-			result.SetLocation(Origin{
-				Code:     ctx.Code,
+			// set origin
+			// TODO check original coffee implementation,
+			//      there was a subtletly here that didn't
+			//      translate yet here:
+			result.SetOrigin(Origin{
+				Code:     ctx.Code.text,
 				Start:    ctx.stackPeek(0).pos,
 				End:      ctx.Code.Pos,
+				Line:     ctx.Code.Line(),
 				RuleName: caller.gnode().rule.GetRuleName(),
 			})
 		}

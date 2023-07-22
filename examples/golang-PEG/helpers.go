@@ -22,7 +22,7 @@ import "github.com/grepsuzette/joeson"
 // its String() will be like "<token:keyword>", "<token:identifier>" etc.
 func x(typename string) func(joeson.Ast) joeson.Ast {
 	return func(ast joeson.Ast) joeson.Ast {
-		return dumb{typename, ast, &joeson.Origin{}}
+		return dumb{typename, ast, ast.GetOrigin()}
 	}
 }
 
@@ -36,8 +36,13 @@ func (e ParseError) String() string     { return e.string }
 type dumb struct {
 	typename string
 	ast      joeson.Ast
-	*joeson.Origin
+	origin   joeson.Origin
 }
 
-func (dumb dumb) assertNode()    {}
-func (dumb dumb) String() string { return "<" + dumb.typename + ":" + dumb.ast.String() + ">" }
+func (dumb dumb) assertNode()                                     {}
+func (dumb dumb) String() string                                  { return "<" + dumb.typename + ":" + dumb.ast.String() + ">" }
+func (dumb dumb) HasAttribute(key interface{}) bool               { return false }
+func (dumb dumb) GetAttribute(key interface{}) interface{}        { panic("not implemented") }
+func (dumb dumb) SetAttribute(key interface{}, value interface{}) { panic("not implemented") }
+func (dumb dumb) GetOrigin() joeson.Origin                        { return dumb.origin }
+func (dumb dumb) SetOrigin(o joeson.Origin)                       { dumb.origin = o }

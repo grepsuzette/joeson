@@ -7,20 +7,16 @@ import (
 )
 
 type NativeMap struct {
-	*Origin
+	Attr
 	Map map[string]Ast
 }
 
 func NewEmptyNativeMap() NativeMap            { return NewNativeMap(map[string]Ast{}) }
-func NewNativeMap(h map[string]Ast) NativeMap { return NativeMap{&Origin{}, h} }
+func NewNativeMap(h map[string]Ast) NativeMap { return NativeMap{newAttr(), h} }
 
 func (nm NativeMap) assertNode() {}
 func (nm NativeMap) String() string {
 	var b strings.Builder
-	// if nm.Origin.RuleName != "" {
-	// b.WriteString(BoldBlue("«" + nm.Origin.RuleName + "•"))
-	// b.WriteString(nm.Origin.RuleName + "=")
-	// }
 	b.WriteString("NativeMap{")
 	first := true
 	for _, k := range helpers.SortStringKeys(nm.Map) {
@@ -31,9 +27,6 @@ func (nm NativeMap) String() string {
 		first = false
 	}
 	b.WriteString("}")
-	// if nm.Origin.RuleName != "" {
-	// 	b.WriteString(BoldBlue("»"))
-	// }
 	return b.String()
 }
 

@@ -138,6 +138,9 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 	// }
 	switch v := line.(type) {
 	case ALine:
+		// for _, v := range v.Array {
+		// 	fmt.Println(v)
+		// }
 		answer = rankFromLines(v.Array, name, GrammarOptions{TraceOptions: opts, LazyGrammar: lazyGrammar})
 	case cLine:
 		answer = v.Parser

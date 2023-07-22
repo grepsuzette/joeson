@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-
-	j "github.com/grepsuzette/joeson"
 )
 
 // for internal usage
@@ -28,7 +26,7 @@ func boolFromExpr(m Machine, item Expr) bool { return numberFromExpr(m, item) !=
 func apply(f func(Machine, List) List) func(Machine, List) Expr {
 	return func(m Machine, list List) Expr {
 		var a List = f(m, list)
-		return Expr{&j.Origin{}, kindList, "", 0, a, ""}
+		return Expr{attr{}, kindList, "", 0, a, ""}
 	}
 }
 

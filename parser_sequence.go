@@ -16,7 +16,7 @@ const (
 )
 
 type sequence struct {
-	*Origin
+	Attr
 	*gnodeimpl
 	sequence []Parser
 	type_    *helpers.Lazy[sequenceRepr] // internal cache for internalType()
@@ -29,8 +29,8 @@ func newSequence(it Ast) *sequence {
 		if a == nil {
 			panic("expecting non nil array")
 		}
-		gn := NewGNode()
-		seq := &sequence{Origin: &Origin{}, gnodeimpl: gn, sequence: helpers.AMap(a.Array, func(a Ast) Parser { return a.(Parser) })}
+		gn := newGNode()
+		seq := &sequence{Attr: newAttr(), gnodeimpl: gn, sequence: helpers.AMap(a.Array, func(a Ast) Parser { return a.(Parser) })}
 		gn.node = seq
 		gn.labels_ = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
 		gn.captures_ = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
@@ -76,8 +76,14 @@ func (seq *sequence) calculateType() sequenceRepr {
 
 func (seq *sequence) String() string {
 	var b strings.Builder
-	as := helpers.AMap(seq.sequence, func(x Parser) string { return String(x) })
-	b.WriteString(strings.Join(as, " "))
+	first := true
+	for _, v := range seq.sequence {
+		if !first {
+			b.WriteString(" ")
+		}
+		b.WriteString(String(v))
+		first = false
+	}
 	return Blue("(") + b.String() + Blue(")")
 }
 
@@ -145,19 +151,19 @@ func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 			return nil
 		}
 		if child.GetRuleLabel() == "&" {
-			if notNilAndNotNativeUndefined(results) {
+			if isNotUndefined(results) {
 				results = merge(res, results)
 			} else {
 				results = res
 			}
 		} else if child.GetRuleLabel() == "@" {
-			if notNilAndNotNativeUndefined(results) {
+			if isNotUndefined(results) {
 				results = merge(results, res)
 			} else {
 				results = res
 			}
 		} else if child.GetRuleLabel() != "" {
-			if notNilAndNotNativeUndefined(results) {
+			if isNotUndefined(results) {
 				if h, isMap := results.(NativeMap); isMap {
 					h.Set(child.GetRuleLabel(), res)
 				} else {

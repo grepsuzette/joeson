@@ -39,7 +39,7 @@ var rules_tokens = rules(
 					if j.NewNativeIntFrom(ast).Int() > 255 {
 						return j.NewParseError(ctx, "ERROR illegal: octal value over 255")
 					} else {
-						return dumb{"octal_byte_value", ast, &j.Origin{}}
+						return dumb{"octal_byte_value", ast, ast.GetOrigin()}
 					}
 				}),
 				i(named("hex_byte_value", "'\\\\x' hex_digit{2,2}"), x("hex_byte_value")),

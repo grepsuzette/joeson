@@ -1,13 +1,13 @@
 package joeson
 
 type existential struct {
-	*Origin
+	Attr
 	*gnodeimpl
 	it Parser
 }
 
 func newExistential(it Ast) *existential {
-	ex := &existential{Origin: &Origin{}, gnodeimpl: NewGNode(), it: it.(Parser)}
+	ex := &existential{Attr: newAttr(), gnodeimpl: newGNode(), it: it.(Parser)}
 	ex.gnodeimpl.node = ex
 	return ex
 }
