@@ -159,3 +159,15 @@ func TestSquareroot(t *testing.T) {
 		}
 	}
 }
+
+func Test_LeftRecursion(t *testing.T) {
+	gm := GrammarFromLines([]Line{
+		o(named("Input", "expr:Expression")),
+		i(named("Expression", "Expression _ binary_op _ Expression | UnaryExpr")),
+		i(named("binary_op", "'+'")),
+		i(named("UnaryExpr", "[0-9]+")),
+		i(named("_", "[ \t]*")),
+	}, "leftRecursion", GrammarOptions{TraceOptions: Mute()})
+	res := gm.ParseString("123 + 456")
+	fmt.Println(res.String())
+}
