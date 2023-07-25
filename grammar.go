@@ -184,7 +184,7 @@ func (gm *Grammar) ForEachChild(f func(Parser) Parser) Parser {
 }
 
 // after Rank has already been set,
-// collect and collect rules, simplify the rule tree, set wasInitialized.
+// connect and collect rules, simplify the rule tree, set wasInitialized.
 func (gm *Grammar) postinit() {
 	if gm.rank == nil {
 		panic("grammar.rank is nil")

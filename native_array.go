@@ -14,7 +14,7 @@ a much more dynamic language.
 */
 
 import (
-	"reflect"
+	// "reflect"
 	"strings"
 
 	"github.com/grepsuzette/joeson/helpers"
@@ -56,9 +56,8 @@ func (na *NativeArray) Concat() string {
 		case *NativeArray:
 			b.WriteString(v.Concat())
 		case NativeUndefined:
-			b.WriteString("<NativeUndefined>")
 		default:
-			panic("Expected NativeString or *NativeArray in Concat(), got " + reflect.TypeOf(element).String())
+			b.WriteString(v.String())
 		}
 	}
 	return b.String()

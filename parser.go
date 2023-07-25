@@ -99,6 +99,8 @@ func newGNode() *gnodeimpl {
 	return gn
 }
 
+// for now you must not include rules manually
+// after the grammar was initialized
 func (gn *gnodeimpl) Include(name string, rule Parser) {
 	rule.SetRuleNameWhenEmpty(name)
 	gn.rulesK = append(gn.rulesK, name)

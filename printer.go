@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+// [experimental] might go away soon!
+//
 // In most cases, ast.String() should be used instead.
 //
 // Unlike Ast String(), Printer also prints the NAMES of the rules that

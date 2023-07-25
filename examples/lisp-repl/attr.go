@@ -6,7 +6,8 @@ import (
 
 type attr j.Origin
 
-func (attr attr) GetLine() int { return attr.Line } func (attr attr) SetLine(n int) {
+func (attr attr) GetLine() int { return attr.Line }
+func (attr attr) SetLine(n int) {
 	attr.Line = n
 	attr.Start = 0
 	attr.End = 0

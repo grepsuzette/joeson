@@ -8,8 +8,7 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// this allows tracing and diffing,
-// it does not do more than compiling the intention grammar
+// just compile the intention grammar
 func TestParseIntention(t *testing.T) {
 	gmIntention := GrammarFromLines(IntentionRules(), "gmIntention")
 	if !gmIntention.IsReady() || gmIntention.numrules != JoesonNbRules {
@@ -17,8 +16,8 @@ func TestParseIntention(t *testing.T) {
 	}
 }
 
-// This test bootstraps the intention grammar:
-// __joeson__ -> __intention__ -> an arbitrary grammar -> parses a string
+// bootstrap the intention grammar:
+// __joeson__ -> __intention__ -> an arbitrary grammar -> parse a string
 func TestBootstrap(t *testing.T) {
 	gmJoeson := NewJoeson()
 	gmIntention := GrammarFromLines(
@@ -52,8 +51,8 @@ func TestBootstrap(t *testing.T) {
 	}
 }
 
+// replicates the original joeson_test.coffee
 func TestManyTimes(t *testing.T) {
-	// this test replicates the original joeson_test.coffee
 	start := time.Now()
 	nbIter := 100
 	parsedGrammar := GrammarFromLines(IntentionRules(), "gmIntention")
@@ -103,8 +102,8 @@ func TestManyTimes(t *testing.T) {
 	fmt.Printf("Duration for %d iterations: %d ms\n", nbIter, time.Since(start).Milliseconds())
 }
 
-// short grammar was useful for debugging. Kept for the good memories
-// __joeson__ -> an arbitrary grammar -> parse a string
+// the following are just small tests
+
 func TestDebugLabel(t *testing.T) {
 	debuglabel := GrammarFromLines(
 		[]Line{

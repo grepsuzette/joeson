@@ -27,13 +27,13 @@ import (
 type (
 	Ast interface {
 		String() string // text representation of this ast.
-		HasAttribute(key interface{}) bool
-		GetAttribute(key interface{}) interface{}
-		SetAttribute(key interface{}, value interface{})
 		GetLine() int
 		SetLine(int)
 		GetOrigin() Origin
 		SetOrigin(o Origin)
+		HasAttribute(key interface{}) bool
+		GetAttribute(key interface{}) interface{}
+		SetAttribute(key interface{}, value interface{})
 	}
 	Origin struct {
 		Code     string

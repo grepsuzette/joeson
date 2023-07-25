@@ -56,3 +56,4 @@ This is why we have `joeson_handcompiled.go`. The rules of this grammar are comp
 
 It is now possible to compile the intention grammar with the handcompiled one, the result can be called a *bootstrapped* grammar. That byproduct is also a *compiling grammar*, so we can now compile with either the bootstrapped intention grammar or the handcompiled grammar.
 
+
