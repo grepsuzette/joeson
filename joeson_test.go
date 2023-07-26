@@ -170,3 +170,18 @@ func Test_LeftRecursion(t *testing.T) {
 	res := gm.ParseString("123 + 456")
 	fmt.Println(res.String())
 }
+
+func TestCapturingStr(t *testing.T) {
+	// "'0x' [0-9a-f]{2,2}" parsing "0x7d" will only capture "7d"
+	// To capture "0x7d" you can have a label: "prefix:'0x' [0-9a-f]{2,2}"
+	// This time it should capture all of it. This is to test this feature.
+	panic("todo")
+	// ast1 := GrammarFromLines([]Line{o(named("Input", "'0x' [0-9a-f]{2,2}"))}, "gm1").ParseString("0x7d")
+	// ast2 := GrammarFromLines([]Line{o(named("Input", "foo:'0x' [0-9a-f]{2,2}"))}, "gm2").ParseString("0x7d")
+	// if s1 := ast1.(*NativeArray).Concat(); s1 != "7d" {
+	// 	t.Errorf("unexpected result 1 %s", s1)
+	// }
+	// if s2 := ast2.(NativeMap).Concat(); s2 != "0x7d" {
+	// 	t.Errorf("unexpected result 2 %s", s2)
+	// }
+}
