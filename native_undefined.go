@@ -19,10 +19,10 @@ func (nu NativeUndefined) prepare()                                  {}
 func (nu NativeUndefined) handlesChildLabel() bool                   { return false }
 func (nu NativeUndefined) ForEachChild(f func(Parser) Parser) Parser { return nu }
 
-func isNotUndefined(x Ast) bool {
+func isUndefined(x Ast) bool {
 	if x == nil {
-		return false
+		return true
 	}
 	_, isUndefined := x.(NativeUndefined)
-	return !isUndefined
+	return isUndefined
 }

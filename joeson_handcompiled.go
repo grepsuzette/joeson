@@ -60,7 +60,7 @@ func named(name string, lineStringOrAst any) NamedRule {
 }
 
 func fCode(it Ast) Ast {
-	h := it.(NativeMap)
+	h := it.(*NativeMap)
 	if !h.IsUndefined("code") {
 		panic("code in joeson is obsolete")
 	}
@@ -84,7 +84,7 @@ func JoesonRules() []Line {
 								o(s(r("PRIMARY"), st("?")), func(it Ast) Ast { return newExistential(it) }),
 								o(s(l("value", r("PRIMARY")), st("*"), l("join", e(s(n(r("__")), r("PRIMARY")))), l("@", e(r("RANGE")))), func(it Ast) Ast { return newPattern(it) }),
 								o(s(l("value", r("PRIMARY")), st("+"), l("join", e(s(n(r("__")), r("PRIMARY"))))), func(it Ast) Ast {
-									h := it.(NativeMap)
+									h := it.(*NativeMap)
 									h.Set("min", NewNativeInt(1))
 									h.Set("max", NewNativeInt(-1))
 									return newPattern(h)

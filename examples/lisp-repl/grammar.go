@@ -26,7 +26,7 @@ var grammarRules = rules(
 )
 
 func parseTopLevelExpr(it j.Ast) j.Ast {
-	if ast, ok := it.(j.NativeMap).GetExists("expr"); ok {
+	if ast, ok := it.(*j.NativeMap).GetExists("expr"); ok {
 		switch v := ast.(type) {
 		case Expr:
 			return v
@@ -41,7 +41,7 @@ func parseTopLevelExpr(it j.Ast) j.Ast {
 }
 
 func parseExpr(it j.Ast) j.Ast {
-	if h, ok := it.(j.NativeMap); !ok {
+	if h, ok := it.(*j.NativeMap); !ok {
 		panic(E)
 	} else {
 		if v, ok := h.GetExists("s"); ok {
@@ -89,7 +89,7 @@ func parseOperator(it j.Ast) j.Ast {
 }
 
 func parseString(it j.Ast) j.Ast {
-	if s, ok := it.(j.NativeMap).GetStringExists("s"); ok {
+	if s, ok := it.(*j.NativeMap).GetStringExists("s"); ok {
 		return j.NewNativeString(s)
 	} else {
 		panic("38274")

@@ -9,7 +9,7 @@ import (
 type ref struct {
 	Attr
 	*gnodeimpl
-	ref   string // ref because joeson.coffee used @ref, because @name was reserved
+	ref   string
 	param Parser
 }
 

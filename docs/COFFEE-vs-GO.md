@@ -129,6 +129,8 @@ already somewhat measured is parser_sequence.go (parseAsSingle and parseAsObject
 to parse the intention grammar, while this is the same number of times as the original implementation, those
 must be considered critical parts).
 
+Another thing to likely do to optimize is to use pointer receivers.
+
 **Error handling**.
 
 `Parse(ctx) Ast` must return `nil` when the current parser failed to recognize anything. Please note it is also possible to return an `AstError` when current context *is* the correct one and you somehow want the parsing to produce an error.

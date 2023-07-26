@@ -19,7 +19,8 @@ type sequence struct {
 	Attr
 	*gnodeimpl
 	sequence []Parser
-	type_    *helpers.Lazy[sequenceRepr] // internal cache for internalType()
+	// TODO rename those foo_ to cachedFoo or something like that
+	type_ *helpers.Lazy[sequenceRepr] // internal cache for internalType()
 }
 
 func newSequence(it Ast) *sequence {
@@ -30,7 +31,15 @@ func newSequence(it Ast) *sequence {
 			panic("expecting non nil array")
 		}
 		gn := newGNode()
-		seq := &sequence{Attr: newAttr(), gnodeimpl: gn, sequence: helpers.AMap(a.Array, func(a Ast) Parser { return a.(Parser) })}
+		parsers := make([]Parser, 0)
+		for _, v := range a.Array {
+			parsers = append(parsers, v.(Parser))
+		}
+		seq := &sequence{
+			Attr:      newAttr(),
+			gnodeimpl: gn,
+			sequence:  parsers,
+		}
 		gn.node = seq
 		gn.labels_ = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
 		gn.captures_ = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
@@ -150,28 +159,31 @@ func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 			// fmt.Printf(Red("sequence %x %d parseAsObject childlabel=%s res==nil\n"), rnd, k, childLabel)
 			return nil
 		}
-		if child.GetRuleLabel() == "&" {
-			if isNotUndefined(results) {
+		label := child.GetRuleLabel()
+		switch label {
+		case "&":
+			if isUndefined(results) {
+				results = res
+			} else {
 				results = merge(res, results)
-			} else {
-				results = res
 			}
-		} else if child.GetRuleLabel() == "@" {
-			if isNotUndefined(results) {
+		case "@":
+			if isUndefined(results) {
+				results = res
+			} else {
 				results = merge(results, res)
-			} else {
-				results = res
 			}
-		} else if child.GetRuleLabel() != "" {
-			if isNotUndefined(results) {
-				if h, isMap := results.(NativeMap); isMap {
-					h.Set(child.GetRuleLabel(), res)
+		case "":
+		default:
+			if isUndefined(results) {
+				results = NewEmptyNativeMap()
+				results.(*NativeMap).Set(label, res)
+			} else {
+				if h, isMap := results.(*NativeMap); isMap {
+					h.Set(label, res)
 				} else {
 					panic("assert")
 				}
-			} else {
-				results = NewEmptyNativeMap()
-				results.(NativeMap).Set(child.GetRuleLabel(), res)
 			}
 		}
 	}
@@ -191,4 +203,50 @@ func (seq *sequence) ForEachChild(f func(Parser) Parser) Parser {
 		seq.sequence = ForEachChild_Array(seq.sequence, f)
 	}
 	return seq
+}
+
+// Port of lib/helpers.js:extend() in a less general way (Ast-specific)
+// Extend a source object with the properties of a newcomer object (shallow copy).
+// The modified `toExtend` object is returned.
+func merge(toExtend Ast, newcomer Ast) Ast {
+	// @extend = extend = (object, properties) ->
+	//   for key, val of properties
+	//     object[key] = val
+	//   object
+	if toExtend == nil || newcomer == nil {
+		return toExtend
+	}
+	switch vnewcomer := newcomer.(type) {
+	case NativeUndefined:
+		return toExtend
+	case *NativeMap:
+		switch vToExtend := toExtend.(type) {
+		case *NativeMap:
+			for _, k := range vnewcomer.Keys() {
+				vToExtend.Set(k, vnewcomer.GetOrPanic(k))
+			}
+		case Parser:
+			for _, k := range vnewcomer.Keys() {
+				switch k {
+				case "label":
+					value := vnewcomer.GetOrPanic(k)
+					vToExtend.SetRuleLabel(value.(NativeString).Str)
+				default:
+					panic("unhandled property " + k + " in func (Ast) Merge(). toExtend=" + toExtend.String() + " \n withPropertiesOf=" + newcomer.String())
+				}
+			}
+		default:
+			panic("assert")
+		}
+		return toExtend
+	case Parser:
+		switch toExtend.(type) {
+		case Parser:
+			panic("Unhandled case in func (Ast) Merge()")
+		default:
+			panic("assert")
+		}
+	default:
+		panic("assert")
+	}
 }

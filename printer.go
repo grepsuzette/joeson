@@ -24,7 +24,7 @@ type Printer interface {
 var (
 	_ Printer = NativeArray{}
 	_ Printer = NativeInt{}
-	_ Printer = NativeMap{}
+	_ Printer = &NativeMap{}
 	_ Printer = NativeString{}
 	_ Printer = NativeUndefined{}
 )
@@ -53,15 +53,12 @@ func (ni NativeInt) Text() string {
 	return printRuleName(ni) + strconv.Itoa(ni.int)
 }
 
-func (nm NativeMap) Text() string {
+func (nm *NativeMap) Text() string {
 	var b strings.Builder
 	b.WriteString("{")
 	first := true
 	for _, k := range nm.keys {
-		v, ok := nm.vals[k]
-		if !ok {
-			panic("key " + k + " has no value anymore in map")
-		}
+		v := nm.GetOrPanic(k)
 		if !first {
 			b.WriteString(", ")
 		}

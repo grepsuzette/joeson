@@ -27,14 +27,14 @@ func newStr(s string) str {
 // used in newLookahead()
 func newStrFromAst(ast Ast) str {
 	switch v := ast.(type) {
-	case NativeMap:
+	case *NativeMap:
 		// convert to str only when there is a single key
 		keys := v.Keys()
 		if len(keys) < 1 {
 			panic("assert Parser expected, got NativeMap but it's got more than one key so can not convert to Str: " + v.String())
 		} else {
 			if ast, ok := v.GetExists(keys[0]); !ok {
-				panic("should not happen")
+				panic("assert")
 			} else {
 				switch w := ast.(type) {
 				case NativeString:

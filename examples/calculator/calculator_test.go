@@ -26,7 +26,7 @@ var linesCalc = []joeson.Line{
 	i(named("Term", "first:Factor rest:( _ MulOp _ Factor )*"), xx),
 	i(named("Factor", "'(' expr:Expression ')' | integer:Integer"), func(it joeson.Ast) joeson.Ast {
 		// --- example of an alternation ------------
-		var nm joeson.NativeMap = it.(joeson.NativeMap)
+		nm := it.(*joeson.NativeMap)
 		if n, exists := nm.GetExists("integer"); exists {
 			return n
 		} else if expr, exists := nm.GetExists("expr"); exists {
@@ -42,7 +42,7 @@ var linesCalc = []joeson.Line{
 }
 
 func xx(it joeson.Ast) joeson.Ast {
-	return eval(it.(joeson.NativeMap).Get("first"), it.(joeson.NativeMap).Get("rest"))
+	return eval(it.(*joeson.NativeMap).Get("first"), it.(*joeson.NativeMap).Get("rest"))
 }
 
 var ops = map[string]func(int, int) int{
@@ -61,7 +61,7 @@ func div(a, b int) int { return a / b }
 // or, failing to do that, call FailNow()
 func extractResult(t *testing.T, x joeson.Ast) int {
 	t.Helper()
-	if n, exists := x.(joeson.NativeMap).GetIntExists("expr"); exists {
+	if n, exists := x.(*joeson.NativeMap).GetIntExists("expr"); exists {
 		return n
 	} else {
 		t.Errorf("Failed to find a result like NativeMap{expr:<INT>} in " + x.String())

@@ -9,6 +9,7 @@ import (
 type pattern struct {
 	Attr
 	*gnodeimpl
+	// TODO unexport those
 	Value Parser
 	Join  Parser
 	Min   int // -1 for unspec.
@@ -19,7 +20,7 @@ type pattern struct {
 func newPattern(it Ast) *pattern {
 	patt := &pattern{newAttr(), newGNode(), nil, nil, -1, -1}
 	patt.node = patt
-	if nativemap, ok := it.(NativeMap); !ok {
+	if nativemap, ok := it.(*NativeMap); !ok {
 		panic("Pattern expecting a map with value, join")
 	} else {
 		patt.Value = nativemap.Get("value").(Parser)
@@ -28,7 +29,15 @@ func newPattern(it Ast) *pattern {
 		} else {
 			patt.SetCapture(patt.Value.Capture())
 		}
-		patt.Join = nativemap.GetParser("join") // can be nil
+		if join, exists := nativemap.GetExists("join"); exists {
+			if join == nil {
+				patt.Join = nil
+			} else {
+				patt.Join = join.(Parser)
+			}
+		} else {
+			patt.Join = nil
+		}
 		patt.Min = -1
 		patt.Max = -1
 		if min, exists := nativemap.GetExists("min"); exists {
@@ -73,7 +82,7 @@ func (patt *pattern) Parse(ctx *ParseContext) Ast {
 		var matches []Ast = []Ast{resValue}
 		for {
 			pos2 := ctx.Code.Pos
-			if isNotUndefined(patt.Join) {
+			if !isUndefined(patt.Join) {
 				resJoin := patt.Join.Parse(ctx)
 				// return nil to revert pos
 				if resJoin == nil {
@@ -106,7 +115,7 @@ func (patt *pattern) String() string {
 	var b strings.Builder
 	b.WriteString(String(patt.Value))
 	b.WriteString(Cyan("*"))
-	if isNotUndefined(patt.Join) {
+	if !isUndefined(patt.Join) {
 		b.WriteString(String(patt.Join))
 	}
 	if patt.Min < 0 && patt.Max < 0 {

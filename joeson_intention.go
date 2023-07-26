@@ -20,7 +20,7 @@ func IntentionRules() []Line {
 								o("PRIMARY '?'", func(it Ast) Ast { return newExistential(it) }),
 								o("value:PRIMARY '*' join:(!__ PRIMARY)? @:RANGE?", func(it Ast) Ast { return newPattern(it) }),
 								o("value:PRIMARY '+' join:(!__ PRIMARY)?", func(it Ast) Ast {
-									h := it.(NativeMap)
+									h := it.(*NativeMap)
 									h.Set("min", NewNativeInt(1))
 									h.Set("max", NewNativeInt(-1))
 									return newPattern(h)
