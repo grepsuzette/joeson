@@ -38,7 +38,7 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 			rank.Append(choice)
 		} else if il, ok := line.(ILine); ok {
 			name, rule := il.toRule(rank, rank, options.TraceOptions, lazyGm)
-			rank.gnode().Include(name, rule)
+			rank.Include(name, rule)
 		} else {
 			panic("Unknown type line, expected 'o' or 'i' line, got '" + line.stringIndent(0) + "' (" + reflect.TypeOf(line).String() + ")")
 		}
@@ -49,7 +49,7 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 func newEmptyRank(name string) *rank {
 	x := &rank{newEmptyChoice()}
 	x.SetRuleName(name)
-	x.gnode().node = x
+	x.node = x
 	return x
 }
 

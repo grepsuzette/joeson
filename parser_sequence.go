@@ -18,9 +18,8 @@ const (
 type sequence struct {
 	Attr
 	*gnodeimpl
-	sequence []Parser
-	// TODO rename those foo_ to cachedFoo or something like that
-	type_ *helpers.Lazy[sequenceRepr] // internal cache for internalType()
+	sequence   []Parser
+	cachedType *helpers.Lazy[sequenceRepr] // internal cache for internalType()
 }
 
 func newSequence(it Ast) *sequence {
@@ -41,9 +40,9 @@ func newSequence(it Ast) *sequence {
 			sequence:  parsers,
 		}
 		gn.node = seq
-		gn.labels_ = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
-		gn.captures_ = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
-		seq.type_ = helpers.NewLazyFromFunc(func() sequenceRepr { return seq.calculateType() })
+		gn.cachedLabels = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
+		gn.cachedCaptures = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
+		seq.cachedType = helpers.NewLazyFromFunc(func() sequenceRepr { return seq.calculateType() })
 		return seq
 	}
 }
@@ -55,7 +54,7 @@ func (seq *sequence) prepare()                {}
 func (seq *sequence) calculateLabels() []string {
 	a := []string{}
 	for _, child := range seq.sequence {
-		a = append(a, child.gnode().labels_.Get()...)
+		a = append(a, child.gnode().cachedLabels.Get()...)
 	}
 	return a
 }
@@ -63,7 +62,7 @@ func (seq *sequence) calculateLabels() []string {
 func (seq *sequence) calculateCaptures() []Ast {
 	a := []Ast{}
 	for _, child := range seq.sequence {
-		a = append(a, child.gnode().captures_.Get()...)
+		a = append(a, child.gnode().cachedCaptures.Get()...)
 	}
 	return a
 }
@@ -72,8 +71,8 @@ func (seq *sequence) calculateCaptures() []Ast {
 // otherwise, if at least 1 capture, it is Array
 // otherwise a Single
 func (seq *sequence) calculateType() sequenceRepr {
-	if len(seq.gnode().labels_.Get()) == 0 {
-		if len(seq.gnode().captures_.Get()) > 1 {
+	if len(seq.cachedLabels.Get()) == 0 {
+		if len(seq.cachedCaptures.Get()) > 1 {
 			return Array
 		} else {
 			return Single
@@ -98,7 +97,7 @@ func (seq *sequence) String() string {
 
 func (seq *sequence) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
-		switch seq.type_.Get() {
+		switch seq.cachedType.Get() {
 		case Array:
 			return seq.parseAsArray(ctx)
 		case Single:
@@ -111,7 +110,7 @@ func (seq *sequence) Parse(ctx *ParseContext) Ast {
 				return seq.parseAsObject(ctx)
 			}
 		default:
-			panic(fmt.Sprintf("Unexpected type %x", seq.type_.Get()))
+			panic(fmt.Sprintf("Unexpected type %x", seq.cachedType.Get()))
 		}
 	}, seq)(ctx)
 }
@@ -198,7 +197,7 @@ func (seq *sequence) ForEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   sequence:   {type:[type:GNode]}
-	seq.gnode().rules = ForEachChildInRules(seq, f)
+	seq.rules = ForEachChildInRules(seq, f)
 	if seq.sequence != nil {
 		seq.sequence = ForEachChild_Array(seq.sequence, f)
 	}

@@ -6,14 +6,14 @@ import (
 
 func TestPattern(t *testing.T) {
 	f := func(patt *pattern, tcase string, expectedMin int, expectedMax int, expectedContent string) {
-		if patt.Value == nil || patt.Value.(str).Str != "foo" {
+		if patt.value == nil || patt.value.(str).Str != "foo" {
 			t.Error(tcase + " patt.Value expected foo")
 		}
-		if int(patt.Min) != expectedMin {
-			t.Errorf(tcase+" patt.Min expected %d, got %d", expectedMin, patt.Min)
+		if int(patt.min) != expectedMin {
+			t.Errorf(tcase+" patt.Min expected %d, got %d", expectedMin, patt.min)
 		}
-		if int(patt.Max) != expectedMax {
-			t.Errorf(tcase+" patt.Max expected %d, got %d", expectedMax, patt.Max)
+		if int(patt.max) != expectedMax {
+			t.Errorf(tcase+" patt.Max expected %d, got %d", expectedMax, patt.max)
 		}
 		if patt.String() != expectedContent {
 			t.Errorf(tcase+" patt.String() expected %s, got %s", expectedContent, patt.String())

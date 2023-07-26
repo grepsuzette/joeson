@@ -342,7 +342,7 @@ func (gm *Grammar) PrintRules() {
 			helpers.PadLeft(helpers.TypeOfToString(v), 20),
 			helpers.PadLeft(helpers.BoolToString(v.Capture()), 3),
 			helpers.PadLeft(v.GetRuleLabel(), 7),
-			helpers.PadLeft(strings.Join(v.gnode().labels_.Get(), ","), 21),
+			helpers.PadLeft(strings.Join(v.gnode().cachedLabels.Get(), ","), 21),
 			helpers.PadLeft(sParentName, 16),
 			helpers.PadLeft(v.String(), 30),
 		)

@@ -26,12 +26,12 @@ func (ex *existential) gnode() *gnodeimpl { return ex.gnodeimpl }
 
 func (ex *existential) prepare() {
 	lbls := ex.calculateLabels()
-	ex.labels_.Set(lbls)
+	ex.cachedLabels.Set(lbls)
 	if len(lbls) > 0 && ex.label == "" {
 		ex.label = "@"
 	}
-	caps := ex.it.gnode().captures_.Get()
-	ex.captures_.Set(caps)
+	caps := ex.it.gnode().cachedCaptures.Get()
+	ex.cachedCaptures.Set(caps)
 	ex.capture = len(caps) > 0
 }
 
@@ -40,7 +40,7 @@ func (ex *existential) calculateLabels() []string {
 	if lbl != "" && lbl != "@" && lbl != "&" {
 		return []string{lbl}
 	} else {
-		return ex.it.gnode().labels_.Get()
+		return ex.it.gnode().cachedLabels.Get()
 	}
 }
 

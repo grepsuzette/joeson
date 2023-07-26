@@ -9,11 +9,10 @@ import (
 type pattern struct {
 	Attr
 	*gnodeimpl
-	// TODO unexport those
-	Value Parser
-	Join  Parser
-	Min   int // -1 for unspec.
-	Max   int // -1 for unspec.
+	value Parser
+	join  Parser
+	min   int // -1 for unspec.
+	max   int // -1 for unspec.
 }
 
 // `it` must be a NativeMap with keys like 'value', 'join', 'min', 'max'
@@ -23,31 +22,31 @@ func newPattern(it Ast) *pattern {
 	if nativemap, ok := it.(*NativeMap); !ok {
 		panic("Pattern expecting a map with value, join")
 	} else {
-		patt.Value = nativemap.Get("value").(Parser)
-		if patt.Value == nil {
+		patt.value = nativemap.Get("value").(Parser)
+		if patt.value == nil {
 			panic("Pattern must have a value")
 		} else {
-			patt.SetCapture(patt.Value.Capture())
+			patt.SetCapture(patt.value.Capture())
 		}
 		if join, exists := nativemap.GetExists("join"); exists {
 			if join == nil {
-				patt.Join = nil
+				patt.join = nil
 			} else {
-				patt.Join = join.(Parser)
+				patt.join = join.(Parser)
 			}
 		} else {
-			patt.Join = nil
+			patt.join = nil
 		}
-		patt.Min = -1
-		patt.Max = -1
+		patt.min = -1
+		patt.max = -1
 		if min, exists := nativemap.GetExists("min"); exists {
 			switch v := min.(type) {
 			case NativeUndefined:
-				patt.Min = -1
+				patt.min = -1
 			case NativeInt:
-				patt.Min = v.Int()
+				patt.min = v.Int()
 			case NativeString:
-				patt.Min = NewNativeIntFromString(v.Str).Int()
+				patt.min = NewNativeIntFromString(v.Str).Int()
 			default:
 				panic("NewPattern unhandled type for min: " + reflect.TypeOf(min).String())
 			}
@@ -55,11 +54,11 @@ func newPattern(it Ast) *pattern {
 		if max, exists := nativemap.GetExists("max"); exists {
 			switch v := max.(type) {
 			case NativeUndefined:
-				patt.Max = -1
+				patt.max = -1
 			case NativeInt:
-				patt.Max = v.Int()
+				patt.max = v.Int()
 			case NativeString:
-				patt.Max = NewNativeIntFromString(v.Str).Int()
+				patt.max = NewNativeIntFromString(v.Str).Int()
 			default:
 				panic("NewPattern unhandled type for max: " + reflect.TypeOf(max).String())
 			}
@@ -71,10 +70,10 @@ func (patt *pattern) gnode() *gnodeimpl { return patt.gnodeimpl }
 func (patt *pattern) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos
-		resValue := patt.Value.Parse(ctx)
+		resValue := patt.value.Parse(ctx)
 		if resValue == nil {
 			ctx.Code.Pos = pos
-			if patt.Min > 0 {
+			if patt.min > 0 {
 				return nil
 			}
 			return NewNativeArray([]Ast{})
@@ -82,26 +81,26 @@ func (patt *pattern) Parse(ctx *ParseContext) Ast {
 		var matches []Ast = []Ast{resValue}
 		for {
 			pos2 := ctx.Code.Pos
-			if !isUndefined(patt.Join) {
-				resJoin := patt.Join.Parse(ctx)
+			if !isUndefined(patt.join) {
+				resJoin := patt.join.Parse(ctx)
 				// return nil to revert pos
 				if resJoin == nil {
 					ctx.Code.Pos = pos2
 					break
 				}
 			}
-			resValue = patt.Value.Parse(ctx)
+			resValue = patt.value.Parse(ctx)
 			// return nil to revert pos
 			if resValue == nil {
 				ctx.Code.Pos = pos2
 				break
 			}
 			matches = append(matches, resValue)
-			if patt.Max > -1 && len(matches) >= int(patt.Max) {
+			if patt.max > -1 && len(matches) >= int(patt.max) {
 				break
 			}
 		}
-		if patt.Min > -1 && int(patt.Min) > len(matches) {
+		if patt.min > -1 && int(patt.min) > len(matches) {
 			ctx.Code.Pos = pos
 			return nil
 		}
@@ -113,22 +112,22 @@ func (patt *pattern) handlesChildLabel() bool { return false }
 func (patt *pattern) prepare()                {}
 func (patt *pattern) String() string {
 	var b strings.Builder
-	b.WriteString(String(patt.Value))
+	b.WriteString(String(patt.value))
 	b.WriteString(Cyan("*"))
-	if !isUndefined(patt.Join) {
-		b.WriteString(String(patt.Join))
+	if !isUndefined(patt.join) {
+		b.WriteString(String(patt.join))
 	}
-	if patt.Min < 0 && patt.Max < 0 {
+	if patt.min < 0 && patt.max < 0 {
 		// Cyan("") so output is identical to coffee
 		return b.String() + Cyan("")
 	} else {
 		sCyan := "{"
-		if patt.Min > -1 {
-			sCyan += strconv.Itoa(patt.Min)
+		if patt.min > -1 {
+			sCyan += strconv.Itoa(patt.min)
 		}
 		sCyan += ","
-		if patt.Max > -1 {
-			sCyan += strconv.Itoa(patt.Max)
+		if patt.max > -1 {
+			sCyan += strconv.Itoa(patt.max)
 		}
 		sCyan += "}"
 		return b.String() + Cyan(sCyan)
@@ -141,11 +140,11 @@ func (patt *pattern) ForEachChild(f func(Parser) Parser) Parser {
 	//   value:      {type:GNode}
 	//   join:       {type:GNode}
 	patt.rules = ForEachChildInRules(patt, f)
-	if patt.Value != nil {
-		patt.Value = f(patt.Value)
+	if patt.value != nil {
+		patt.value = f(patt.value)
 	}
-	if patt.Join != nil {
-		patt.Join = f(patt.Join)
+	if patt.join != nil {
+		patt.join = f(patt.join)
 	}
 	return patt
 }

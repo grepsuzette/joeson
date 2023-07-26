@@ -78,6 +78,6 @@ func (s str) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Str, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
-	s.gnode().rules = ForEachChildInRules(s, f)
+	s.rules = ForEachChildInRules(s, f)
 	return s
 }

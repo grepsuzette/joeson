@@ -44,6 +44,6 @@ func (re *regex) ForEachChild(f func(Parser) Parser) Parser {
 	// no children defined for Ref, but GNode has:
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
-	re.gnode().rules = ForEachChildInRules(re, f)
+	re.rules = ForEachChildInRules(re, f)
 	return re
 }
