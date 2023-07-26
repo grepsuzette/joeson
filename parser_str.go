@@ -4,7 +4,8 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// str is one of the most simple Parser, it tries to parse the string it was built with.
+// str is a parser that must match a string exactly.
+// It does not capture by default.
 // ```
 // p := newStr("foo").
 // p.Parse("fool") -> NewNativeString("foo"),
@@ -27,7 +28,7 @@ func newStr(s string) str {
 func newStrFromAst(ast Ast) str {
 	switch v := ast.(type) {
 	case NativeMap:
-		// try to convert to Str iif it has only one key
+		// convert to str only when there is a single key
 		keys := v.Keys()
 		if len(keys) < 1 {
 			panic("assert Parser expected, got NativeMap but it's got more than one key so can not convert to Str: " + v.String())
