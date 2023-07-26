@@ -57,7 +57,11 @@ func (nm NativeMap) Text() string {
 	var b strings.Builder
 	b.WriteString("{")
 	first := true
-	for k, v := range nm.Map {
+	for _, k := range nm.keys {
+		v, ok := nm.vals[k]
+		if !ok {
+			panic("key " + k + " has no value anymore in map")
+		}
 		if !first {
 			b.WriteString(", ")
 		}
