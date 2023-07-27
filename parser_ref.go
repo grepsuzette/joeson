@@ -44,13 +44,13 @@ func newRef(it Ast) *ref {
 	if name[0:1] == "_" {
 		ref.SetCapture(false)
 	}
-	ref.gnodeimpl.cachedLabels = helpers.NewLazyFromFunc(func() []string {
+	ref.gnodeimpl.lazyLabels = helpers.NewLazyFromFunc(func() []string {
 		if ref.GetRuleLabel() == "@" {
 			referenced := ref.grammar.getRule(ref.ref)
 			if referenced == nil {
 				panic("ref " + ref.ref + " was not found in grammar.Rules")
 			} else {
-				return referenced.gnode().cachedLabels.Get()
+				return referenced.gnode().lazyLabels.Get()
 			}
 		} else if ref.GetRuleLabel() != "" {
 			return []string{ref.GetRuleLabel()}

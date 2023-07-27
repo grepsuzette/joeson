@@ -29,6 +29,30 @@ func NewNativeMap(h map[string]Ast) *NativeMap {
 	}
 }
 
+// NativeMap.Concat works provided all types within its tree are Native*.
+// it will panic otherwise.
+func (nm *NativeMap) Concat() string {
+	var b strings.Builder
+	for _, k := range nm.Keys() {
+		if v, ok := nm.GetExists(k); ok {
+			switch w := v.(type) {
+			case *NativeMap:
+				b.WriteString(w.Concat())
+			case *NativeArray:
+				b.WriteString(w.Concat())
+			case NativeUndefined:
+			case NativeString:
+				b.WriteString(w.Str)
+			case NativeInt:
+				b.WriteString(w.String())
+			default:
+				panic("NativeMap.Concat only works with Native* types")
+			}
+		}
+	}
+	return b.String()
+}
+
 func (nm *NativeMap) assertNode() {}
 func (nm *NativeMap) String() string {
 	var b strings.Builder

@@ -16,7 +16,8 @@ type ParseError struct {
 
 func (pe ParseError) assertNode() {}
 func (pe ParseError) String() string {
-	return "ERROR " + pe.ErrorString + " " + pe.ctx.String()
+	return "ERROR " + pe.ErrorString
+	// return "ERROR " + pe.ErrorString + " " + pe.ctx.String()
 }
 
 func NewParseError(ctx *ParseContext, s string) ParseError {

@@ -18,8 +18,8 @@ const (
 type sequence struct {
 	Attr
 	*gnodeimpl
-	sequence   []Parser
-	cachedType *helpers.Lazy[sequenceRepr] // internal cache for internalType()
+	sequence []Parser
+	lazyType *helpers.Lazy[sequenceRepr] // internal cache for internalType()
 }
 
 func newSequence(it Ast) *sequence {
@@ -40,9 +40,9 @@ func newSequence(it Ast) *sequence {
 			sequence:  parsers,
 		}
 		gn.node = seq
-		gn.cachedLabels = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
-		gn.cachedCaptures = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
-		seq.cachedType = helpers.NewLazyFromFunc(func() sequenceRepr { return seq.calculateType() })
+		gn.lazyLabels = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
+		gn.lazyCaptures = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
+		seq.lazyType = helpers.NewLazyFromFunc(func() sequenceRepr { return seq.calculateType() })
 		return seq
 	}
 }
@@ -54,7 +54,7 @@ func (seq *sequence) prepare()                {}
 func (seq *sequence) calculateLabels() []string {
 	a := []string{}
 	for _, child := range seq.sequence {
-		a = append(a, child.gnode().cachedLabels.Get()...)
+		a = append(a, child.gnode().lazyLabels.Get()...)
 	}
 	return a
 }
@@ -62,7 +62,7 @@ func (seq *sequence) calculateLabels() []string {
 func (seq *sequence) calculateCaptures() []Ast {
 	a := []Ast{}
 	for _, child := range seq.sequence {
-		a = append(a, child.gnode().cachedCaptures.Get()...)
+		a = append(a, child.gnode().lazyCaptures.Get()...)
 	}
 	return a
 }
@@ -71,8 +71,8 @@ func (seq *sequence) calculateCaptures() []Ast {
 // otherwise, if at least 1 capture, it is Array
 // otherwise a Single
 func (seq *sequence) calculateType() sequenceRepr {
-	if len(seq.cachedLabels.Get()) == 0 {
-		if len(seq.cachedCaptures.Get()) > 1 {
+	if len(seq.lazyLabels.Get()) == 0 {
+		if len(seq.lazyCaptures.Get()) > 1 {
 			return Array
 		} else {
 			return Single
@@ -97,7 +97,7 @@ func (seq *sequence) String() string {
 
 func (seq *sequence) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
-		switch seq.cachedType.Get() {
+		switch seq.lazyType.Get() {
 		case Array:
 			return seq.parseAsArray(ctx)
 		case Single:
@@ -110,7 +110,7 @@ func (seq *sequence) Parse(ctx *ParseContext) Ast {
 				return seq.parseAsObject(ctx)
 			}
 		default:
-			panic(fmt.Sprintf("Unexpected type %x", seq.cachedType.Get()))
+			panic(fmt.Sprintf("Unexpected type %x", seq.lazyType.Get()))
 		}
 	}, seq)(ctx)
 }

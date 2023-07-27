@@ -18,8 +18,8 @@ type Parser interface {
 
 	GetRuleName() string
 	GetRuleLabel() string
-	SetRuleLabel(string)
 	Capture() bool
+	SetRuleLabel(string)
 	SetRuleName(string)
 	SetRuleNameWhenEmpty(string)
 	SetCapture(bool)
@@ -66,8 +66,8 @@ type gnodeimpl struct {
 	grammar *Grammar          // the grammar itself
 	node    Parser            // node containing this impl. Hack. Only used by GNode.Captures_ default implementation.
 
-	cachedLabels   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate GNode behavior in the original coffeescript impl. See NewGNode() doc below.
-	cachedCaptures *helpers.Lazy[[]Ast]    // the lazy captures getter, ditto.
+	lazyLabels   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate GNode behavior in the original coffeescript impl. See NewGNode() doc below.
+	lazyCaptures *helpers.Lazy[[]Ast]    // the lazy captures getter, ditto.
 }
 
 func newGNode() *gnodeimpl {
@@ -83,14 +83,14 @@ func newGNode() *gnodeimpl {
 	// lost when going from the very dynamic combo javascript + clazz to
 	// golang. Technically helpers.Lazy is just a callback whose execution
 	// result is cached for ulterior calls.
-	gn.cachedLabels = helpers.NewLazyFromFunc(func() []string {
+	gn.lazyLabels = helpers.NewLazyFromFunc(func() []string {
 		if gn.label != "" {
 			return []string{gn.label}
 		} else {
 			return []string{}
 		}
 	})
-	gn.cachedCaptures = helpers.NewLazyFromFunc(func() []Ast {
+	gn.lazyCaptures = helpers.NewLazyFromFunc(func() []Ast {
 		if gn.capture {
 			return []Ast{gn.node}
 		} else {
@@ -120,12 +120,12 @@ func (gn *gnodeimpl) SetRuleLabel(label string) { gn.label = label }
 func (gn *gnodeimpl) Capture() bool             { return gn.capture }
 func (gn *gnodeimpl) SetCapture(b bool)         { gn.capture = b }
 
-func (gn *gnodeimpl) Labels() []string                { return gn.cachedLabels.Get() }
-func (gn *gnodeimpl) Captures() []Ast                 { return gn.cachedCaptures.Get() }
-func (gn *gnodeimpl) SetLabels(v []string)            { gn.cachedLabels.Set(v) }
-func (gn *gnodeimpl) SetCaptures(v []Ast)             { gn.cachedCaptures.Set(v) }
-func (gn *gnodeimpl) SetLazyLabels(f func() []string) { gn.cachedLabels = helpers.NewLazyFromFunc(f) }
-func (gn *gnodeimpl) SetLazyCaptures(f func() []Ast)  { gn.cachedCaptures = helpers.NewLazyFromFunc(f) }
+func (gn *gnodeimpl) Labels() []string                { return gn.lazyLabels.Get() }
+func (gn *gnodeimpl) Captures() []Ast                 { return gn.lazyCaptures.Get() }
+func (gn *gnodeimpl) SetLabels(v []string)            { gn.lazyLabels.Set(v) }
+func (gn *gnodeimpl) SetCaptures(v []Ast)             { gn.lazyCaptures.Set(v) }
+func (gn *gnodeimpl) SetLazyLabels(f func() []string) { gn.lazyLabels = helpers.NewLazyFromFunc(f) }
+func (gn *gnodeimpl) SetLazyCaptures(f func() []Ast)  { gn.lazyCaptures = helpers.NewLazyFromFunc(f) }
 
 func IsRule(parser Parser) bool {
 	return parser.gnode().rule == parser

@@ -136,5 +136,5 @@ func (ctx *ParseContext) restoreWith(stash_ stash) {
 
 // just another way to produce a NewParseError. Perhaps the latter should be unimported
 func (ctx *ParseContext) Error(s string) ParseError {
-	return NewParseError(ctx, s+" - "+ctx.String())
+	return NewParseError(ctx, s)
 }
