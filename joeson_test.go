@@ -174,14 +174,20 @@ func Test_LeftRecursion(t *testing.T) {
 func TestCapturingStr(t *testing.T) {
 	// "'0x' [0-9a-f]{2,2}" parsing "0x7d" will only capture "7d"
 	// To capture "0x7d" you can have a label: "prefix:'0x' [0-9a-f]{2,2}"
-	// This time it should capture all of it. This is to test this feature.
-	// panic("todo")
-	// ast1 := GrammarFromLines([]Line{o(named("Input", "'0x' [0-9a-f]{2,2}"))}, "gm1").ParseString("0x7d")
-	// ast2 := GrammarFromLines([]Line{o(named("Input", "foo:'0x' [0-9a-f]{2,2}"))}, "gm2").ParseString("0x7d")
-	// if s1 := ast1.(*NativeArray).Concat(); s1 != "7d" {
-	// 	t.Errorf("unexpected result 1 %s", s1)
-	// }
-	// if s2 := ast2.(NativeMap).Concat(); s2 != "0x7d" {
-	// 	t.Errorf("unexpected result 2 %s", s2)
-	// }
+	// This time it should capture all of it.
+
+	{
+		// demonstrate str is not captured
+		ast := GrammarFromLines([]Line{o(named("Input", "'0x' [0-9a-f]{2,2}"))}, "gm").ParseString("0x7d")
+		if s := ast.(*NativeArray).Concat(); s != "7d" {
+			t.Errorf("for test 1 unexpected result %s", s)
+		}
+	}
+	{
+		// capture str with labels
+		ast := GrammarFromLines([]Line{o(named("Input", "captureMe:'0x' captureMeToo:[0-9a-f]{2,2}"))}, "gm").ParseString("0x7d")
+		if s := ast.(*NativeMap).Concat(); s != "0x7d" {
+			t.Errorf("for test 2 unexpected result %s", s)
+		}
+	}
 }
