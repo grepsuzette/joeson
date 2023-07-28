@@ -12,7 +12,16 @@ func Escape(str string) string {
 	return ToAscii(EscapeButKeepNonAscii(str))
 }
 
-var escaper = strings.NewReplacer("\n", "\\n", "\r", "\\r", "\t", "\\t", `\`, "\\\\")
+var escaper = strings.NewReplacer(
+	"\n", `\n`,
+	"\r", `\r`,
+	"\t", `\t`,
+	`\`, `\\`,
+	"\a", `\a`,
+	"\f", `\f`,
+	"\b", `\b`,
+	"\v", `\v`,
+)
 
 func EscapeButKeepNonAscii(str string) string {
 	/*
