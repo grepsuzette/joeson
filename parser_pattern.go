@@ -6,6 +6,23 @@ import (
 	"strings"
 )
 
+// pattern parser
+// Let rule a parse 'a' and rule b parses 'b'.
+// The following notations are handled by the pattern parser:
+//
+// "a*" parses "", "a", "aaa"
+// "a+" parses "a", "aaa" but not ""
+// "a*b" (b is called th join) parses "", "a", "aaa", "aba", "aababaaababa"
+//
+//	but NOT "abab" (it must not end with "b")
+//
+// "a+b" is similar but does not match ""
+// "a*b{1,2}" parses "a", "aaaaa", "aba", "aaabaaaa". The {} notation repeats
+//
+//	the whole a*b pattern. In other words, it admits at most one b in the
+//	parsed expressions.
+//
+//	See parser_pattern_test.go
 type pattern struct {
 	Attr
 	*gnodeimpl
