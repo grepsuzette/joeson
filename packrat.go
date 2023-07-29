@@ -92,7 +92,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 			return result
 		}
 		frame := ctx.getFrame(x)
-		startPos := ctx.Code.Pos
+		startPos := ctx.Code.Pos()
 		if !frame.loopstage.IsSet {
 			frame.loopstage.Set(0)
 		}
@@ -111,7 +111,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 						ctx.log(Cyan("`-hit:")+" nil", opts)
 					}
 				}
-				ctx.Code.Pos = frame.endpos.Int
+				ctx.Code.SetPos(frame.endpos.Int)
 				return frame.result
 			}
 			frame.loopstage.Set(1)
@@ -120,7 +120,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 			switch frame.loopstage.Int {
 			case 1: // non-recursive (i.e. done)
 				frame.loopstage.Set(0)
-				frame.cacheSet(result, ctx.Code.Pos)
+				frame.cacheSet(result, ctx.Code.Pos())
 				if opts.Stack {
 					s := Cyan("`-set:") + " "
 					if result == nil {
@@ -183,14 +183,14 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 						}
 						bestStash = ctx.wipeWith(frame, true)
 						bestResult = result
-						bestEndPos = ctx.Code.Pos
+						bestEndPos = ctx.Code.Pos()
 						frame.cacheSet(bestResult, bestEndPos)
 						if opts.Stack {
 							ctx.log(Yellow("|`--- loop iteration ---")+frame.toString(), opts)
 						}
-						ctx.Code.Pos = startPos
+						ctx.Code.SetPos(startPos)
 						result = fparse(ctx)
-						if ctx.Code.Pos <= bestEndPos {
+						if ctx.Code.Pos() <= bestEndPos {
 							break
 						}
 					}
@@ -199,7 +199,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 					}
 					ctx.wipeWith(frame, false)
 					ctx.restoreWith(bestStash)
-					ctx.Code.Pos = bestEndPos
+					ctx.Code.SetPos(bestEndPos)
 					if opts.Stack {
 						ctx.log(Yellow("`--- loop done! --- ")+"best result: "+helpers.Escape(bestResult.String()), opts)
 					}
@@ -239,7 +239,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 			}
 			// Step 2: Return whatever was cacheSet.
 			if frame.endpos.IsSet {
-				ctx.Code.Pos = frame.endpos.Int
+				ctx.Code.SetPos(frame.endpos.Int)
 			}
 			return frame.result
 		default:
@@ -274,7 +274,7 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 			result.SetOrigin(Origin{
 				Code:     ctx.Code.text,
 				Start:    ctx.stackPeek(0).pos,
-				End:      ctx.Code.Pos,
+				End:      ctx.Code.Pos(),
 				Line:     ctx.Code.Line(),
 				RuleName: caller.gnode().rule.GetRuleName(),
 			})

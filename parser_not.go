@@ -20,9 +20,9 @@ func (no *not) handlesChildLabel() bool { return false }
 
 func (no *not) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
-		pos := ctx.Code.Pos
+		pos := ctx.Code.Pos()
 		res := no.it.Parse(ctx)
-		ctx.Code.Pos = pos
+		ctx.Code.SetPos(pos)
 		if res != nil {
 			return nil
 		} else {

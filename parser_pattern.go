@@ -86,10 +86,10 @@ func newPattern(it Ast) *pattern {
 func (patt *pattern) gnode() *gnodeimpl { return patt.gnodeimpl }
 func (patt *pattern) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
-		pos := ctx.Code.Pos
+		pos := ctx.Code.Pos()
 		resValue := patt.value.Parse(ctx)
 		if resValue == nil {
-			ctx.Code.Pos = pos
+			ctx.Code.SetPos(pos)
 			if patt.min > 0 {
 				return nil
 			}
@@ -97,19 +97,19 @@ func (patt *pattern) Parse(ctx *ParseContext) Ast {
 		}
 		var matches []Ast = []Ast{resValue}
 		for {
-			pos2 := ctx.Code.Pos
+			pos2 := ctx.Code.Pos()
 			if !isUndefined(patt.join) {
 				resJoin := patt.join.Parse(ctx)
 				// return nil to revert pos
 				if resJoin == nil {
-					ctx.Code.Pos = pos2
+					ctx.Code.SetPos(pos2)
 					break
 				}
 			}
 			resValue = patt.value.Parse(ctx)
 			// return nil to revert pos
 			if resValue == nil {
-				ctx.Code.Pos = pos2
+				ctx.Code.SetPos(pos2)
 				break
 			}
 			matches = append(matches, resValue)
@@ -118,7 +118,7 @@ func (patt *pattern) Parse(ctx *ParseContext) Ast {
 			}
 		}
 		if patt.min > -1 && int(patt.min) > len(matches) {
-			ctx.Code.Pos = pos
+			ctx.Code.SetPos(pos)
 			return nil
 		}
 		return NewNativeArray(matches)

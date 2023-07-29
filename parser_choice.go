@@ -46,10 +46,10 @@ func (ch *choice) prepare() {
 func (ch *choice) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		for _, choice := range ch.choices {
-			pos := ctx.Code.Pos
+			pos := ctx.Code.Pos()
 			result := choice.Parse(ctx)
 			if result == nil {
-				ctx.Code.Pos = pos
+				ctx.Code.SetPos(pos)
 			} else {
 				return result
 			}

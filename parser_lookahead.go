@@ -23,9 +23,9 @@ func (look *lookahead) String() string {
 
 func (look *lookahead) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
-		pos := ctx.Code.Pos
+		pos := ctx.Code.Pos()
 		result := look.expr.Parse(ctx) // check whether it parses...
-		ctx.Code.Pos = pos             // ...but revert to prev pos if so
+		ctx.Code.SetPos(pos)           // ...but revert to prev pos if so
 		return result
 	}, look)(ctx)
 }

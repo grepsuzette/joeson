@@ -20,7 +20,7 @@ func eq_str(t *testing.T, a string, b string) {
 }
 
 func TestState(t *testing.T) {
-	cs := NewCodeStream(`line 0
+	cs := NewRuneStream(`line 0
 line 1
 line 2 -- rest of line 2
 line 3
@@ -48,8 +48,8 @@ line 4`)
 }
 
 func TestRegexp(t *testing.T) {
-	cs := NewCodeStream("A EXPRESSION|B")
-	cs.Pos = 2
+	cs := NewRuneStream("A EXPRESSION|B")
+	cs.pos = 2
 	if re, err := regexp.CompilePOSIX("([a-zA-Z\\._][a-zA-Z\\._0-9]*)"); err != nil {
 		t.Fatalf("regexp failed to compile")
 	} else {

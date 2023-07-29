@@ -15,7 +15,7 @@ type ParseContext struct {
 	TraceOptions        // grammar.TraceOptions at the moment this context is created.
 	Counter      int    // [For debugging] iteration counter shown with TRACE=stack. Useful with conditional breakpoints
 	GrammarName  string // [For debugging] set in grammar.Parse to the value of grammar.Name(). Useful for conditional breakpoints (typically in packrat loopify()) to only break when your final grammar is being used to parse anything. See docs/diffing.md # debugging methodology
-	Code         *CodeStream
+	Code         *RuneStream
 
 	numRules     int
 	frames       [][]*frame // 2D: [len(code.text) + 1][numRules]
@@ -27,7 +27,7 @@ type ParseContext struct {
 
 // Create a new parse context.
 // numRules: grammar numRules at the moment context is created (can be 0 before the very first grammar is created)
-func newParseContext(code *CodeStream, numRules int, opts TraceOptions) *ParseContext {
+func newParseContext(code *RuneStream, numRules int, opts TraceOptions) *ParseContext {
 	// frames is 2d
 	// frames[len(code.text) + 1][grammar.numRules]frame
 	//                         ^---- +1 is to include EOF
@@ -58,7 +58,7 @@ func (ctx *ParseContext) String() string {
 	codeSgmnt += "\t" + BoldBlack(helpers.PadRight(helpers.SliceString(p, len(p)-5, len(p)), 5))
 	p = helpers.Escape(ctx.Code.Peek(NewPeek().AfterChars(20)))
 	codeSgmnt += Green(helpers.PadLeft(helpers.SliceString(p, 0, 20), 20))
-	if ctx.Code.Pos+20 < len(ctx.Code.text) {
+	if ctx.Code.Pos()+20 < len(ctx.Code.text) {
 		codeSgmnt += BoldBlack(">")
 	} else {
 		codeSgmnt += BoldBlack("]")
@@ -85,7 +85,7 @@ func (ctx *ParseContext) stackPop() { ctx.stackLength-- }
 
 func (ctx *ParseContext) getFrame(x Parser) *frame {
 	id := x.gnode().id
-	pos := ctx.Code.Pos
+	pos := ctx.Code.Pos()
 	posFrames := ctx.frames[pos]
 	frame := posFrames[id]
 	if frame != nil {

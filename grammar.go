@@ -71,15 +71,20 @@ func (gm *Grammar) CountRules() int { return gm.numrules }
 // but the parser takes the responsability (denying any other parser the
 // chance to parse), it returns a ParseError instead.
 func (gm *Grammar) ParseString(sCode string) Ast {
-	return gm.ParseCode(NewCodeStream(sCode))
+	return gm.ParseCode(NewRuneStream(sCode))
 }
 
 // CodeStream comes from original Joeson implementation
 // Prefer to use ParseString() or ParseTokens()
-func (gm *Grammar) ParseCode(code *CodeStream) Ast {
+func (gm *Grammar) ParseCode(code *RuneStream) Ast {
 	return gm.Parse(newParseContext(code, gm.numrules, gm.TraceOptions))
 }
 
+// func (gm *Grammar) ParseTokens(code *TokenStream) Ast {
+// 	return gm.Parse(newParseContext(code, gm.numrules, gm.TraceOptions))
+// }
+
+// Because grammar implements Parser
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	var oldTrace bool
 	ctx.GrammarName = gm.GetRuleName()
@@ -97,11 +102,11 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 		gm.TraceOptions.Stack = oldTrace
 	}
 	// if parse is incomplete, compute error message
-	if ctx.Code.Pos != ctx.Code.Length() {
+	if ctx.Code.Pos() != ctx.Code.Length() {
 		// find the maximum parsed entity
-		maxAttempt := ctx.Code.Pos
-		maxSuccess := ctx.Code.Pos
-		for pos := ctx.Code.Pos; pos < len(ctx.frames); pos++ {
+		maxAttempt := ctx.Code.Pos()
+		maxSuccess := ctx.Code.Pos()
+		for pos := ctx.Code.Pos(); pos < len(ctx.frames); pos++ {
 			posFrames := ctx.frames[pos]
 			for _, frame := range posFrames {
 				if frame != nil {
@@ -121,10 +126,10 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 		sErr += Red("Suspect") + "/"
 		sErr += White("Unknown") + "\n\n"
 		sErr += Green(ctx.Code.Peek(NewPeek().BeforeLines(2)))
-		sErr += Yellow(ctx.Code.Peek(NewPeek().AfterChars(maxSuccess - ctx.Code.Pos)))
-		ctx.Code.Pos = maxSuccess
-		sErr += Red(ctx.Code.Peek(NewPeek().AfterChars(maxAttempt-ctx.Code.Pos))) + "/"
-		ctx.Code.Pos = maxAttempt
+		sErr += Yellow(ctx.Code.Peek(NewPeek().AfterChars(maxSuccess - ctx.Code.Pos())))
+		ctx.Code.SetPos(maxSuccess)
+		sErr += Red(ctx.Code.Peek(NewPeek().AfterChars(maxAttempt-ctx.Code.Pos()))) + "/"
+		ctx.Code.SetPos(maxAttempt)
 		sErr += White(ctx.Code.Peek(NewPeek().AfterLines(2))) + "\n"
 		return NewParseError(ctx, sErr)
 	}
