@@ -10,19 +10,18 @@ import (
 // - RuneStream is a simple implementation.
 // - TokenStream allows to work with pre-tokenized source code.
 type CodeStream interface {
-	// important: for Pos, SetPos, PosToLine, PosToCol, if source is tokenized,
-	// pos is relative to the transformed text (that is the working text).
+	// `Pos` means the offset in the tokenized file
+	// for non-tokenized stream, there is of course no such ambiguity.
 	Pos() int
 	SetPos(int)
 	PosToLine(pos int) int
 	PosToCol(pos int) int
-
-	Line() int // line in the original text
-	Col() int  // col in the original text
+	Line() int // first line is 1
+	Col() int  // first column is 1
+	Length() int
 
 	// all relating to the working text
-	Length() int
-	GetUntil(end string) string
+	GetUntil(end string) string // Get until the string `end` is encountered.  Change code.pos accordingly, including the string
 	GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string
 	Peek(*PeekOper) string
 	MatchString(string) (didMatch bool, m string)

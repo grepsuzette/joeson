@@ -1,7 +1,6 @@
 package joeson
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -55,7 +54,7 @@ func (code *RuneStream) GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string
 	oldpos := code.pos
 	code.pos = index
 	s := helpers.SliceString(code.text, oldpos, code.pos)
-	fmt.Printf("index=%d return=%s∎\n", index, s)
+	// fmt.Printf("index=%d return=%s∎\n", index, s)
 	return s
 }
 

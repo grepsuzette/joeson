@@ -1,7 +1,9 @@
 package joeson
 
 import (
+	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -59,5 +61,26 @@ func TestRegexp(t *testing.T) {
 		} else if m != "EXPRESSION" {
 			t.Fail()
 		}
+	}
+}
+
+func TestPosToLine(t *testing.T) {
+	source := `
+	// RuneStream is a very simple code holder, cursor, matcher.
+	type RuneStream struct {
+		text       string
+		pos        int // "Hello, 世界, X" <- Pos of o is 4, Pos of 界 is 10
+		lineStarts []int
+	}
+	`
+	code := NewRuneStream(source)
+	index := strings.Index(code.text, "text")
+	line := code.PosToLine(index)
+	if line != 3 {
+		t.Errorf(fmt.Sprintf("Invalid line found %d, expected 3", line))
+	}
+	col := code.PosToCol(index)
+	if col != 2 {
+		t.Errorf(fmt.Sprintf("Invalid col found %d, expected 2", col))
 	}
 }
