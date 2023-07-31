@@ -15,7 +15,7 @@ type ParseContext struct {
 	TraceOptions        // grammar.TraceOptions at the moment this context is created.
 	Counter      int    // [For debugging] iteration counter shown with TRACE=stack. Useful with conditional breakpoints
 	GrammarName  string // [For debugging] set in grammar.Parse to the value of grammar.Name(). Useful for conditional breakpoints (typically in packrat loopify()) to only break when your final grammar is being used to parse anything. See docs/diffing.md # debugging methodology
-	Code         *RuneStream
+	Code         CodeStream
 
 	numRules     int
 	frames       [][]*frame // 2D: [len(code.text) + 1][numRules]
@@ -26,12 +26,13 @@ type ParseContext struct {
 }
 
 // Create a new parse context.
+// code: possible to use text (RuneStream) or tokenized input (TokenStream)
 // numRules: grammar numRules at the moment context is created (can be 0 before the very first grammar is created)
-func newParseContext(code *RuneStream, numRules int, opts TraceOptions) *ParseContext {
+func newParseContext(code CodeStream, numRules int, opts TraceOptions) *ParseContext {
 	// frames is 2d
 	// frames[len(code.text) + 1][grammar.numRules]frame
 	//                         ^---- +1 is to include EOF
-	frames := make([][]*frame, len(code.text)+1)
+	frames := make([][]*frame, code.workLength()+1)
 	for i := range frames {
 		frames[i] = make([]*frame, numRules)
 	}
@@ -58,7 +59,7 @@ func (ctx *ParseContext) String() string {
 	codeSgmnt += "\t" + BoldBlack(helpers.PadRight(helpers.SliceString(p, len(p)-5, len(p)), 5))
 	p = helpers.Escape(ctx.Code.PeekRunes(+20))
 	codeSgmnt += Green(helpers.PadLeft(helpers.SliceString(p, 0, 20), 20))
-	if ctx.Code.Pos()+20 < len(ctx.Code.text) {
+	if ctx.Code.Pos()+20 < ctx.Code.Length() {
 		codeSgmnt += BoldBlack(">")
 	} else {
 		codeSgmnt += BoldBlack("]")

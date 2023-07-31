@@ -10,9 +10,10 @@ type CodeStream interface {
 	SetPos(int)
 	PosToLine(pos int) int
 	PosToCol(pos int) int
-	Line() int // Current line. First line is 1.
-	Col() int  // Current column. First column is 1.
-	Length() int
+	Line() int    // Current line. First line is 1.
+	Col() int     // Current column. First column is 1.
+	Code() string // User-provided code
+	Length() int  // len(Code())
 
 	GetUntil(end string) string // Get until the string `end` is encountered.  Change current position accordingly, including the string
 	GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string
@@ -21,6 +22,9 @@ type CodeStream interface {
 	MatchString(string) (didMatch bool, m string)
 	MatchRegexp(regexp.Regexp) (didMatch bool, m string)
 	Print() string
+
+	// usable only by grammar, parsectx and packrat
+	workLength() int
 }
 
 var (

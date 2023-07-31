@@ -272,7 +272,7 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 			//      there was a subtletly here that didn't
 			//      translate yet here:
 			result.SetOrigin(Origin{
-				Code:     ctx.Code.text,
+				Code:     ctx.Code.Code(),
 				Start:    ctx.stackPeek(0).pos,
 				End:      ctx.Code.Pos(),
 				Line:     ctx.Code.Line(),

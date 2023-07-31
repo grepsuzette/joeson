@@ -105,8 +105,15 @@ func (code *TokenStream) Line() int { return code.PosToLine(code.workOffset) }
 // Current column (in the original text), starting counting at 1.
 func (code *TokenStream) Col() int { return code.PosToCol(code.workOffset) }
 
+<<<<<<< HEAD
 // Length of the original text (since exported function are for external usage)
 func (code *TokenStream) Length() int { return len(code.original) }
+=======
+func (code *TokenStream) Code() string { return code.original }
+func (code *TokenStream) Length() int  { return len(code.original) }
+
+func (code *TokenStream) workLength() int { return len(code.work) }
+>>>>>>> d68d265 (feat: add grammar ParseTokens)
 
 // Get until the string `end` is encountered.
 // Change workingpos accordingly, including the string
@@ -209,8 +216,8 @@ func (code *TokenStream) Print() string {
 	s += fmt.Sprintf("%v\n", code.lineStarts)
 	s += "Original text:\n"
 	s += strings.NewReplacer("\n", "<CR>\n", "\t", "<TAB>", " ", "_").Replace(code.original) + "\n\n"
-	s += "Work text (tokenized):\n"
-	s += code.work + "\n\n"
+	s += code.PrintWorkText()
+	s += "\n"
 	s += "Tokens:\n"
 	for _, token := range code.tokens {
 		s += BoldBlack("[o=" + strconv.Itoa(token.OriginalOffset) + ", w=" + strconv.Itoa(token.WorkOffset) + "]")
@@ -219,6 +226,13 @@ func (code *TokenStream) Print() string {
 	return s
 }
 
+<<<<<<< HEAD
+=======
+func (code *TokenStream) PrintWorkText() string {
+	return "Work text (tokenized):\n" + code.work + "\n"
+}
+
+>>>>>>> d68d265 (feat: add grammar ParseTokens)
 // Given an arbitrary work offset (as given by Pos()),
 // get all possible coordinates (i.e. originalOffset, line, col).
 //

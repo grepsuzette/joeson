@@ -16,7 +16,7 @@ type RuneStream struct {
 	lineStarts []int
 }
 
-func NewRuneStream(text string) *RuneStream {
+func NewRuneStream(text string) CodeStream {
 	lineStarts := []int{0}
 	for pos, rune := range text {
 		if rune == '\n' {
@@ -32,9 +32,11 @@ func (code *RuneStream) SetPos(n int) { code.pos = n }
 func (code *RuneStream) PosToLine(pos int) int { return helpers.BisectRight(code.lineStarts, pos) - 1 }
 func (code *RuneStream) PosToCol(pos int) int  { return pos - code.lineStarts[code.PosToLine(pos)] }
 
-func (code *RuneStream) Line() int   { return code.PosToLine(code.pos) }
-func (code *RuneStream) Col() int    { return code.PosToCol(code.pos) }
-func (code *RuneStream) Length() int { return len(code.text) }
+func (code *RuneStream) Line() int       { return code.PosToLine(code.pos) }
+func (code *RuneStream) Col() int        { return code.PosToCol(code.pos) }
+func (code *RuneStream) Code() string    { return code.text }
+func (code *RuneStream) Length() int     { return len(code.text) }
+func (code *RuneStream) workLength() int { return len(code.text) }
 
 // Get until the string `end` is encountered.
 // Change code.pos accordingly, including the `end`.

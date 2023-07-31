@@ -66,25 +66,31 @@ func GrammarFromLines(lines []Line, name string, options ...GrammarOptions) *Gra
 func (gm *Grammar) assertNode()     {}
 func (gm *Grammar) CountRules() int { return gm.numrules }
 
+// TODO FIXME this documentation is not entirely accurate
 // Parse functions don't panic.
 // A parser returns nil when it cannot to parse. When there is an error
 // but the parser takes the responsability (denying any other parser the
 // chance to parse), it returns a ParseError instead.
-func (gm *Grammar) ParseString(sCode string) Ast {
-	return gm.ParseCode(NewRuneStream(sCode))
+func (gm *Grammar) ParseString(s string) Ast {
+	return gm.Parse(newParseContext(
+		NewRuneStream(s),
+		gm.numrules,
+		gm.TraceOptions,
+	))
 }
 
-// CodeStream comes from original Joeson implementation
-// Prefer to use ParseString() or ParseTokens()
-func (gm *Grammar) ParseCode(code *RuneStream) Ast {
-	return gm.Parse(newParseContext(code, gm.numrules, gm.TraceOptions))
+// When you have a lexer available, you may parse
+// the tokenized input against the grammar.
+func (gm *Grammar) ParseTokens(tokenized *TokenStream) Ast {
+	return gm.Parse(newParseContext(
+		tokenized,
+		gm.numrules,
+		gm.TraceOptions,
+	))
 }
 
-// func (gm *Grammar) ParseTokens(code *TokenStream) Ast {
-// 	return gm.Parse(newParseContext(code, gm.numrules, gm.TraceOptions))
-// }
-
-// Because grammar implements Parser
+// Exported because grammar implements Parser
+// Use ParseString() or ParseTokens()
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	var oldTrace bool
 	ctx.GrammarName = gm.GetRuleName()

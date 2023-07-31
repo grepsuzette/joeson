@@ -50,7 +50,7 @@ line 4`)
 
 func TestRegexp(t *testing.T) {
 	cs := NewRuneStream("A EXPRESSION|B")
-	cs.pos = 2
+	cs.SetPos(2)
 	if re, err := regexp.CompilePOSIX("([a-zA-Z\\._][a-zA-Z\\._0-9]*)"); err != nil {
 		t.Fatalf("regexp failed to compile")
 	} else {
@@ -73,7 +73,7 @@ func TestPosToLine(t *testing.T) {
 	}
 	`
 	code := NewRuneStream(source)
-	index := strings.Index(code.text, "text")
+	index := strings.Index(code.Code(), "text")
 	line := code.PosToLine(index)
 	if line != 3 {
 		t.Errorf(fmt.Sprintf("Invalid line found %d, expected 3", line))
