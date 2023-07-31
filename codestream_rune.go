@@ -58,33 +58,61 @@ func (code *RuneStream) GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string
 	return s
 }
 
-func (code *RuneStream) Peek(oper *PeekOper) string {
-	if oper.beforeLines < 0 && oper.beforeChars < 0 {
-		oper.beforeChars = 0
-	}
-	if oper.afterLines < 0 && oper.afterChars < 0 {
-		oper.afterChars = 0
-	}
-	if oper.beforeChars == 0 && oper.afterChars == 0 {
-		return ""
-	}
-	start := 0
-	end := 0
-	if oper.beforeLines > -1 {
-		startLine := helpers.Max(0, code.Line()-oper.beforeLines)
-		start = code.lineStarts[startLine]
+// TODO DELETE soon
+// func (code *RuneStream) Peek(oper *PeekOper) string {
+// 	if oper.beforeLines < 0 && oper.beforeChars < 0 {
+// 		oper.beforeChars = 0
+// 	}
+// 	if oper.afterLines < 0 && oper.afterChars < 0 {
+// 		oper.afterChars = 0
+// 	}
+// 	if oper.beforeChars == 0 && oper.afterChars == 0 {
+// 		return ""
+// 	}
+// 	start := 0
+// 	end := 0
+// 	if oper.beforeLines > -1 {
+// 		startLine := helpers.Max(0, code.Line()-oper.beforeLines)
+// 		start = code.lineStarts[startLine]
+// 	} else {
+// 		start = code.pos - oper.beforeChars
+// 	}
+// 	if oper.afterLines > -1 {
+// 		endLine := helpers.Min(len(code.lineStarts)-1, code.Line()+oper.afterLines)
+// 		if endLine < len(code.lineStarts)-1 {
+// 			end = code.lineStarts[endLine+1] - 1
+// 		} else {
+// 			end = len(code.text)
+// 		}
+// 	} else {
+// 		end = code.pos + oper.afterChars
+// 	}
+// 	return helpers.SliceString(code.text, start, end)
+// }
+
+func (code *RuneStream) PeekRunes(n int) string {
+	start := code.pos
+	end := code.pos
+	if n < 0 {
+		start += n
 	} else {
-		start = code.pos - oper.beforeChars
+		end += n
 	}
-	if oper.afterLines > -1 {
-		endLine := helpers.Min(len(code.lineStarts)-1, code.Line()+oper.afterLines)
+	return helpers.SliceString(code.text, start, end)
+}
+
+func (code *RuneStream) PeekLines(n int) string {
+	start := code.pos
+	end := code.pos
+	if n < 0 {
+		start = code.lineStarts[helpers.Max(0, code.Line()+n)]
+	} else {
+		endLine := helpers.Min(len(code.lineStarts)-1, code.Line()+n)
 		if endLine < len(code.lineStarts)-1 {
 			end = code.lineStarts[endLine+1] - 1
 		} else {
 			end = len(code.text)
 		}
-	} else {
-		end = code.pos + oper.afterChars
 	}
 	return helpers.SliceString(code.text, start, end)
 }

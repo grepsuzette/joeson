@@ -130,39 +130,12 @@ func (code *TokenStream) GetUntilWithIgnoreEOF(end string, ignoreEOF bool) strin
 	return s
 }
 
-func (code *TokenStream) Peek(oper *PeekOper) string {
-	if oper.beforeLines < 0 && oper.beforeChars < 0 {
-		oper.beforeChars = 0
-	}
-	if oper.afterLines < 0 && oper.afterChars < 0 {
-		oper.afterChars = 0
-	}
-	if oper.beforeChars == 0 && oper.afterChars == 0 {
-		return ""
-	}
-	start := 0
-	end := 0
-	if oper.beforeLines > -1 {
-		startLine := helpers.Max(0, code.Line()-oper.beforeLines)
-		start = code.lineStarts[startLine]
-	} else {
-		start = code.original - oper.beforeChars
-	}
-	if oper.afterLines > -1 {
-		endLine := helpers.Min(len(code.lineStarts)-1, code.Line()+oper.afterLines)
-		if endLine < len(code.lineStarts)-1 {
-			end = code.lineStarts[endLine+1] - 1
-		} else {
-			end = len(code.original)
-		}
-	} else {
-		end = code.pos + oper.afterChars
-	}
-	return helpers.SliceString(
-		code.work,
-		code.calcWorkOffset(start),
-		code.calcWorkOffset(end),
-	)
+func (code *TokenStream) PeekRunes(n int) string {
+	panic("TODO")
+}
+
+func (code *TokenStream) PeekLines(n int) string {
+	panic("TODO")
 }
 
 // the reverse operation can be obtained with coords()

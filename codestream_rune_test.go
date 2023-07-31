@@ -43,10 +43,9 @@ line 4`)
 	eq_str(t, part, "line 2 -- ")
 	eq_int(t, cs.Line(), 2)
 	eq_int(t, cs.Col(), 10)
-	eq_str(t, cs.Peek(NewPeek().AfterChars(4)), "rest")
-	eq_str(t, cs.Peek(NewPeek().BeforeLines(0).AfterLines(0)), "line 2 -- rest of line 2")
-	eq_str(t, cs.Peek(NewPeek().AfterLines(0)), "rest of line 2")
-	eq_str(t, cs.Peek(NewPeek().AfterLines(1)), "rest of line 2\nline 3")
+	eq_str(t, cs.PeekRunes(4), "rest")
+	eq_str(t, cs.PeekLines(0), "rest of line 2")
+	eq_str(t, cs.PeekLines(1), "rest of line 2\nline 3")
 }
 
 func TestRegexp(t *testing.T) {

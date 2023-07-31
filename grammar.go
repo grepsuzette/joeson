@@ -125,12 +125,12 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 		sErr += Yellow("Parsing") + "/"
 		sErr += Red("Suspect") + "/"
 		sErr += White("Unknown") + "\n\n"
-		sErr += Green(ctx.Code.Peek(NewPeek().BeforeLines(2)))
-		sErr += Yellow(ctx.Code.Peek(NewPeek().AfterChars(maxSuccess - ctx.Code.Pos())))
+		sErr += Green(ctx.Code.PeekLines(-2))
+		sErr += Yellow(ctx.Code.PeekRunes(maxSuccess - ctx.Code.Pos()))
 		ctx.Code.SetPos(maxSuccess)
-		sErr += Red(ctx.Code.Peek(NewPeek().AfterChars(maxAttempt-ctx.Code.Pos()))) + "/"
+		sErr += Red(ctx.Code.PeekRunes(maxAttempt-ctx.Code.Pos())) + "/"
 		ctx.Code.SetPos(maxAttempt)
-		sErr += White(ctx.Code.Peek(NewPeek().AfterLines(2))) + "\n"
+		sErr += White(ctx.Code.PeekLines(+2)) + "\n"
 		return NewParseError(ctx, sErr)
 	}
 	return result
