@@ -8,7 +8,8 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// RuneStream is a very simple code holder, cursor, matcher.
+// A simple code holder, cursor, matcher implementing CodeStream.
+// The name "stream" is a little bit illusory. It's a string okay.
 type RuneStream struct {
 	text       string
 	pos        int // "Hello, 世界, X" <- Pos of o is 4, Pos of 界 is 10
@@ -58,38 +59,7 @@ func (code *RuneStream) GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string
 	return s
 }
 
-// TODO DELETE soon
-// func (code *RuneStream) Peek(oper *PeekOper) string {
-// 	if oper.beforeLines < 0 && oper.beforeChars < 0 {
-// 		oper.beforeChars = 0
-// 	}
-// 	if oper.afterLines < 0 && oper.afterChars < 0 {
-// 		oper.afterChars = 0
-// 	}
-// 	if oper.beforeChars == 0 && oper.afterChars == 0 {
-// 		return ""
-// 	}
-// 	start := 0
-// 	end := 0
-// 	if oper.beforeLines > -1 {
-// 		startLine := helpers.Max(0, code.Line()-oper.beforeLines)
-// 		start = code.lineStarts[startLine]
-// 	} else {
-// 		start = code.pos - oper.beforeChars
-// 	}
-// 	if oper.afterLines > -1 {
-// 		endLine := helpers.Min(len(code.lineStarts)-1, code.Line()+oper.afterLines)
-// 		if endLine < len(code.lineStarts)-1 {
-// 			end = code.lineStarts[endLine+1] - 1
-// 		} else {
-// 			end = len(code.text)
-// 		}
-// 	} else {
-// 		end = code.pos + oper.afterChars
-// 	}
-// 	return helpers.SliceString(code.text, start, end)
-// }
-
+// take a look n runes before or after, don't update position
 func (code *RuneStream) PeekRunes(n int) string {
 	start := code.pos
 	end := code.pos
@@ -101,6 +71,7 @@ func (code *RuneStream) PeekRunes(n int) string {
 	return helpers.SliceString(code.text, start, end)
 }
 
+// take a look n lines before or after, don't update position
 func (code *RuneStream) PeekLines(n int) string {
 	start := code.pos
 	end := code.pos
@@ -128,9 +99,9 @@ func (code *RuneStream) MatchString(s string) (didMatch bool, m string) {
 	return true, s
 }
 
-// Match regex `re` against current code.Pos.
-// didMatch indicates whether is succeeded
-// in which case the match[0] is in `m`, which may be ”
+// Match regex `re` against current position.
+// didMatch indicates whether is succeeded.
+// If so the full text for the match (usually called match[0]) is in m.
 func (code *RuneStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string) {
 	if firstMatchLoc := re.FindStringIndex(code.text[code.pos:]); firstMatchLoc == nil {
 		return false, ""
@@ -145,6 +116,7 @@ func (code *RuneStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string) 
 	}
 }
 
+// debugging purposes only
 func (code *RuneStream) Print() string {
 	s := "Code at offset " + BoldYellow(strconv.Itoa(code.pos)) + "/" + BoldYellow(strconv.Itoa(len(code.text))) + ": '"
 	s += Cyan(helpers.SliceString(code.text, helpers.Max(0, code.pos-20), code.pos))

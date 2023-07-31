@@ -4,30 +4,26 @@ import (
 	"regexp"
 )
 
-// CodeStream is a code holder, cursor, matcher.
-//
-// Implementations:
-// - RuneStream is a simple implementation.
-// - TokenStream allows to work with pre-tokenized source code.
+// A code holder, cursor, matcher.
 type CodeStream interface {
-	// `Pos` means the offset in the tokenized file
-	// for non-tokenized stream, there is of course no such ambiguity.
 	Pos() int
 	SetPos(int)
 	PosToLine(pos int) int
 	PosToCol(pos int) int
-	Line() int // first line is 1
-	Col() int  // first column is 1
+	Line() int // Current line. First line is 1.
+	Col() int  // Current column. First column is 1.
 	Length() int
 
-	// all relating to the working text
-	GetUntil(end string) string // Get until the string `end` is encountered.  Change code.pos accordingly, including the string
+	GetUntil(end string) string // Get until the string `end` is encountered.  Change current position accordingly, including the string
 	GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string
-	PeekRunes(n int) string // e.g. -3 to go back 3 runes. 2 to advance 2 runes
-	PeekLines(n int) string // e.g. 2 to advance 2 lines. 1 to advance 1 line (this one is not necessarily precise, meant for printing purposes)
+	PeekRunes(n int) string // e.g. -3 to peek 3 runes back. 2 to peek 2 runes forward. Does not change position.
+	PeekLines(n int) string // e.g. 2 to peek 2 lines forward. -1 to peek 1 line backwards. (this one is not necessarily precise, it is meant for printing purposes and not for parsing)
 	MatchString(string) (didMatch bool, m string)
 	MatchRegexp(regexp.Regexp) (didMatch bool, m string)
 	Print() string
 }
 
-var _ CodeStream = &RuneStream{} // _ CodeStream = &TokenStream{}
+var (
+	_ CodeStream = &RuneStream{}
+	_ CodeStream = &TokenStream{}
+)

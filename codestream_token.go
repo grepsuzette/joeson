@@ -9,19 +9,11 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// The idea of TokenStream is to match against a tokenkized grammar
-// that would standardize for example blanks or comments, whilst converting
-// back error locations when there is a problem.
-//
-// There are therefore two views of the same thing:
-//
-// - Some user-provided `original` text, to be parsed.
-// - Some user-provided tokens from that same text. A `work` string
-// is joined from those tokens, along with the positions of each token in
-// the original text.
-//
-// Two systems of source coordinates exist then.
-// An illustration is provided to explain graphically:
+// TokenStream allows matching against tokenkized texts.
+// User can provide tokens produced from an original text.
+// Two systems of source coordinates exist then (token-space, original-space).
+// An illustration is provided to explain graphically,
+// although it's relatively straightforward:
 //
 //	 pos=0    pos=12
 //	/        /
@@ -29,11 +21,12 @@ import (
 //	====  ======= ===
 //	===========  =====
 //
-// When fail at offset N,
-// we can find which offset
-// of which token, and
-// translate back to original
+// When fail at offset N, we can find which offset
+// of which token, and translate back to original
 // source space position (pos).
+//
+// Grammars are intended to parse against the tokenized text (`work`)
+// and errors are meant to show the `original` text.
 type (
 	TokenStream struct {
 		tokens     []Token // tokens with their position
@@ -77,10 +70,12 @@ func NewTokenStream(text string, tokens []Token) *TokenStream {
 	return &TokenStream{tokens, text, b.String(), 0, lineStarts}
 }
 
+// `Pos` here means the offset in the tokenized string (AKA workOffset)
 func (ts *TokenStream) Pos() int {
 	return ts.workOffset
 }
 
+// `Pos` here means the offset in the tokenized string (AKA workOffset)
 func (ts *TokenStream) SetPos(n int) {
 	if n > len(ts.work) {
 		panic("assert")
@@ -88,6 +83,8 @@ func (ts *TokenStream) SetPos(n int) {
 	ts.workOffset = n
 }
 
+// `Pos` here means the offset in the tokenized string (AKA workOffset)
+// Line refers to the original text, and start at 1.
 func (code *TokenStream) PosToLine(workOffset int) int {
 	return helpers.BisectRight(
 		code.lineStarts,
@@ -95,13 +92,20 @@ func (code *TokenStream) PosToLine(workOffset int) int {
 	) - 1
 }
 
+// `Pos` here means the offset in the tokenized string (AKA workOffset)
+// Col refers to the original text, and start at 1.
 func (code *TokenStream) PosToCol(workOffset int) int {
 	return code.coords(workOffset).originalOffset -
 		code.lineStarts[code.PosToLine(workOffset)]
 }
 
-func (code *TokenStream) Line() int   { return code.PosToLine(code.workOffset) }
-func (code *TokenStream) Col() int    { return code.PosToCol(code.workOffset) }
+// Current line (in the original text), starting counting at 1.
+func (code *TokenStream) Line() int { return code.PosToLine(code.workOffset) }
+
+// Current column (in the original text), starting counting at 1.
+func (code *TokenStream) Col() int { return code.PosToCol(code.workOffset) }
+
+// Length of the original text (since exported function are for external usage)
 func (code *TokenStream) Length() int { return len(code.original) }
 
 // Get until the string `end` is encountered.
@@ -130,22 +134,41 @@ func (code *TokenStream) GetUntilWithIgnoreEOF(end string, ignoreEOF bool) strin
 	return s
 }
 
+// Take a look `n` runes backwards or forwards, depending on the sign of n,
+// return the string contained in the interval made with the current position.
 func (code *TokenStream) PeekRunes(n int) string {
-	panic("TODO")
+	start := code.workOffset
+	end := code.workOffset
+	if n < 0 {
+		start += n
+	} else {
+		end += n
+	}
+	return helpers.SliceString(code.work, start, end)
 }
 
+// Take a look `n` lines backwards or forwards, depending on the sign of n,
+// return the string contained in the interval made with the current position.
+// PeekLines() is meant for printing purposes only.
+// It responds with the original text, not the tokenized one.
 func (code *TokenStream) PeekLines(n int) string {
-	panic("TODO")
+	pos := code.coords(code.workOffset).originalOffset
+	start := pos
+	end := pos
+	if n < 0 {
+		start = code.lineStarts[helpers.Max(0, code.Line()+n)]
+	} else {
+		endLine := helpers.Min(len(code.lineStarts)-1, code.Line()+n)
+		if endLine < len(code.lineStarts)-1 {
+			end = code.lineStarts[endLine+1] - 1
+		} else {
+			end = len(code.original)
+		}
+	}
+	return helpers.SliceString(code.original, start, end) // respond w/ original text
 }
 
-// the reverse operation can be obtained with coords()
-// func (code *TokenStream) calcWorkOffset(originalOffset int) int {
-// 	for n, token := range code.tokens {
-// 		token
-// 	}
-// }
-
-// Match string `s` against current code.pos.
+// Match string `s` against current position.
 // didMatch indicates whether is succeeded
 // in which case the match is in `m`
 func (code *TokenStream) MatchString(s string) (didMatch bool, m string) {
@@ -157,8 +180,24 @@ func (code *TokenStream) MatchString(s string) (didMatch bool, m string) {
 	return true, s
 }
 
-func (code *TokenStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string) { panic("TODO") }
+// Match regex `re` against current position.
+// didMatch indicates whether is succeeded.
+// If so the full text for the match (usually called match[0]) is in m.
+func (code *TokenStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string) {
+	if firstMatchLoc := re.FindStringIndex(code.work[code.workOffset:]); firstMatchLoc == nil {
+		return false, ""
+	} else {
+		if firstMatchLoc[0] != 0 {
+			return false, ""
+		} else {
+			s := helpers.SliceString(code.work, code.workOffset+firstMatchLoc[0], code.workOffset+firstMatchLoc[1])
+			code.workOffset += firstMatchLoc[1]
+			return true, s
+		}
+	}
+}
 
+// This somewhat lengthy printage is really meant for debugging/developping tests.  Don't use it for anything else, or prepare to meet your destiny.
 func (code *TokenStream) Print() string {
 	pos := code.workOffset
 	s := "Code at offset " + BoldYellow(strconv.Itoa(pos)) + "/" + BoldYellow(strconv.Itoa(len(code.original))) + ": '"
@@ -180,8 +219,11 @@ func (code *TokenStream) Print() string {
 	return s
 }
 
-// if overflow, panic since it would be an impossible coordinate
-// the reverse operation can be obtain with calcWorkOffset()
+// Given an arbitrary work offset (as given by Pos()),
+// get all possible coordinates (i.e. originalOffset, line, col).
+//
+// if overflow, panic since it would be an impossible coordinate.
+// the reverse operation can be obtain with calcWorkOffset().
 func (code *TokenStream) coords(workOffset int) coord {
 	// find most advanced token number, such that the following token would begin
 	// after workOffset.
