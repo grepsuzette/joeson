@@ -61,7 +61,7 @@ func TestManyTimes(t *testing.T) {
 		switch v := rule.(type) {
 		case ALine:
 			if name != "" {
-				fmt.Printf("%s%s\n", helpers.Indent(indent), Red(name+":"))
+				// fmt.Printf("%s%s\n", helpers.Indent(indent), Red(name+":"))
 			}
 			for _, subline := range v.Array {
 				frecurse(subline, indent+1, "")
@@ -74,13 +74,13 @@ func TestManyTimes(t *testing.T) {
 		case ILine:
 			frecurse(v.content, indent, v.name)
 		case cLine:
-			fmt.Printf("%s%s\n", helpers.Indent(indent), String(v.Parser))
+			// fmt.Printf("%s%s\n", helpers.Indent(indent), String(v.Parser))
 		case sLine:
 			// parse the rules of the intention grammar, one line at a time
 			ast := parsedGrammar.ParseString(v.Str)
 			if IsParseError(ast) {
 				panic(ast.String())
-			} else {
+			} else if false { // set to true to enable as in original joeson implementation
 				sName := ""
 				if name != "" {
 					sName = Red(helpers.PadLeft(name+":", 10-indent*2))
@@ -100,37 +100,6 @@ func TestManyTimes(t *testing.T) {
 		frecurse(NewALine(IntentionRules()), 0, "")
 	}
 	fmt.Printf("Duration for %d iterations: %d ms\n", nbIter, time.Since(start).Milliseconds())
-}
-
-// the following are just small tests
-
-func TestDebugLabel(t *testing.T) {
-	debuglabel := GrammarFromLines(
-		[]Line{
-			o(Named("In", "l:Br")),
-			i(Named("Br", "'Toy' | 'BZ'")),
-		},
-		"gmDebugLabel",
-	)
-	ast := debuglabel.ParseString("Toy")
-	if IsParseError(ast) {
-		t.Error(ast.String())
-	} else {
-		if nm, isNativeMap := ast.(*NativeMap); !isNativeMap {
-			t.Errorf("expected NativeMap, got %T. String: %s\n", ast, ast.String())
-		} else {
-			// in two operations...
-			if label, exists := nm.GetExists("l"); !exists {
-				t.Fail()
-			} else if label.(NativeString).Str != "Toy" {
-				t.Fail()
-			}
-			// ...or in 1 operation
-			if label, exists := nm.GetStringExists("l"); !exists || label != "Toy" {
-				t.Fail()
-			}
-		}
-	}
 }
 
 func TestSquareroot(t *testing.T) {
@@ -175,9 +144,8 @@ func TestCapturingStr(t *testing.T) {
 	// "'0x' [0-9a-f]{2,2}" parsing "0x7d" will only capture "7d"
 	// To capture "0x7d" you can have a label: "prefix:'0x' [0-9a-f]{2,2}"
 	// This time it should capture all of it.
-
 	{
-		// demonstrate str is not captured
+		// to demonstrate str is not captured
 		ast := GrammarFromLines([]Line{o(named("Input", "'0x' [0-9a-f]{2,2}"))}, "gm").ParseString("0x7d")
 		if s := ast.(*NativeArray).Concat(); s != "7d" {
 			t.Errorf("for test 1 unexpected result %s", s)

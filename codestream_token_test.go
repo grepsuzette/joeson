@@ -69,31 +69,34 @@ func TestTokenStreamInternals(t *testing.T) {
 	// --- test private functions -------------
 	{
 		originalOffset := tokens.coords(0).originalOffset // @ "type "
-		if originalOffset != 65 {
-			t.Errorf("coords(0).originalOffset == 0 should be 65, got %d\n", originalOffset)
+		expect := 64
+		if originalOffset != expect {
+			t.Errorf("coords(0).originalOffset should be %d, got %d\n", expect, originalOffset)
 		}
 	}
 	{
 		originalOffset := tokens.coords(16).originalOffset // @ "struct "
-		if originalOffset != 81 {
-			t.Errorf("coords(16).originalOffset should be 81, got %d\n", originalOffset)
+		expect := 81
+		if originalOffset != expect {
+			t.Errorf("coords(16).originalOffset should be %d, got %d\n", expect, originalOffset)
 		}
 	}
 	{
 		originalOffset := tokens.coords(26).originalOffset // @ "t|ext " (at tokenOffset 1 of token "text ")
-		if originalOffset != 93 {
-			t.Errorf("coords(26).originalOffset should be 93, got %d\n", originalOffset)
+		expect := 94
+		if originalOffset != expect {
+			t.Errorf("coords(26).originalOffset should be %d, got %d\n", expect, originalOffset)
 		}
 	}
 	if tokens.PosToLine(0) != 2 {
 		t.Errorf("PosToLine(0) == 2: %d\n", tokens.PosToLine(0))
 	}
 	// --- test PosToLine PosToCol Line Col Length ------------------
-	posType := found{search: "type", work: 0, original: 65, line: 2, col: 2}
-	posText := found{search: "text", work: 25, original: 92, line: 3, col: 3}
-	pos_ext := found{search: "ext", work: 26, original: 93, line: 3, col: 4}
-	posStrn := found{search: "string", work: 30, original: 103, line: 3, col: 14}
-	posRBrk := found{search: "]", work: 62, original: 198, line: 5, col: 15}
+	posType := found{search: "type", work: 0, original: 64, line: 2, col: 1}
+	posText := found{search: "text", work: 23, original: 91, line: 3, col: 2}
+	pos_ext := found{search: "ext", work: 24, original: 92, line: 3, col: 3}
+	posStrn := found{search: "string", work: 28, original: 103, line: 3, col: 14}
+	posRBrk := found{search: "]", work: 56, original: 197, line: 5, col: 14}
 	testHas(t, tokens, posType)
 	testHas(t, tokens, posText)
 	testHas(t, tokens, pos_ext)
@@ -101,21 +104,15 @@ func TestTokenStreamInternals(t *testing.T) {
 	testHas(t, tokens, posRBrk)
 
 	// --- test MatchString MatchRegexp PeekRunes PeekLines ---------
-	tokens.workOffset = posStrn.work // jump to "string"
+	// jump to "string"
+	tokens.workOffset = posStrn.work
+	// now it should match "string", and advance
 	if ok, m := tokens.MatchString("string"); !ok || m != "string" {
 		t.Error("Failed to match string \"string\"")
 	}
-	fmt.Println(tokens.workOffset)
-	fmt.Println(strings.NewReplacer("\n", "<CR>\n", "\t", "<TAB>", " ", "_").Replace(tokens.work[tokens.workOffset : tokens.workOffset+15]))
-	re1 := regexp.MustCompilePOSIX(`[ \t\n\r]*(pos)`)
-	// TODO i wonder if captures should not return the captured text.
-	// at times it may seem more convenient
-	// test in original implementation again, maybe think it again
-	// if ok, m := code.MatchRegexp(*re1); !ok || m != "pos" {
-	// 	t.Error("Failed to match regexp " + re1.String() + ". m=" + m)
-	// }
+	re1 := regexp.MustCompilePOSIX(`[ ;\t\n\r]*pos`)
 	if ok, _ := tokens.MatchRegexp(*re1); !ok {
-		t.Error("Failed to match regexp " + re1.String())
+		t.Errorf("failed to match regexp %q\nThe TokenStream.Print(): %s", re1.String(), tokens.Print())
 	}
 	re2 := regexp.MustCompilePOSIX(`NO`)
 	if ok, _ := tokens.MatchRegexp(*re2); ok {

@@ -129,8 +129,8 @@ func (code *TokenStream) Line() int { return code.PosToLine(code.workOffset) }
 func (code *TokenStream) Col() int { return code.PosToCol(code.workOffset) }
 
 // Length of the original text (since exported function are for external usage)
-func (code *TokenStream) Code() string { return code.original }
-func (code *TokenStream) Length() int  { return len(code.original) }
+func (code *TokenStream) Code() string    { return code.original }
+func (code *TokenStream) Length() int     { return len(code.original) }
 func (code *TokenStream) workLength() int { return len(code.work) }
 
 // Get until the string `end` is encountered.
@@ -264,21 +264,15 @@ func (code *TokenStream) PrintDebug() string {
 	return s
 }
 
-<<<<<<< HEAD
-=======
 func (code *TokenStream) PrintWorkText() string {
 	return "Work text (tokenized):\n" + code.work + "\n"
 }
 
-<<<<<<< HEAD
->>>>>>> d68d265 (feat: add grammar ParseTokens)
-=======
 // debug only, don't modify those!
 func (code *TokenStream) Tokens() []Token {
 	return code.tokens
 }
 
->>>>>>> bea85fe (feat: Add a go tokenizer to  TokenStream (TokenStreamFromGoCode()))
 // Given an arbitrary work offset (as given by Pos()),
 // get all possible coordinates (i.e. originalOffset, line, col).
 // the reverse operation can be obtain with calcWorkOffset().
