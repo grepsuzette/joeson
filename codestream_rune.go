@@ -118,11 +118,15 @@ func (code *RuneStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string) 
 	}
 }
 
-// debugging purposes only
+// short, single line information to be integrated in parse errors
 func (code *RuneStream) Print() string {
 	s := "Code at offset " + BoldYellow(strconv.Itoa(code.pos)) + "/" + BoldYellow(strconv.Itoa(len(code.text))) + ": '"
 	s += Cyan(helpers.SliceString(code.text, helpers.Max(0, code.pos-20), code.pos))
 	s += BoldCyan("|")
 	s += BoldWhite(helpers.SliceString(code.text, code.pos, code.pos+40)) + "'"
 	return s
+}
+
+func (code *RuneStream) PrintDebug() string {
+	return code.Print()
 }

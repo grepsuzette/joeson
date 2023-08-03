@@ -1,7 +1,10 @@
 package joeson
 
 import (
+	"errors"
 	"fmt"
+	goscanner "go/scanner"
+	"go/token"
 	"regexp"
 	"strconv"
 	"strings"
@@ -50,6 +53,14 @@ type (
 	}
 )
 
+func (t Token) String() string {
+	return fmt.Sprintf("OriginalOffset: %d\tWorkOffset: %d\t%q",
+		t.OriginalOffset,
+		t.WorkOffset,
+		t.Repr,
+	)
+}
+
 // `tokens` must have been generated from `text` using a scanner/lexer/tokenizer,
 // however you want to call it. An example is "go/scanner".
 // If `tokens` have position starting beyond `text` it will panic
@@ -62,9 +73,21 @@ func NewTokenStream(text string, tokens []Token) *TokenStream {
 	}
 	var b strings.Builder
 	for _, token := range tokens {
-		if token.OriginalOffset > len(text) {
-			panic("tokens reference text outside the original text")
-		}
+		// Tokens may be inserted, so below test is unwanted.
+		// E.g. ";" tokens can be inserted by go lexer.
+		// if token.OriginalOffset > len(text) {
+		// 	fmt.Println("text:\n" + text)
+		// 	fmt.Println("tokens:")
+		// 	for _, t := range tokens {
+		// 		fmt.Println(t.String())
+		// 	}
+		// 	panic(fmt.Sprintf(
+		// 		"Check your lexing function: tokens reference text outside the "+
+		// 			"original text (token.OriginalOffset=%d > len(text)=%d)",
+		// 		token.OriginalOffset,
+		// 		len(text),
+		// 	))
+		// }
 		b.WriteString(token.Repr)
 	}
 	return &TokenStream{tokens, text, b.String(), 0, lineStarts}
@@ -105,15 +128,10 @@ func (code *TokenStream) Line() int { return code.PosToLine(code.workOffset) }
 // Current column (in the original text), starting counting at 1.
 func (code *TokenStream) Col() int { return code.PosToCol(code.workOffset) }
 
-<<<<<<< HEAD
 // Length of the original text (since exported function are for external usage)
-func (code *TokenStream) Length() int { return len(code.original) }
-=======
 func (code *TokenStream) Code() string { return code.original }
 func (code *TokenStream) Length() int  { return len(code.original) }
-
 func (code *TokenStream) workLength() int { return len(code.work) }
->>>>>>> d68d265 (feat: add grammar ParseTokens)
 
 // Get until the string `end` is encountered.
 // Change workingpos accordingly, including the string
@@ -204,8 +222,28 @@ func (code *TokenStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string)
 	}
 }
 
-// This somewhat lengthy printage is really meant for debugging/developping tests.  Don't use it for anything else, or prepare to meet your destiny.
+// short, single line information to be integrated in parse errors
 func (code *TokenStream) Print() string {
+	// o is about original
+	// w is about work
+	var o strings.Builder
+	// var w strings.Builder
+	originalOffset := code.coords(code.Pos()).originalOffset
+	// TODO delete foloowing line
+	o.WriteString(fmt.Sprintf("work: %q. original: %q\n", code.work, code.original))
+	o.WriteString("Code at offset ")
+	o.WriteString(BoldYellow(strconv.Itoa(originalOffset)))
+	o.WriteString("/")
+	o.WriteString(BoldYellow(strconv.Itoa(len(code.original))))
+	o.WriteString(": '")
+	o.WriteString(Cyan(helpers.SliceString(code.original, helpers.Max(0, originalOffset-20), originalOffset)))
+	o.WriteString(BoldCyan("|"))
+	o.WriteString(BoldWhite(helpers.SliceString(code.original, originalOffset, originalOffset+40)) + "'")
+	return o.String()
+}
+
+// multiline
+func (code *TokenStream) PrintDebug() string {
 	pos := code.workOffset
 	s := "Code at offset " + BoldYellow(strconv.Itoa(pos)) + "/" + BoldYellow(strconv.Itoa(len(code.original))) + ": '"
 	s += Cyan(helpers.SliceString(code.original, helpers.Max(0, pos-20), pos))
@@ -232,11 +270,17 @@ func (code *TokenStream) PrintWorkText() string {
 	return "Work text (tokenized):\n" + code.work + "\n"
 }
 
+<<<<<<< HEAD
 >>>>>>> d68d265 (feat: add grammar ParseTokens)
+=======
+// debug only, don't modify those!
+func (code *TokenStream) Tokens() []Token {
+	return code.tokens
+}
+
+>>>>>>> bea85fe (feat: Add a go tokenizer to  TokenStream (TokenStreamFromGoCode()))
 // Given an arbitrary work offset (as given by Pos()),
 // get all possible coordinates (i.e. originalOffset, line, col).
-//
-// if overflow, panic since it would be an impossible coordinate.
 // the reverse operation can be obtain with calcWorkOffset().
 func (code *TokenStream) coords(workOffset int) coord {
 	// find most advanced token number, such that the following token would begin
@@ -244,14 +288,20 @@ func (code *TokenStream) coords(workOffset int) coord {
 	nToken := 0
 	var token Token
 	for {
-		if nToken >= len(code.tokens) {
-			panic(fmt.Sprintf("workOffset %d would overflow, what you ask makes no sense", workOffset))
+		if nToken >= len(code.tokens)-1 {
+			break
+			// panic(fmt.Sprintf("workOffset %d would overflow, what you ask makes no sense", workOffset))
+			// ^ No: it can make sense when a token was inserted
 		}
 		token = code.tokens[nToken]
 		if workOffset < token.WorkOffset+len(token.Repr) {
 			break
 		}
 		nToken++
+	}
+	if nToken >= len(code.tokens) {
+		panic(fmt.Sprintf("nToken=%d goes beyond len(code.tokens)=%d\n"+
+			"%s", nToken, len(code.tokens), code.Print()))
 	}
 	offsetInToken := workOffset - token.WorkOffset
 	originalOffset := code.tokens[nToken].OriginalOffset + offsetInToken
@@ -262,4 +312,78 @@ func (code *TokenStream) coords(workOffset int) coord {
 		workOffset:     workOffset,
 		originalOffset: originalOffset,
 	}
+}
+
+// ------------------------------------------------------------------------
+
+// A function is provided to transform some go code into a TokenStream.
+// You can then call `yourGrammar.ParseTokens(ts TokenStream)` directly.
+
+// use by error handler below
+var scanErrors []error
+
+func handleErrors(pos token.Position, msg string) {
+	scanErrors = append(scanErrors, scannerError{pos, msg})
+}
+
+func TokenStreamFromGoCode(source string) (*TokenStream, error) {
+	var scan goscanner.Scanner
+	fset := token.NewFileSet()
+	file := fset.AddFile("", fset.Base(), len(source))
+	scan.Init(file, []byte(source), handleErrors, 0 /*goscanner.ScanComments*/)
+	if scan.ErrorCount > 0 {
+		if scan.ErrorCount != len(scanErrors) {
+			panic("assert") // errors must have been collected
+		}
+		return nil, errors.Join(scanErrors...)
+	}
+	tokens := []Token{}
+	workOffset := 0
+	prev := ""
+
+	// Go lexer adds an automatic semicolon when the line's last token is:
+	// * an identifier
+	// * an integer, floating-point, imaginary, rune, or string literal
+	// * one of the keywords break, continue, fallthrough, or return
+	// * one of the operators and delimiters ++, --, ), ], or }
+	var b strings.Builder
+	mustInsertSpaceAfter := regexp.MustCompile("[a-zA-Z0-9_=]$")
+	for {
+		pos, tok, lit := scan.Scan()
+		if tok == token.EOF {
+			break
+		}
+		s := ""
+		tokStr := tok.String()
+		if tokStr == ";" && lit == "\n" {
+			s = ";\n"
+		} else if lit != "" {
+			if mustInsertSpaceAfter.MatchString(prev) {
+				s = " " + lit
+			} else {
+				s = lit
+			}
+		} else {
+			if mustInsertSpaceAfter.MatchString(prev) &&
+				(tok.IsOperator() && tok == token.COMMA) {
+				s = " " + tokStr
+			} else {
+				s = tokStr
+			}
+		}
+		workOffset += len(prev)
+		prev = s
+		tokens = append(tokens, Token{s, int(pos) - 1, workOffset})
+		b.WriteString(s)
+	}
+	return NewTokenStream(source, tokens), nil
+}
+
+type scannerError struct {
+	pos token.Position
+	msg string
+}
+
+func (se scannerError) Error() string {
+	return fmt.Sprintf("there was an error at %s: %s", se.pos.String(), se.msg)
 }

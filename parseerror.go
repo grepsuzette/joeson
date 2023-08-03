@@ -10,14 +10,19 @@ package joeson
 // the parsing will fail immediately. See examples.
 type ParseError struct {
 	Attr
-	ctx         *ParseContext
+	ctx         *ParseContext // can be nil (e.g. when some lexer failed)
 	ErrorString string
 }
 
 func (pe ParseError) assertNode() {}
 func (pe ParseError) String() string {
 	return "ERROR " + pe.ErrorString
-	// return "ERROR " + pe.ErrorString + " " + pe.ctx.String()
+	//
+	// if pe.ctx != nil {
+	//	return "ERROR " + pe.ErrorString + " " + pe.ctx.String()
+	// } else {
+	//	return "ERROR " + pe.ErrorString
+	// }
 }
 
 func NewParseError(ctx *ParseContext, s string) ParseError {

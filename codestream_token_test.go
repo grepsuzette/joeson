@@ -2,12 +2,18 @@ package joeson
 
 import (
 	"fmt"
-	"go/scanner"
-	"go/token"
 	"regexp"
 	"strings"
 	"testing"
 )
+
+// What is tested here:
+//
+// | test name                 | counters, line, col.. | Grammar.ParseTokens | other...
+// | TestTokenStreamInternals  | 1                     | 0                   |
+// | TestLongerSample          | 0                     | 0                   | prints tokenized version (ultimately will be compared to some expected large tokenized version, when finalized)
+// | TestMiniatures            | 0                     | 1                   |
+// | TestExpectedTokenization  | 0                     | 0                   | tests short sample expected tokenization
 
 type found struct {
 	search   string // text to search in tokenstream.work
@@ -47,61 +53,40 @@ func testHas(t *testing.T, code *TokenStream, f found) {
 	}
 }
 
-func TestTokenStream(t *testing.T) {
-	// let's use go scanner for this example
-	// build some tokenized text
-	var tokenizer scanner.Scanner
-	fset := token.NewFileSet()
-	file := fset.AddFile("", fset.Base(), len(source))
-	tokenizer.Init(file, []byte(source), nil, 0) // scanner.ScanComments)
-	tokens := []Token{}
-	workOffset := 0
-	prevTokenLen := 0
-	for {
-		pos, tok, lit := tokenizer.Scan()
-		if tok == token.EOF {
-			break
-		}
-		s := ""
-		if lit != "" {
-			s = lit + " "
-		} else {
-			s = tok.String() + " "
-		}
-		workOffset += prevTokenLen
-		prevTokenLen = len(s)
-		tokens = append(tokens, Token{s, int(pos), workOffset})
+func TestTokenStreamInternals(t *testing.T) {
+	tokens, e := TokenStreamFromGoCode(source)
+	if e != nil {
+		t.Errorf("Failed to tokenize %q: %s", source, e.Error())
 	}
-	code := NewTokenStream(source, tokens)
 	// test initial counters
-	if code.Pos() != 0 {
-		t.Errorf("at start Pos() == 0: %d\n", code.Pos())
+	if tokens.Pos() != 0 {
+		t.Errorf("at start Pos() == 0: %d\n", tokens.Pos())
 	}
-	code.SetPos(0)
-	if code.Pos() != 0 {
-		t.Errorf("After SetPos(0), Pos() == 0: %d\n", code.Pos())
+	tokens.SetPos(0)
+	if tokens.Pos() != 0 {
+		t.Errorf("After SetPos(0), Pos() == 0: %d\n", tokens.Pos())
 	}
 	// --- test private functions -------------
 	{
-		originalOffset := code.coords(0).originalOffset // @ "type "
+		originalOffset := tokens.coords(0).originalOffset // @ "type "
 		if originalOffset != 65 {
 			t.Errorf("coords(0).originalOffset == 0 should be 65, got %d\n", originalOffset)
 		}
 	}
 	{
-		originalOffset := code.coords(16).originalOffset // @ "struct "
+		originalOffset := tokens.coords(16).originalOffset // @ "struct "
 		if originalOffset != 81 {
 			t.Errorf("coords(16).originalOffset should be 81, got %d\n", originalOffset)
 		}
 	}
 	{
-		originalOffset := code.coords(26).originalOffset // @ "t|ext " (at tokenOffset 1 of token "text ")
+		originalOffset := tokens.coords(26).originalOffset // @ "t|ext " (at tokenOffset 1 of token "text ")
 		if originalOffset != 93 {
 			t.Errorf("coords(26).originalOffset should be 93, got %d\n", originalOffset)
 		}
 	}
-	if code.PosToLine(0) != 2 {
-		t.Errorf("PosToLine(0) == 2: %d\n", code.PosToLine(0))
+	if tokens.PosToLine(0) != 2 {
+		t.Errorf("PosToLine(0) == 2: %d\n", tokens.PosToLine(0))
 	}
 	// --- test PosToLine PosToCol Line Col Length ------------------
 	posType := found{search: "type", work: 0, original: 65, line: 2, col: 2}
@@ -109,19 +94,19 @@ func TestTokenStream(t *testing.T) {
 	pos_ext := found{search: "ext", work: 26, original: 93, line: 3, col: 4}
 	posStrn := found{search: "string", work: 30, original: 103, line: 3, col: 14}
 	posRBrk := found{search: "]", work: 62, original: 198, line: 5, col: 15}
-	testHas(t, code, posType)
-	testHas(t, code, posText)
-	testHas(t, code, pos_ext)
-	testHas(t, code, posStrn)
-	testHas(t, code, posRBrk)
+	testHas(t, tokens, posType)
+	testHas(t, tokens, posText)
+	testHas(t, tokens, pos_ext)
+	testHas(t, tokens, posStrn)
+	testHas(t, tokens, posRBrk)
 
 	// --- test MatchString MatchRegexp PeekRunes PeekLines ---------
-	code.workOffset = posStrn.work // jump to "string"
-	if ok, m := code.MatchString("string"); !ok || m != "string" {
+	tokens.workOffset = posStrn.work // jump to "string"
+	if ok, m := tokens.MatchString("string"); !ok || m != "string" {
 		t.Error("Failed to match string \"string\"")
 	}
-	fmt.Println(code.workOffset)
-	fmt.Println(strings.NewReplacer("\n", "<CR>\n", "\t", "<TAB>", " ", "_").Replace(code.work[code.workOffset : code.workOffset+15]))
+	fmt.Println(tokens.workOffset)
+	fmt.Println(strings.NewReplacer("\n", "<CR>\n", "\t", "<TAB>", " ", "_").Replace(tokens.work[tokens.workOffset : tokens.workOffset+15]))
 	re1 := regexp.MustCompilePOSIX(`[ \t\n\r]*(pos)`)
 	// TODO i wonder if captures should not return the captured text.
 	// at times it may seem more convenient
@@ -129,13 +114,173 @@ func TestTokenStream(t *testing.T) {
 	// if ok, m := code.MatchRegexp(*re1); !ok || m != "pos" {
 	// 	t.Error("Failed to match regexp " + re1.String() + ". m=" + m)
 	// }
-	if ok, _ := code.MatchRegexp(*re1); !ok {
+	if ok, _ := tokens.MatchRegexp(*re1); !ok {
 		t.Error("Failed to match regexp " + re1.String())
 	}
 	re2 := regexp.MustCompilePOSIX(`NO`)
-	if ok, _ := code.MatchRegexp(*re2); ok {
+	if ok, _ := tokens.MatchRegexp(*re2); ok {
 		t.Error("Should not have matched regexp " + re2.String())
 	}
 
-	fmt.Println(code.Print())
+	fmt.Println(tokens.Print())
+}
+
+func TestLongerSample(t *testing.T) {
+	source := `
+package p
+import fmt "fmt"
+const pi = 3.14
+type T struct{
+	a int
+	 b string
+	  c float
+}
+var x int
+func f() { L: }
+
+var (
+	_ int = 23
+	_ string = "abc"
+)
+
+type (
+	Alpha struct {
+		a int
+		b string
+		 c float
+	}
+	Beta struct {
+		a []string{256} // comment
+	}
+	 Gamma struct {}
+)
+
+func f() {
+	if true {
+		if false {
+			// after 1 below, there should have an automatic ; inserted
+			n := 1
+			fmt.Println("no")
+		}
+	}
+	a := []string{
+		"foo",
+		 "bar",
+	 "baz",
+	}
+}
+	`
+	fmt.Println(source)
+	if tokens, e := TokenStreamFromGoCode(source); e != nil {
+		t.Error(e.Error())
+	} else {
+		work := tokens.PrintWorkText()
+		fmt.Println(work)
+
+		// no test yet during development phase
+		// it's just printing what we obtain.
+		// if work != expectWork {
+		// 	t.Fail()
+		// }
+	}
+}
+
+const expectWork string = `package p;
+import fmt "fmt";
+const pi= 3.14;
+type T struct{a int;
+b string;
+c float;
+};
+var x int;
+func f(){L:};
+var(_ int= 23;
+_ string= "abc";
+);
+type(Alpha struct{a int;
+b string;
+c float;
+};
+Beta struct{a[]string{256};
+};
+Gamma struct{};
+);
+func f(){if true{if false{n:= 1;
+fmt.Println("no");
+};
+};
+a:=[]string{"foo","bar","baz",};
+};
+`
+
+func TestExpectedTokenization(t *testing.T) {
+	for _, a := range [][]string{
+		{"a", "a;\n"},
+		{"1234+  (-321)", "1234+(-321);\n"},
+	} {
+		if tokens, e := TokenStreamFromGoCode(a[0]); e != nil {
+			t.Error(e.Error())
+		} else {
+			joined := ""
+			for _, token := range tokens.Tokens() {
+				joined += token.Repr
+			}
+			if joined != a[1] {
+				// work := tokens.PrintWorkText()
+				// work := tokens.Print()
+				// fmt.Println(work)
+				t.Errorf("tokenizing %q should have produced %q, not %q",
+					a[0], a[1], joined,
+				)
+			}
+		}
+	}
+}
+
+// have a small grammar, parse many small tokenized go expressions parsed
+func TestMiniatures(t *testing.T) {
+	gm := GrammarFromLines([]Line{
+		o(named("Input", rules(
+			o("Number"),
+			i(named("Number", "[0-9]+ term")),
+		))),
+		i(named("term", "';' '\n'*")),
+	}, "miniatures")
+
+	ter := ";\n"
+	for _, a := range [][]string{
+		{"1234", "1234" + ter, "1234"},
+	} {
+		if len(a) != 3 {
+			t.Errorf("Expected array of len 3, got len %d for %v", len(a), a)
+			continue
+		}
+
+		miniature := a[0]
+		tokenized := a[1]
+		expectation := a[2] // stringified expected parse result
+
+		if tokens, err := TokenStreamFromGoCode(miniature); err != nil {
+			t.Errorf("Fail to tokenize %q: %s", miniature, err.Error())
+		} else {
+			if tokens.work != tokenized {
+				t.Errorf("%q should have been tokenized as %s, got %q", miniature, tokenized, tokens.work)
+			} else {
+				ast := gm.ParseTokens(tokens)
+				reality := ast.String()
+				if IsParseError(ast) {
+					if !strings.HasPrefix(expectation, "ERROR ") {
+						t.Errorf("%q parsed as unexpected error %s", miniature, reality)
+					}
+					if !strings.HasPrefix(expectation, reality) {
+						t.Errorf("ParseError when parsing %q. Expected %q, got %s", miniature, expectation, reality)
+					}
+				} else {
+					if strings.HasPrefix(expectation, "ERROR") {
+						t.Errorf("%q parsed as %s but expected %s", miniature, reality, tokenized)
+					}
+				}
+			}
+		}
+	}
 }

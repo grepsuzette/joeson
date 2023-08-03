@@ -81,9 +81,9 @@ func (gm *Grammar) ParseString(s string) Ast {
 
 // When you have a lexer available, you may parse
 // the tokenized input against the grammar.
-func (gm *Grammar) ParseTokens(tokenized *TokenStream) Ast {
+func (gm *Grammar) ParseTokens(tokens *TokenStream) Ast {
 	return gm.Parse(newParseContext(
-		tokenized,
+		tokens,
 		gm.numrules,
 		gm.TraceOptions,
 	))
@@ -108,7 +108,7 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 		gm.TraceOptions.Stack = oldTrace
 	}
 	// if parse is incomplete, compute error message
-	if ctx.Code.Pos() != ctx.Code.Length() {
+	if ctx.Code.Pos() != ctx.Code.workLength() {
 		// find the maximum parsed entity
 		maxAttempt := ctx.Code.Pos()
 		maxSuccess := ctx.Code.Pos()

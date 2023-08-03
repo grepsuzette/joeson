@@ -10,7 +10,7 @@ type CodeStream interface {
 	SetPos(int)
 	PosToLine(pos int) int
 	PosToCol(pos int) int
-	Line() int    // Current line. First line is 1.
+	Line() int    // Current line. First line is 0.
 	Col() int     // Current column. First column is 1.
 	Code() string // User-provided code
 	Length() int  // len(Code())
@@ -21,7 +21,9 @@ type CodeStream interface {
 	PeekLines(n int) string // e.g. 2 to peek 2 lines forward. -1 to peek 1 line backwards. (this one is not necessarily precise, it is meant for printing purposes and not for parsing)
 	MatchString(string) (didMatch bool, m string)
 	MatchRegexp(regexp.Regexp) (didMatch bool, m string)
-	Print() string
+
+	Print() string      // short line info, can be integrated to longer parse error messages
+	PrintDebug() string // free-form multiline detailed debug information
 
 	// usable only by grammar, parsectx and packrat
 	workLength() int
