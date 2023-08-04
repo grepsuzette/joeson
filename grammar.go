@@ -92,11 +92,10 @@ func (gm *Grammar) ParseTokens(tokens *TokenStream) Ast {
 // Exported because grammar implements Parser
 // Use ParseString() or ParseTokens()
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
-	var oldTrace bool
+	oldTrace := gm.TraceOptions.Stack
 	ctx.GrammarName = gm.GetRuleName()
 	if ctx.parseOptions.Debug {
 		// temporarily enable stack tracing
-		oldTrace = gm.TraceOptions.Stack
 		gm.TraceOptions.Stack = true
 	}
 	if gm.rank == nil {
@@ -104,9 +103,7 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	}
 	result := gm.rank.Parse(ctx)
 	// undo temporary stack tracing
-	if ctx.parseOptions.Debug {
-		gm.TraceOptions.Stack = oldTrace
-	}
+	gm.TraceOptions.Stack = oldTrace
 	// if parse is incomplete, compute error message
 	if ctx.Code.Pos() != ctx.Code.workLength() {
 		// find the maximum parsed entity

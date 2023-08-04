@@ -133,14 +133,9 @@ func rule2line(x any) Line {
 // see line/README.md # internals
 func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs ParseOptions, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Parser {
 	var answer Parser
-	// if name == "decimal_digit" {
 	// 	fmt.Printf("getRule name=%s reflect.TypeOf(line).String())=%s attrs=%s\n", name, reflect.TypeOf(line).String(), attrs)
-	// }
 	switch v := line.(type) {
 	case ALine:
-		// for _, v := range v.Array {
-		// 	fmt.Println(v)
-		// }
 		answer = rankFromLines(v.Array, name, GrammarOptions{TraceOptions: opts, LazyGrammar: lazyGrammar})
 	case cLine:
 		answer = v.Parser
@@ -159,8 +154,7 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 			traceOptions.Loop = false
 			traceOptions.Stack = false
 		}
-		// parse the string
-		// a grammar like joeson_handcompiled is needed for that,
+		// parse the string. A grammar like joeson_handcompiled is needed for that,
 		gm := lazyGrammar.Get() // uses Lazy to get the grammar in cache or build it
 		ctx := newParseContext(NewRuneStream(v.Str), gm.numrules, traceOptions).setParseOptions(attrs)
 		ast := gm.Parse(ctx)
@@ -181,9 +175,7 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 	if rule.name != "" && rule.name != name {
 		panic("assert")
 	}
-	// if name == "decimal_digit" {
-	// 	fmt.Printf(" name=%s attrs rule.rule.Debug=%s rule.Debug=%s attrs.Debug=%s\n", name, reflect.TypeOf(line).String(), rule.Debug, rule.Debug, attrs.Debug)
-	// }
+	// fmt.Printf(" name=%s attrs rule.rule.Debug=%s rule.Debug=%s attrs.Debug=%s\n", name, reflect.TypeOf(line).String(), rule.Debug, rule.Debug, attrs.Debug)
 	// rule.SkipCache = attrs.SkipCache
 	// rule.SkipLog = attrs.SkipLog
 	rule.CbBuilder = attrs.CbBuilder
