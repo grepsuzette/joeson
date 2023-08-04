@@ -6,7 +6,7 @@ import (
 
 // NativeInt is an `int` that implements `Ast`.
 type NativeInt struct {
-	Attr
+	*Attr
 	int
 }
 

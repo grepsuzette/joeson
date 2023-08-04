@@ -7,7 +7,7 @@ import (
 )
 
 type choice struct {
-	Attr
+	*Attr
 	*gnodeimpl
 	choices []Parser
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type ref struct {
-	Attr
+	*Attr
 	*gnodeimpl
 	ref   string
 	param Parser

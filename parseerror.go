@@ -9,7 +9,7 @@ package joeson
 // in another way. When a ParseError Ast is returned instead,
 // the parsing will fail immediately. See examples.
 type ParseError struct {
-	Attr
+	*Attr
 	ctx         *ParseContext // can be nil (e.g. when some lexer failed)
 	ErrorString string
 }

@@ -6,7 +6,7 @@ import (
 )
 
 type regex struct {
-	Attr
+	*Attr
 	*gnodeimpl
 	reStr string
 	re    regexp.Regexp

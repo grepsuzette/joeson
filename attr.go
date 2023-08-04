@@ -8,29 +8,29 @@ type Attr struct {
 	RuleName string
 }
 
-func newAttr() Attr {
-	return Attr{}
+func newAttr() *Attr {
+	return &Attr{}
 }
 
 func isPredefinedAttr(attr string) bool {
 	return false
 }
 
-func (attr Attr) SetLine(n int) {
+func (attr *Attr) SetLine(n int) {
 	attr.Line = n
 	attr.Start = 0
 	attr.End = 0
 }
 
-func (attr Attr) GetLine() int {
+func (attr *Attr) GetLine() int {
 	return attr.Line
 }
 
-func (attr Attr) setRuleName(rulename string) {
+func (attr *Attr) setRuleName(rulename string) {
 	attr.RuleName = rulename
 }
 
-func (attr Attr) SetOrigin(o Origin) {
+func (attr *Attr) SetOrigin(o Origin) {
 	attr.Code = o.Code
 	attr.Start = o.Start
 	attr.End = o.End
@@ -38,7 +38,7 @@ func (attr Attr) SetOrigin(o Origin) {
 	attr.RuleName = o.RuleName
 }
 
-func (attr Attr) GetOrigin() Origin {
+func (attr *Attr) GetOrigin() Origin {
 	return Origin{
 		Code:     attr.Code,
 		Line:     attr.Line,
@@ -48,14 +48,14 @@ func (attr Attr) GetOrigin() Origin {
 	}
 }
 
-func (attr Attr) HasAttribute(key interface{}) bool {
+func (attr *Attr) HasAttribute(key interface{}) bool {
 	return false
 }
 
-func (attr Attr) GetAttribute(key interface{}) interface{} {
+func (attr *Attr) GetAttribute(key interface{}) interface{} {
 	return false
 }
 
-func (attr Attr) SetAttribute(key interface{}, value interface{}) {
+func (attr *Attr) SetAttribute(key interface{}, value interface{}) {
 	panic("unimplemented")
 }

@@ -1,7 +1,7 @@
 package joeson
 
 type lookahead struct {
-	Attr
+	*Attr
 	*gnodeimpl
 	expr Parser
 }

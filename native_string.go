@@ -2,7 +2,7 @@ package joeson
 
 // NativeString wraps `string` and implements Ast.
 type NativeString struct {
-	Attr
+	*Attr
 	Str string
 }
 

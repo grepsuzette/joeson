@@ -16,7 +16,7 @@ const (
 )
 
 type sequence struct {
-	Attr
+	*Attr
 	*gnodeimpl
 	sequence []Parser
 	lazyType *helpers.Lazy[sequenceRepr] // internal cache for internalType()

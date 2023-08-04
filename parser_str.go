@@ -12,7 +12,7 @@ import (
 // p.Parse("fbar") -> nil.
 // ```
 type str struct {
-	Attr
+	*Attr
 	*gnodeimpl
 	Str string
 }

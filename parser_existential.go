@@ -1,7 +1,7 @@
 package joeson
 
 type existential struct {
-	Attr
+	*Attr
 	*gnodeimpl
 	it Parser
 }

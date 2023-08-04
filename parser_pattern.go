@@ -24,7 +24,7 @@ import (
 //
 //	See parser_pattern_test.go
 type pattern struct {
-	Attr
+	*Attr
 	*gnodeimpl
 	value Parser
 	join  Parser

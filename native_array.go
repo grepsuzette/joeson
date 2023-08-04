@@ -26,7 +26,7 @@ import (
 // undefined is something else).
 
 type NativeArray struct {
-	Attr
+	*Attr
 	Array []Ast
 }
 

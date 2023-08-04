@@ -1,7 +1,7 @@
 package joeson
 
 type not struct {
-	Attr
+	*Attr
 	*gnodeimpl
 	it Parser
 }

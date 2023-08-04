@@ -13,7 +13,7 @@ import (
 //
 
 type NativeMap struct {
-	Attr
+	*Attr
 	vals map[string]Ast
 	keys []string // the order, for Concat() to work well with sequence parser
 }

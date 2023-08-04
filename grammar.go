@@ -10,7 +10,7 @@ import (
 )
 
 type Grammar struct {
-	Attr
+	*Attr
 	*gnodeimpl
 	rank     Parser         // a *Rank or a Ref to a rank
 	numrules int            // Each Ast can have rules, recursively. This however is the total count in the grammar
