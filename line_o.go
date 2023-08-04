@@ -47,18 +47,23 @@ func (ol OLine) stringIndent(nIndent int) string {
 	return s
 }
 
-// You may provide a `grammar` to attempt to parse the rules with, or leave it nil
-// which will use the joeson_handcompiled grammar.
-func (ol OLine) toRule(rank_ *rank, parentRule Parser, by oLineByIndexOrName, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Parser {
+// Convert a O line to a rule Parser.
+// lazyGrammar: normally nil. A lazy grammar can be provided here. nil uses joeson_handcompiled grammar.
+func (ol OLine) toRule(
+	rank_ *rank,
+	parentRule Parser,
+	by oLineByIndexOrName,
+	opts *TraceOptions,
+	lazyGrammar *helpers.Lazy[*Grammar],
+) Parser {
 	// figure out the name for this rule
 	var name string
 	var content Line = ol.content
 	if ol.name != "" {
-		// a named rule, easy
-		name = ol.name
+		name = ol.name // named rule
 	} else if by.name != "" {
 		name = by.name
-	} else if by.index.IsSet && parentRule != nil {
+	} else if by.index.IsSet && parentRule != nil { // unamed OLine by index, will produce names like foo[0], foo[1], foo[2]
 		name = parentRule.GetRuleName() + "[" + strconv.Itoa(by.index.Int) + "]"
 	} else {
 		panic("assert")

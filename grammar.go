@@ -11,17 +11,17 @@ import (
 
 type Grammar struct {
 	*Attr
+	*TraceOptions
 	*gnodeimpl
-	rank     Parser         // a *Rank or a Ref to a rank
-	numrules int            // Each Ast can have rules, recursively. This however is the total count in the grammar
-	id2rule  map[int]Parser // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
-	TraceOptions
+	rank           Parser         // a *Rank or a Ref to a rank
+	numrules       int            // Each Ast can have rules, recursively. This however is the total count in the grammar
+	id2rule        map[int]Parser // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
 	wasInitialized bool
 }
 
 type GrammarOptions struct {
 	// Govern what is traced during initialization or parsing
-	TraceOptions TraceOptions
+	TraceOptions *TraceOptions
 
 	// Leave this nil unless you know what you're doing.
 	// This lazy function must return the grammar to use when some uncompiled
@@ -49,6 +49,9 @@ func GrammarFromLines(lines []Line, name string, options ...GrammarOptions) *Gra
 	var opts GrammarOptions
 	if len(options) > 0 {
 		opts = options[0]
+		if opts.TraceOptions == nil {
+			opts.TraceOptions = Mute()
+		}
 	} else {
 		opts = GrammarOptions{
 			TraceOptions: DefaultTraceOptions(),
@@ -143,9 +146,9 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 
 func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTraceOptions()) }
 
-func newEmptyGrammarWithOptions(opts TraceOptions) *Grammar {
+func newEmptyGrammarWithOptions(opts *TraceOptions) *Grammar {
 	name := "__empty__"
-	gm := &Grammar{newAttr(), newGNode(), nil, 0, map[int]Parser{}, opts, false}
+	gm := &Grammar{newAttr(), opts, newGNode(), nil, 0, map[int]Parser{}, false}
 	gm.gnodeimpl.name = name
 	gm.gnodeimpl.node = gm
 	return gm

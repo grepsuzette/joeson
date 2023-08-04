@@ -7,6 +7,8 @@ import (
 )
 
 // Trace options. They produce various traces during parsing.
+// This can be governed by the TRACE environment variable or
+// when creating a grammar.
 type TraceOptions struct {
 	Stack      bool // print detailed parsing steps
 	Loop       bool // print all rules
@@ -15,12 +17,22 @@ type TraceOptions struct {
 	SkipSetup  bool // mute traces during the setup of the joeson grammar
 }
 
+func (to *TraceOptions) Copy() *TraceOptions {
+	neu := &TraceOptions{}
+	neu.Stack = to.Stack
+	neu.Loop = to.Loop
+	neu.Grammar = to.Grammar
+	neu.FilterLine = to.FilterLine
+	neu.SkipSetup = to.SkipSetup
+	return neu
+}
+
 // Define what the default TraceOptions is when GrammarFromLines() is called optionless.
 // By default if $TRACE envvar is specified, the options will be read from it
 // starting from a Mute() state. If $TRACE is not specified, we only show succint
 // trace to be beginner-friendly.
-func DefaultTraceOptions() TraceOptions {
-	return TraceOptionsFromEnvironmentOrUse(TraceOptions{
+func DefaultTraceOptions() *TraceOptions {
+	return TraceOptionsFromEnvironmentOrUse(&TraceOptions{
 		Stack:      false, // why default is false: too verbose
 		Loop:       false, // why default is false: prefer to use grammar
 		Grammar:    true,
@@ -30,19 +42,19 @@ func DefaultTraceOptions() TraceOptions {
 }
 
 // Mute() creates a TraceOptions with all traces disabled.
-func Mute() TraceOptions {
-	return TraceOptions{Stack: false, Loop: false, Grammar: false, FilterLine: -1, SkipSetup: false}
+func Mute() *TraceOptions {
+	return &TraceOptions{Stack: false, Loop: false, Grammar: false, FilterLine: -1, SkipSetup: false}
 }
 
 // Verbose() creates a TraceOptions with Stack and Grammar tracing enabled.
-func Verbose() TraceOptions {
-	return TraceOptions{Stack: true, Loop: false, Grammar: true, FilterLine: -1, SkipSetup: true}
+func Verbose() *TraceOptions {
+	return &TraceOptions{Stack: true, Loop: false, Grammar: true, FilterLine: -1, SkipSetup: true}
 }
 
 // If $TRACE (or $trace) environment variable is defined, derive the
 // trace options from it, starting from a Mute() initial state. If
 // the envvar is missing, defaultOpts is returned instead.
-func TraceOptionsFromEnvironmentOrUse(defaultOpts TraceOptions) TraceOptions {
+func TraceOptionsFromEnvironmentOrUse(defaultOpts *TraceOptions) *TraceOptions {
 	return checkEnvironmentForTraceOptions(Mute())
 }
 
@@ -53,7 +65,7 @@ func TraceOptionsFromEnvironmentOrUse(defaultOpts TraceOptions) TraceOptions {
 //
 // See the code for the option details, as the array does not render
 // well in godoc.
-func checkEnvironmentForTraceOptions(initial ...TraceOptions) TraceOptions {
+func checkEnvironmentForTraceOptions(initial ...*TraceOptions) *TraceOptions {
 	// Possible values (several are possible, comma-separated):
 	//
 	// | Name       | Behavior                                   |
@@ -65,7 +77,7 @@ func checkEnvironmentForTraceOptions(initial ...TraceOptions) TraceOptions {
 	// | grammar    | print grammar information and all rules    |
 	// | skipsetup  | mute traces during joeson grammar setup    |
 	// | all        | print all that makes sense                 |
-	var opt TraceOptions
+	var opt *TraceOptions
 	if len(initial) > 0 {
 		opt = initial[0]
 	} else {

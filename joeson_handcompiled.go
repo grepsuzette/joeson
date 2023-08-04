@@ -8,7 +8,7 @@ func NewJoeson() *Grammar {
 	return NewJoesonWithOptions(DefaultTraceOptions())
 }
 
-func NewJoesonWithOptions(opts TraceOptions) *Grammar {
+func NewJoesonWithOptions(opts *TraceOptions) *Grammar {
 	gm := GrammarFromLines(
 		JoesonRules(),
 		JoesonGrammarName,

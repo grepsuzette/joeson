@@ -132,7 +132,15 @@ func rule2line(x any) Line {
 // opts:       Parse time options
 
 // see line/README.md # internals
-func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs *ParseOptions, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Parser {
+func getRule(
+	rank_ *rank,
+	name string,
+	line Line,
+	parentRule Parser,
+	attrs *ParseOptions,
+	opts *TraceOptions,
+	lazyGrammar *helpers.Lazy[*Grammar],
+) Parser {
 	var answer Parser
 	// 	fmt.Printf("getRule name=%s reflect.TypeOf(line).String())=%s attrs=%s\n", name, reflect.TypeOf(line).String(), attrs)
 	switch v := line.(type) {
@@ -150,10 +158,13 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs *Pars
 		// answer.(gnode).gnode().ParseOptions = attrs
 	case sLine:
 		// temporarily halt trace when SkipSetup
-		traceOptions := opts
+		var traceOptions *TraceOptions
 		if opts.SkipSetup {
+			traceOptions = opts.Copy()
 			traceOptions.Loop = false
 			traceOptions.Stack = false
+		} else {
+			traceOptions = opts
 		}
 		// parse the string. A grammar like joeson_handcompiled is needed for that,
 		gm := lazyGrammar.Get() // uses Lazy to get the grammar in cache or build it

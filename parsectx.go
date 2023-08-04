@@ -9,14 +9,15 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// As in the initial implementation, ParseContext does not know Grammar. It's
-// just a context.
+// What is being parsed, what is the position, what are the parse options.
 type ParseContext struct {
-	TraceOptions         // grammar.TraceOptions at the moment this context is created.
-	*ParseOptions        // Defined arbitrarily within a rule (setParseOptions()), e.g. in I("INT", "/[0-9]+/", someCb, ParseOptions{SkipLog: false}), and then passed to the ParseContext.
-	Counter       int    // [For debugging] iteration counter shown with TRACE=stack. Useful with conditional breakpoints
-	GrammarName   string // [For debugging] set in grammar.Parse to the value of grammar.Name(). Useful for conditional breakpoints (typically in packrat loopify()) to only break when your final grammar is being used to parse anything. See docs/diffing.md # debugging methodology
 	Code          CodeStream
+	*TraceOptions        // grammar.TraceOptions at the moment this context is created.
+	*ParseOptions        // Defined within a rule, e.g. I("INT", "/[0-9]+/", ParseOptions{Debug: true})
+	Counter       int    // [debug] iteration counter. Shown with TRACE=stack. Useful with conditional breakpoints
+	GrammarName   string // [debug] set in grammar.Parse to the value of grammar.Name().
+	// Useful for conditional breakpoints (typically in packrat loopify())
+	// to only break when your final grammar is being used to parse anything.
 
 	numRules    int
 	frames      [][]*frame // 2D: [len(code.text) + 1][numRules]
@@ -28,7 +29,7 @@ type ParseContext struct {
 // Create a new parse context.
 // code: possible to use text (RuneStream) or tokenized input (TokenStream)
 // numRules: grammar numRules at the moment context is created (can be 0 before the very first grammar is created)
-func newParseContext(code CodeStream, numRules int, opts TraceOptions) *ParseContext {
+func newParseContext(code CodeStream, numRules int, opts *TraceOptions) *ParseContext {
 	// frames is 2d
 	// frames[len(code.text) + 1][grammar.numRules]frame
 	//                         ^---- +1 is to include EOF
@@ -39,8 +40,8 @@ func newParseContext(code CodeStream, numRules int, opts TraceOptions) *ParseCon
 	return &ParseContext{
 		Code:         code,
 		ParseOptions: newParseOptions(),
-		numRules:     numRules,
 		TraceOptions: opts,
+		numRules:     numRules,
 		frames:       frames,
 		stackLength:  0,
 		Counter:      0,
@@ -68,7 +69,7 @@ func (ctx *ParseContext) String() string {
 	return codeSgmnt + " " + Cyan(strings.Join(make([]string, ctx.stackLength), "| "))
 }
 
-func (ctx *ParseContext) log(message string, opts TraceOptions) {
+func (ctx *ParseContext) log(message string, opts *TraceOptions) {
 	if !ctx.ParseOptions.SkipLog {
 		if opts.FilterLine == -1 || ctx.Code.Line() == opts.FilterLine {
 			fmt.Printf("%s%s\n", ctx.String(), message)
