@@ -9,9 +9,9 @@ type Lazy[T any] struct {
 	f   func() T // lazy evaluator
 }
 
-func NewLazy[T any]() *Lazy[T]                   { return &Lazy[T]{} }
-func NewLazyFromValue[T any](t T) *Lazy[T]       { r := &Lazy[T]{}; r.Set(t); return r }
-func NewLazyFromFunc[T any](f func() T) *Lazy[T] { return &Lazy[T]{f: f} }
+func NewLazy[T any]() *Lazy[T]                { return &Lazy[T]{} }
+func LazyFromValue[T any](t T) *Lazy[T]       { r := &Lazy[T]{}; r.Set(t); return r }
+func LazyFromFunc[T any](f func() T) *Lazy[T] { return &Lazy[T]{f: f} }
 
 func (k *Lazy[T]) IsSet() bool { return k.val != nil }
 func (k *Lazy[T]) Set(t T)     { k.val = &t }

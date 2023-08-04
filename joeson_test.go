@@ -23,7 +23,7 @@ func TestBootstrap(t *testing.T) {
 	gmIntention := GrammarFromLines(
 		IntentionRules(),
 		"gmIntention",
-		GrammarOptions{LazyGrammar: helpers.NewLazyFromValue[*Grammar](gmJoeson)},
+		GrammarOptions{LazyGrammar: helpers.LazyFromValue[*Grammar](gmJoeson)},
 	)
 	gmJoeson.Bomb() // destroy the grammar to make sure it plays no part below
 	gmDebuglabel := GrammarFromLines(
@@ -32,7 +32,7 @@ func TestBootstrap(t *testing.T) {
 			i(Named("Br", "'Toy' | 'BZ'")),
 		},
 		"gmFoo",
-		GrammarOptions{LazyGrammar: helpers.NewLazyFromValue[*Grammar](gmIntention)},
+		GrammarOptions{LazyGrammar: helpers.LazyFromValue[*Grammar](gmIntention)},
 	)
 	gmDebuglabel.PrintRules()
 	ast := gmDebuglabel.ParseString("Toy")

@@ -16,7 +16,7 @@ func newNot(it Ast) *not {
 
 func (no *not) gnode() *gnodeimpl       { return no.gnodeimpl }
 func (no *not) prepare()                {}
-func (no *not) handlesChildLabel() bool { return false }
+func (no *not) HandlesChildLabel() bool { return false }
 
 func (no *not) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {

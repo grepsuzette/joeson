@@ -174,7 +174,7 @@ func (gm *Grammar) getRule(name string) Parser {
 }
 
 func (gm *Grammar) prepare()                {}
-func (gm *Grammar) handlesChildLabel() bool { return false }
+func (gm *Grammar) HandlesChildLabel() bool { return false }
 func (gm *Grammar) String() string {
 	if gm.rank == nil {
 		return Magenta("GRAMMAR{}")
@@ -353,7 +353,7 @@ func (gm *Grammar) PrintRules() {
 			helpers.PadLeft(helpers.TypeOfToString(v), 20),
 			helpers.PadLeft(helpers.BoolToString(v.Capture()), 3),
 			helpers.PadLeft(v.GetRuleLabel(), 7),
-			helpers.PadLeft(strings.Join(v.gnode().lazyLabels.Get(), ","), 21),
+			helpers.PadLeft(strings.Join(v.gnode().labels_.Get(), ","), 21),
 			helpers.PadLeft(sParentName, 16),
 			helpers.PadLeft(v.String(), 30),
 		)

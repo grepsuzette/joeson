@@ -23,7 +23,7 @@ func TestLazy0a(t *testing.T) {
 }
 
 func TestLazy0b(t *testing.T) {
-	lazy := NewLazyFromFunc[int](func() int { return 5 })
+	lazy := LazyFromFunc[int](func() int { return 5 })
 	if lazy.IsSet() {
 		t.FailNow()
 	}
@@ -40,7 +40,7 @@ func TestLazy0b(t *testing.T) {
 }
 
 func TestLazy0c(t *testing.T) {
-	lazy := NewLazyFromValue[int](5)
+	lazy := LazyFromValue[int](5)
 	if !lazy.IsSet() {
 		t.FailNow()
 	}

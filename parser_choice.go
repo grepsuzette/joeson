@@ -31,7 +31,7 @@ func newChoice(it Ast) *choice {
 func (ch *choice) isMonoChoice() bool      { return len(ch.choices) == 1 }
 func (ch *choice) Append(node Parser)      { ch.choices = append(ch.choices, node) }
 func (ch *choice) gnode() *gnodeimpl       { return ch.gnodeimpl }
-func (ch *choice) handlesChildLabel() bool { return false }
+func (ch *choice) HandlesChildLabel() bool { return false }
 
 func (ch *choice) prepare() {
 	for _, choice := range ch.choices {

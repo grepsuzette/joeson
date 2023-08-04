@@ -59,7 +59,7 @@ func newStrFromAst(ast Ast) str {
 
 func (s str) gnode() *gnodeimpl       { return s.gnodeimpl }
 func (s str) prepare()                {}
-func (s str) handlesChildLabel() bool { return false }
+func (s str) HandlesChildLabel() bool { return false }
 func (s str) String() string {
 	return Green("'" + helpers.Escape(s.Str) + "'")
 }

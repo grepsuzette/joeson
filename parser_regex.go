@@ -26,7 +26,7 @@ func (re *regex) gnode() *gnodeimpl { return re.gnodeimpl }
 func (re *regex) String() string {
 	return Magenta("/" + strings.NewReplacer("\r", "\\r", "\n", "\\n", "\t", "\\t").Replace(re.re.String()) + "/g")
 }
-func (re *regex) handlesChildLabel() bool { return false }
+func (re *regex) HandlesChildLabel() bool { return false }
 func (re *regex) prepare()                {}
 func (re *regex) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {

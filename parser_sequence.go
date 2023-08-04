@@ -40,21 +40,21 @@ func newSequence(it Ast) *sequence {
 			sequence:  parsers,
 		}
 		gn.node = seq
-		gn.lazyLabels = helpers.NewLazyFromFunc(func() []string { return seq.calculateLabels() })
-		gn.lazyCaptures = helpers.NewLazyFromFunc(func() []Ast { return seq.calculateCaptures() })
-		seq.lazyType = helpers.NewLazyFromFunc(func() sequenceRepr { return seq.calculateType() })
+		gn.labels_ = helpers.LazyFromFunc(func() []string { return seq.calculateLabels() })
+		gn.captures_ = helpers.LazyFromFunc(func() []Ast { return seq.calculateCaptures() })
+		seq.lazyType = helpers.LazyFromFunc(func() sequenceRepr { return seq.calculateType() })
 		return seq
 	}
 }
 
 func (seq *sequence) gnode() *gnodeimpl       { return seq.gnodeimpl }
-func (seq *sequence) handlesChildLabel() bool { return true }
+func (seq *sequence) HandlesChildLabel() bool { return true }
 func (seq *sequence) prepare()                {}
 
 func (seq *sequence) calculateLabels() []string {
 	a := []string{}
 	for _, child := range seq.sequence {
-		a = append(a, child.gnode().lazyLabels.Get()...)
+		a = append(a, child.gnode().labels_.Get()...)
 	}
 	return a
 }
@@ -62,7 +62,7 @@ func (seq *sequence) calculateLabels() []string {
 func (seq *sequence) calculateCaptures() []Ast {
 	a := []Ast{}
 	for _, child := range seq.sequence {
-		a = append(a, child.gnode().lazyCaptures.Get()...)
+		a = append(a, child.gnode().captures_.Get()...)
 	}
 	return a
 }
@@ -71,8 +71,8 @@ func (seq *sequence) calculateCaptures() []Ast {
 // otherwise, if at least 1 capture, it is Array
 // otherwise a Single
 func (seq *sequence) calculateType() sequenceRepr {
-	if len(seq.lazyLabels.Get()) == 0 {
-		if len(seq.lazyCaptures.Get()) > 1 {
+	if len(seq.labels_.Get()) == 0 {
+		if len(seq.captures_.Get()) > 1 {
 			return Array
 		} else {
 			return Single

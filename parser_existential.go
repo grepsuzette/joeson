@@ -12,11 +12,11 @@ func newExistential(it Ast) *existential {
 	return ex
 }
 
-// TODO handlesChildLabel$: get: -> @parent?.handlesChildLabel
+// TODO HandlesChildLabel$: get: -> @parent?.HandlesChildLabel
 // examine this case^
-func (ex *existential) handlesChildLabel() bool {
+func (ex *existential) HandlesChildLabel() bool {
 	if ex.gnodeimpl.parent != nil {
-		return ex.gnodeimpl.parent.handlesChildLabel()
+		return ex.gnodeimpl.parent.HandlesChildLabel()
 	} else {
 		return false
 	}
@@ -26,12 +26,12 @@ func (ex *existential) gnode() *gnodeimpl { return ex.gnodeimpl }
 
 func (ex *existential) prepare() {
 	lbls := ex.calculateLabels()
-	ex.lazyLabels.Set(lbls)
+	ex.labels_.Set(lbls)
 	if len(lbls) > 0 && ex.label == "" {
 		ex.label = "@"
 	}
-	caps := ex.it.gnode().lazyCaptures.Get()
-	ex.lazyCaptures.Set(caps)
+	caps := ex.it.gnode().captures_.Get()
+	ex.captures_.Set(caps)
 	ex.capture = len(caps) > 0
 }
 
@@ -40,7 +40,7 @@ func (ex *existential) calculateLabels() []string {
 	if lbl != "" && lbl != "@" && lbl != "&" {
 		return []string{lbl}
 	} else {
-		return ex.it.gnode().lazyLabels.Get()
+		return ex.it.gnode().labels_.Get()
 	}
 }
 

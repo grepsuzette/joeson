@@ -44,13 +44,13 @@ func newRef(it Ast) *ref {
 	if name[0:1] == "_" {
 		ref.SetCapture(false)
 	}
-	ref.gnodeimpl.lazyLabels = helpers.NewLazyFromFunc(func() []string {
+	ref.gnodeimpl.labels_ = helpers.LazyFromFunc(func() []string {
 		if ref.GetRuleLabel() == "@" {
 			referenced := ref.grammar.getRule(ref.ref)
 			if referenced == nil {
 				panic("ref " + ref.ref + " was not found in grammar.Rules")
 			} else {
-				return referenced.gnode().lazyLabels.Get()
+				return referenced.gnode().labels_.Get()
 			}
 		} else if ref.GetRuleLabel() != "" {
 			return []string{ref.GetRuleLabel()}
@@ -62,7 +62,7 @@ func newRef(it Ast) *ref {
 }
 
 func (x *ref) gnode() *gnodeimpl       { return x.gnodeimpl }
-func (x *ref) handlesChildLabel() bool { return false }
+func (x *ref) HandlesChildLabel() bool { return false }
 func (x *ref) prepare()                {}
 func (x *ref) Parse(ctx *ParseContext) Ast {
 	return wrap(func(ctx *ParseContext, _ Parser) Ast {

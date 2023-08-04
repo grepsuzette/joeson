@@ -22,7 +22,7 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 	if options.LazyGrammar != nil {
 		lazyGm = options.LazyGrammar
 	} else {
-		lazyGm = helpers.NewLazyFromFunc[*Grammar](func() *Grammar {
+		lazyGm = helpers.LazyFromFunc[*Grammar](func() *Grammar {
 			// Lazy, so this will only get called if the rules have string rules (SLine)
 			// and optionalLazyGrammar was left empty. getRule()'s `case SLine:` is
 			// the only place that needs a grammar.
@@ -60,7 +60,7 @@ func (rank *rank) Length() int {
 func (rank *rank) Append(node Parser)      { rank.choice.Append(node) }
 func (rank *rank) gnode() *gnodeimpl       { return rank.choice.gnode() }
 func (rank *rank) prepare()                { rank.choice.prepare() }
-func (rank *rank) handlesChildLabel() bool { return false }
+func (rank *rank) HandlesChildLabel() bool { return false }
 
 func (rank *rank) String() string {
 	var b strings.Builder

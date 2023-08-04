@@ -125,7 +125,7 @@ func (patt *pattern) Parse(ctx *ParseContext) Ast {
 	}, patt)(ctx)
 }
 
-func (patt *pattern) handlesChildLabel() bool { return false }
+func (patt *pattern) HandlesChildLabel() bool { return false }
 func (patt *pattern) prepare()                {}
 func (patt *pattern) String() string {
 	var b strings.Builder

@@ -16,7 +16,7 @@ func newLookahead(it Ast) *lookahead {
 
 func (look *lookahead) prepare()                {}
 func (look *lookahead) gnode() *gnodeimpl       { return look.gnodeimpl }
-func (look *lookahead) handlesChildLabel() bool { return false }
+func (look *lookahead) HandlesChildLabel() bool { return false }
 func (look *lookahead) String() string {
 	return Blue("(?") + String(look.expr) + Blue(")")
 }
