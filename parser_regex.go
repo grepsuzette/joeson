@@ -33,9 +33,7 @@ func (re *regex) Parse(ctx *ParseContext) Ast {
 		if didMatch, sMatch := ctx.Code.MatchRegexp(re.re); !didMatch {
 			return nil
 		} else {
-			it := NewNativeString(sMatch)
-			it.setRuleName(re.Attr.RuleName)
-			return it
+			return NewNativeString(sMatch)
 		}
 	}, re)(ctx)
 }

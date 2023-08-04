@@ -1,11 +1,10 @@
 package joeson
 
 type Attr struct {
-	Code     string
-	Start    int
-	End      int
-	Line     int
-	RuleName string
+	Code  string
+	Start int
+	End   int
+	Line  int
 }
 
 func newAttr() *Attr {
@@ -26,25 +25,19 @@ func (attr *Attr) GetLine() int {
 	return attr.Line
 }
 
-func (attr *Attr) setRuleName(rulename string) {
-	attr.RuleName = rulename
-}
-
 func (attr *Attr) SetOrigin(o Origin) {
 	attr.Code = o.Code
 	attr.Start = o.Start
 	attr.End = o.End
 	attr.Line = o.Line
-	attr.RuleName = o.RuleName
 }
 
 func (attr *Attr) GetOrigin() Origin {
 	return Origin{
-		Code:     attr.Code,
-		Line:     attr.Line,
-		Start:    attr.Start,
-		End:      attr.End,
-		RuleName: attr.RuleName,
+		Code:  attr.Code,
+		Line:  attr.Line,
+		Start: attr.Start,
+		End:   attr.End,
 	}
 }
 
