@@ -13,6 +13,15 @@ type ParseOptions struct {
 	CbBuilder ParseCallback
 }
 
+func newParseOptions() *ParseOptions {
+	return &ParseOptions{
+		SkipLog:   false,
+		SkipCache: false,
+		Debug:     false,
+		CbBuilder: nil,
+	}
+}
+
 // Rules often have callbacks. ParseCallback are never directly used,
 // instead they are built by O() and I(). Even though ParseCallback has
 // 3 arguments, usually one 1 is passed when writing a callback for O() and I()

@@ -10,7 +10,7 @@ import (
 type OLine struct {
 	name    string // "" unless provided by Named()
 	content Line
-	attrs   ParseOptions
+	*ParseOptions
 }
 
 type oLineByIndexOrName struct {
@@ -41,7 +41,7 @@ func (ol OLine) stringIndent(nIndent int) string {
 	s += " " + ol.name + " "
 	re := regexp.MustCompile("^ *o *")
 	s += re.ReplaceAllString(ol.content.stringIndent(nIndent), "o ")
-	if ol.attrs.CbBuilder != nil {
+	if ol.ParseOptions.CbBuilder != nil {
 		s += " " + Yellow("𝘧")
 	}
 	return s
@@ -63,7 +63,7 @@ func (ol OLine) toRule(rank_ *rank, parentRule Parser, by oLineByIndexOrName, op
 	} else {
 		panic("assert")
 	}
-	rule := getRule(rank_, name, content, parentRule, ol.attrs, opts, lazyGrammar)
+	rule := getRule(rank_, name, content, parentRule, ol.ParseOptions, opts, lazyGrammar)
 	rule.gnode().parent = parentRule
 	return rule
 }

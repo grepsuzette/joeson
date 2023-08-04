@@ -94,7 +94,7 @@ func (gm *Grammar) ParseTokens(tokens *TokenStream) Ast {
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	oldTrace := gm.TraceOptions.Stack
 	ctx.GrammarName = gm.GetRuleName()
-	if ctx.parseOptions.Debug {
+	if ctx.ParseOptions.Debug {
 		// temporarily enable stack tracing
 		gm.TraceOptions.Stack = true
 	}

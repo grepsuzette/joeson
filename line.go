@@ -19,7 +19,8 @@ type Line interface {
 // to help destructuring `a` into a name, content (Line) and options. This
 // is where `Named()` gets decomposed if it was used. This is also
 // where parsing callbacks make their way into ParseOptions.
-func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions) {
+func lineInit(origArgs []any) (name string, lineContent Line, attrs *ParseOptions) {
+	attrs = newParseOptions()
 	for i, arg := range origArgs {
 		if i == 0 {
 			switch v := arg.(type) {
@@ -43,7 +44,7 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs ParseOptions
 			case func(Ast, *ParseContext, Ast) Ast:
 				attrs.CbBuilder = v
 			case ParseOptions:
-				attrs = v
+				attrs = &v
 			case string:
 				fmt.Printf(
 					"Error in grammar: O (or I) called lineInit with %v\nSo the second parameter was a string: %s\nRight now this syntax is not supported\nPlease fix your grammar",
@@ -131,7 +132,7 @@ func rule2line(x any) Line {
 // opts:       Parse time options
 
 // see line/README.md # internals
-func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs ParseOptions, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Parser {
+func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs *ParseOptions, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) Parser {
 	var answer Parser
 	// 	fmt.Printf("getRule name=%s reflect.TypeOf(line).String())=%s attrs=%s\n", name, reflect.TypeOf(line).String(), attrs)
 	switch v := line.(type) {
@@ -143,7 +144,7 @@ func getRule(rank_ *rank, name string, line Line, parentRule Parser, attrs Parse
 	case ILine:
 		panic("assert") // ILine is impossible here
 	case OLine:
-		v.attrs = attrs
+		v.ParseOptions = attrs
 		answer = v.toRule(rank_, parentRule, oLineByIndexOrName{name: name}, opts, lazyGrammar)
 		answer.SetRuleNameWhenEmpty(name)
 		// answer.(gnode).gnode().ParseOptions = attrs

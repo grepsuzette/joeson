@@ -12,17 +12,17 @@ import (
 // As in the initial implementation, ParseContext does not know Grammar. It's
 // just a context.
 type ParseContext struct {
-	TraceOptions        // grammar.TraceOptions at the moment this context is created.
-	Counter      int    // [For debugging] iteration counter shown with TRACE=stack. Useful with conditional breakpoints
-	GrammarName  string // [For debugging] set in grammar.Parse to the value of grammar.Name(). Useful for conditional breakpoints (typically in packrat loopify()) to only break when your final grammar is being used to parse anything. See docs/diffing.md # debugging methodology
-	Code         CodeStream
+	TraceOptions         // grammar.TraceOptions at the moment this context is created.
+	*ParseOptions        // Defined arbitrarily within a rule (setParseOptions()), e.g. in I("INT", "/[0-9]+/", someCb, ParseOptions{SkipLog: false}), and then passed to the ParseContext.
+	Counter       int    // [For debugging] iteration counter shown with TRACE=stack. Useful with conditional breakpoints
+	GrammarName   string // [For debugging] set in grammar.Parse to the value of grammar.Name(). Useful for conditional breakpoints (typically in packrat loopify()) to only break when your final grammar is being used to parse anything. See docs/diffing.md # debugging methodology
+	Code          CodeStream
 
-	numRules     int
-	frames       [][]*frame // 2D: [len(code.text) + 1][numRules]
-	stack        [1024]*frame
-	stackLength  int
-	loopStack    []string
-	parseOptions ParseOptions // Defined arbitrarily within a rule (setParseOptions()), e.g. in I("INT", "/[0-9]+/", someCb, ParseOptions{SkipLog: false}), and then passed to the ParseContext.
+	numRules    int
+	frames      [][]*frame // 2D: [len(code.text) + 1][numRules]
+	stack       [1024]*frame
+	stackLength int
+	loopStack   []string
 }
 
 // Create a new parse context.
@@ -38,6 +38,7 @@ func newParseContext(code CodeStream, numRules int, opts TraceOptions) *ParseCon
 	}
 	return &ParseContext{
 		Code:         code,
+		ParseOptions: newParseOptions(),
 		numRules:     numRules,
 		TraceOptions: opts,
 		frames:       frames,
@@ -46,9 +47,9 @@ func newParseContext(code CodeStream, numRules int, opts TraceOptions) *ParseCon
 	}
 }
 
-// ParseOptions are only set from within the callback within a rule.
-func (ctx *ParseContext) setParseOptions(opts ParseOptions) *ParseContext {
-	ctx.parseOptions = opts
+// only set from within the callback within a rule.
+func (ctx *ParseContext) setParseOptions(opts *ParseOptions) *ParseContext {
+	ctx.ParseOptions = opts
 	return ctx
 }
 
@@ -68,7 +69,7 @@ func (ctx *ParseContext) String() string {
 }
 
 func (ctx *ParseContext) log(message string, opts TraceOptions) {
-	if !ctx.parseOptions.SkipLog {
+	if !ctx.ParseOptions.SkipLog {
 		if opts.FilterLine == -1 || ctx.Code.Line() == opts.FilterLine {
 			fmt.Printf("%s%s\n", ctx.String(), message)
 		}

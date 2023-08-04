@@ -10,7 +10,7 @@ import (
 type ILine struct {
 	name    string // ILine, as terminal elements, are always named
 	content Line
-	attrs   ParseOptions
+	*ParseOptions
 }
 
 /*
@@ -47,12 +47,12 @@ func (il ILine) stringIndent(nIndent int) string {
 	s += " " + il.name + " "
 	re := regexp.MustCompile("^ *o *")
 	s += re.ReplaceAllString(il.content.stringIndent(nIndent), "o ")
-	if il.attrs.CbBuilder != nil {
+	if il.ParseOptions.CbBuilder != nil {
 		s += " " + Yellow("𝘧")
 	}
 	return s
 }
 
 func (il ILine) toRule(rank_ *rank, parentRule Parser, opts TraceOptions, lazyGrammar *helpers.Lazy[*Grammar]) (name string, rule Parser) {
-	return il.name, getRule(rank_, il.name, il.content, parentRule, il.attrs, opts, lazyGrammar)
+	return il.name, getRule(rank_, il.name, il.content, parentRule, il.ParseOptions, opts, lazyGrammar)
 }
