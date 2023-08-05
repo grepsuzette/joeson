@@ -1,5 +1,15 @@
 package joeson
 
+// Lookahead does not consume or capture characters.
+// It is meant as an optimizer. See test file for an example.
+//
+// (?foo) -> lookahead{foo}
+// ?foo -> lookahead{foo}
+// foo? -> existential{foo}
+//
+// lookahead does not capture.
+// use parens when using this with alternation
+// e.g. "a ?c | b" is grouped as "a (?c | b)".
 type lookahead struct {
 	*Attr
 	*gnodeimpl
@@ -8,7 +18,7 @@ type lookahead struct {
 
 func newLookahead(it Ast) *lookahead {
 	gn := newGNode()
-	la := &lookahead{newAttr(), gn, newStrFromAst(it)}
+	la := &lookahead{newAttr(), gn, it.(*NativeMap).GetOrPanic("expr").(Parser)}
 	gn.capture = false
 	gn.node = la
 	return la

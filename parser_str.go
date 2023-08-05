@@ -24,39 +24,6 @@ func newStr(s string) str {
 	return str
 }
 
-// used in newLookahead()
-func newStrFromAst(ast Ast) str {
-	switch v := ast.(type) {
-	case *NativeMap:
-		// convert to str only when there is a single key
-		keys := v.Keys()
-		if len(keys) < 1 {
-			panic("assert Parser expected, got NativeMap but it's got more than one key so can not convert to Str: " + v.String())
-		} else {
-			if ast, ok := v.GetExists(keys[0]); !ok {
-				panic("assert")
-			} else {
-				switch w := ast.(type) {
-				case NativeString:
-					return newStr(w.Str)
-				case str:
-					return w
-				case *NativeArray:
-					return newStr(w.Concat())
-				default:
-					panic("Could not create a Parser from NativeMap " + v.String())
-				}
-			}
-		}
-	case NativeString:
-		return newStr(v.Str)
-	case str:
-		return v
-	default:
-		panic("Could not create str from " + v.String())
-	}
-}
-
 func (s str) gnode() *gnodeimpl       { return s.gnodeimpl }
 func (s str) prepare()                {}
 func (s str) HandlesChildLabel() bool { return false }

@@ -1,5 +1,8 @@
 package joeson
 
+// foo? -> existential{foo}
+// (?foo) -> lookahead{foo}
+// ?foo -> lookahead{foo}
 type existential struct {
 	*Attr
 	*gnodeimpl
