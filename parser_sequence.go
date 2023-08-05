@@ -161,20 +161,20 @@ func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 		label := child.GetRuleLabel()
 		switch label {
 		case "&":
-			if isUndefined(results) {
+			if IsUndefined(results) {
 				results = res
 			} else {
 				results = merge(res, results)
 			}
 		case "@":
-			if isUndefined(results) {
+			if IsUndefined(results) {
 				results = res
 			} else {
 				results = merge(results, res)
 			}
 		case "":
 		default:
-			if isUndefined(results) {
+			if IsUndefined(results) {
 				results = NewEmptyNativeMap()
 				results.(*NativeMap).Set(label, res)
 			} else {

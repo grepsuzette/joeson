@@ -21,7 +21,7 @@ func (nu NativeUndefined) prepare()                                  {}
 func (nu NativeUndefined) HandlesChildLabel() bool                   { return false }
 func (nu NativeUndefined) ForEachChild(f func(Parser) Parser) Parser { return nu }
 
-func isUndefined(x Ast) bool {
+func IsUndefined(x Ast) bool {
 	if x == nil {
 		return true
 	}

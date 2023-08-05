@@ -98,7 +98,7 @@ func (patt *pattern) Parse(ctx *ParseContext) Ast {
 		var matches []Ast = []Ast{resValue}
 		for {
 			pos2 := ctx.Code.Pos()
-			if !isUndefined(patt.join) {
+			if !IsUndefined(patt.join) {
 				resJoin := patt.join.Parse(ctx)
 				// return nil to revert pos
 				if resJoin == nil {
@@ -131,7 +131,7 @@ func (patt *pattern) String() string {
 	var b strings.Builder
 	b.WriteString(String(patt.value))
 	b.WriteString(Cyan("*"))
-	if !isUndefined(patt.join) {
+	if !IsUndefined(patt.join) {
 		b.WriteString(String(patt.join))
 	}
 	if patt.min < 0 && patt.max < 0 {
