@@ -238,8 +238,8 @@ func TestExpectedTokenization(t *testing.T) {
 func TestMiniatures(t *testing.T) {
 	gm := GrammarFromLines([]Line{
 		o(named("Input", rules(
-			o("Number"),
-			i(named("Number", "[0-9]+ term")),
+			o(named("Number", "[0-9]+ term")),
+			o(named("LnChar", "/'[^']+'/ term")),
 		))),
 		i(named("term", "';' '\n'*")),
 	}, "miniatures")
@@ -247,6 +247,8 @@ func TestMiniatures(t *testing.T) {
 	ter := ";\n"
 	for _, a := range [][]string{
 		{"1234", "1234" + ter, "1234"},
+		{`'\f'`, `'\f'` + ter, `'\f'`},
+		{`'\n'`, `'\n'` + ter, `'\n'`},
 	} {
 		if len(a) != 3 {
 			t.Errorf("Expected array of len 3, got len %d for %v", len(a), a)
@@ -261,7 +263,7 @@ func TestMiniatures(t *testing.T) {
 			t.Errorf("Fail to tokenize %q: %s", miniature, err.Error())
 		} else {
 			if tokens.work != tokenized {
-				t.Errorf("%q should have been tokenized as %s, got %q", miniature, tokenized, tokens.work)
+				t.Errorf("%q should have been tokenized as %q, got %q", miniature, tokenized, tokens.work)
 			} else {
 				ast := gm.ParseTokens(tokens)
 				reality := ast.String()
