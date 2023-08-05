@@ -9,7 +9,6 @@ type NativeUndefined struct {
 
 func NewNativeUndefined() NativeUndefined {
 	nu := NativeUndefined{newAttr(), newGNode()}
-	nu.SetCapture(false)
 	return nu
 }
 func (nu NativeUndefined) assertNode()    {}
