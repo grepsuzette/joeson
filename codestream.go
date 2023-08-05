@@ -6,7 +6,7 @@ import (
 
 // A code holder, cursor, matcher.
 type CodeStream interface {
-	Pos() int
+	Pos() int // normally the current offset. For TokenStream Pos means the workOffset instead
 	SetPos(int)
 	PosToLine(pos int) int
 	PosToCol(pos int) int
@@ -17,8 +17,8 @@ type CodeStream interface {
 
 	GetUntil(end string) string // Get until the string `end` is encountered.  Change current position accordingly, including the string
 	GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string
-	PeekRunes(n int) string // e.g. -3 to peek 3 runes back. 2 to peek 2 runes forward. Does not change position.
-	PeekLines(n int) string // e.g. 2 to peek 2 lines forward. -1 to peek 1 line backwards. (this one is not necessarily precise, it is meant for printing purposes and not for parsing)
+	PeekRunes(n int) string    // TODO multiargs like PeekLines  // e.g. -3 to peek 3 runes back. 2 to peek 2 runes forward. Does not change position.
+	PeekLines(n ...int) string // e.g. PeekLines(-1, 2), 2 to peek 2 lines forward. -1 to peek 1 line backwards. (this one is not necessarily precise for TokenStream). You may pass more than 1 arg, the min and max of the series will be used to peek a range.
 	MatchString(string) (didMatch bool, m string)
 	MatchRegexp(regexp.Regexp) (didMatch bool, m string)
 

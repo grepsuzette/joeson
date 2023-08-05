@@ -83,3 +83,44 @@ func TestPosToLine(t *testing.T) {
 		t.Errorf(fmt.Sprintf("Invalid col found %d, expected 2", col))
 	}
 }
+
+func TestPeekLines(t *testing.T) {
+	s := "rose are blue\nblue are violet\nviolet are pi/2"
+	code := NewRuneStream(s)
+	index := strings.Index(code.Code(), "blue are violet")
+	code.SetPos(index)
+	{
+		peeked := code.PeekLines(-1, 1)
+		if peeked != s {
+			t.Errorf("expected %q, got %q\n", s, peeked)
+		}
+	}
+	{
+		peeked := code.PeekLines(0, 1)
+		expected := "blue are violet\nviolet are pi/2"
+		if peeked != expected {
+			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+	{
+		peeked := code.PeekLines(-1, 0)
+		expected := "rose are blue\nblue are violet"
+		if peeked != expected {
+			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+	{
+		peeked := code.PeekLines(-99, 0)
+		expected := "rose are blue\nblue are violet"
+		if peeked != expected {
+			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+	{
+		peeked := code.PeekLines(99, 9, 1, 0)
+		expected := "blue are violet\nviolet are pi/2"
+		if peeked != expected {
+			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+}

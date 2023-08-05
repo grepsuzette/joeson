@@ -14,6 +14,7 @@ import (
 // | TestLongerSample          | 0                     | 0                   | prints tokenized version (ultimately will be compared to some expected large tokenized version, when finalized)
 // | TestMiniatures            | 0                     | 1                   |
 // | TestExpectedTokenization  | 0                     | 0                   | tests short sample expected tokenization
+// | TestTokenPeekLines        | 0                     | 0                   | PeekLines()
 
 type found struct {
 	search   string // text to search in tokenstream.work
@@ -214,6 +215,7 @@ func TestExpectedTokenization(t *testing.T) {
 	for _, a := range [][]string{
 		{"a", "a;\n"},
 		{"1234+  (-321)", "1234+(-321);\n"},
+		{"rose are blue\nblue are violet\nviolet are pi/2", "rose are blue;\nblue are violet;\nviolet are pi/2;\n"},
 	} {
 		if tokens, e := TokenStreamFromGoCode(a[0]); e != nil {
 			t.Error(e.Error())
@@ -281,6 +283,55 @@ func TestMiniatures(t *testing.T) {
 					}
 				}
 			}
+		}
+	}
+}
+
+// this is a similar test to TestPeekLines but done on a TokenStream
+func TestTokenPeekLines(t *testing.T) {
+	s := "rose are blue\nblue are violet\nviolet are pi/2"
+	code, e := TokenStreamFromGoCode(s)
+	if e != nil {
+		t.Errorf("Failed to build tokenstream from %q", s)
+	}
+	expectedTokenization := "rose are blue;\nblue are violet;\nviolet are pi/2;\n"
+	if code.work != expectedTokenization {
+		t.Errorf("check tokenization for TestTokenPeekLines, we can not go on the test")
+	}
+	index := strings.Index(code.work, "blue are violet")
+	code.SetPos(index)
+	{
+		peeked := code.PeekLines(-1, 1)
+		if peeked != s {
+			t.Errorf("expected %q, got %q\n", s, peeked)
+		}
+	}
+	{
+		peeked := code.PeekLines(0, 1)
+		expected := "blue are violet\nviolet are pi/2"
+		if peeked != expected {
+			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+	{
+		peeked := code.PeekLines(-1, 0)
+		expected := "rose are blue\nblue are violet"
+		if peeked != expected {
+			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+	{
+		peeked := code.PeekLines(-99, 0)
+		expected := "rose are blue\nblue are violet"
+		if peeked != expected {
+			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+	{
+		peeked := code.PeekLines(99, 9, 1, 0)
+		expected := "blue are violet\nviolet are pi/2"
+		if peeked != expected {
+			t.Errorf("expected %q, got %q\n", expected, peeked)
 		}
 	}
 }

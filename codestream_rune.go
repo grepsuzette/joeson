@@ -73,19 +73,32 @@ func (code *RuneStream) PeekRunes(n int) string {
 	return helpers.SliceString(code.text, start, end)
 }
 
-// take a look n lines before or after, don't update position
-func (code *RuneStream) PeekLines(n int) string {
-	start := code.pos
-	end := code.pos
-	if n < 0 {
-		start = code.lineStarts[helpers.Max(0, code.Line()+n)]
-	} else {
-		endLine := helpers.Min(len(code.lineStarts)-1, code.Line()+n)
-		if endLine < len(code.lineStarts)-1 {
-			end = code.lineStarts[endLine+1] - 1
-		} else {
-			end = len(code.text)
+// Take a look n lines before or after, don't update position
+// Negative means to look n lines before, positive means after.
+// It is possible to provide 2 or more arguments.
+// In that case, it will peek from the minimum to the maximum of the
+// series.
+func (code *RuneStream) PeekLines(n ...int) string {
+	if len(n) <= 0 {
+		return ""
+	}
+	min := n[0]
+	max := n[0]
+	for _, n := range n {
+		if n < min {
+			min = n
 		}
+		if n > max {
+			max = n
+		}
+	}
+	start := code.lineStarts[helpers.Max(0, code.Line()+min)]
+	var end int
+	endLine := helpers.Min(len(code.lineStarts)-1, code.Line()+max)
+	if endLine < len(code.lineStarts)-1 {
+		end = code.lineStarts[endLine+1] - 1
+	} else {
+		end = len(code.text)
 	}
 	return helpers.SliceString(code.text, start, end)
 }

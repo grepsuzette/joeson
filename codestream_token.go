@@ -174,23 +174,34 @@ func (code *TokenStream) PeekRunes(n int) string {
 
 // Take a look `n` lines backwards or forwards, depending on the sign of n,
 // return the string contained in the interval made with the current position.
-// PeekLines() is meant for printing purposes only.
+// For TokeStream, PeekLines() is mostly meant for printing purposes.
 // It responds with the original text, not the tokenized one.
-func (code *TokenStream) PeekLines(n int) string {
-	pos := code.coords(code.workOffset).originalOffset
-	start := pos
-	end := pos
-	if n < 0 {
-		start = code.lineStarts[helpers.Max(0, code.Line()+n)]
-	} else {
-		endLine := helpers.Min(len(code.lineStarts)-1, code.Line()+n)
-		if endLine < len(code.lineStarts)-1 {
-			end = code.lineStarts[endLine+1] - 1
-		} else {
-			end = len(code.original)
+// It is possible to provide 2 or more arguments.
+// In that case, it will peek from the minimum to the maximum of the
+// series.
+func (code *TokenStream) PeekLines(n ...int) string {
+	if len(n) <= 0 {
+		return ""
+	}
+	min := n[0]
+	max := n[0]
+	for _, n := range n {
+		if n < min {
+			min = n
+		}
+		if n > max {
+			max = n
 		}
 	}
-	return helpers.SliceString(code.original, start, end) // respond w/ original text
+	start := code.lineStarts[helpers.Max(0, code.Line()+min)]
+	var end int
+	endLine := helpers.Min(len(code.lineStarts)-1, code.Line()+max)
+	if endLine < len(code.lineStarts)-1 {
+		end = code.lineStarts[endLine+1] - 1
+	} else {
+		end = len(code.original)
+	}
+	return helpers.SliceString(code.original, start, end)
 }
 
 // Match string `s` against current position.
