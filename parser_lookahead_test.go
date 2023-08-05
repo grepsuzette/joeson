@@ -19,11 +19,13 @@ func assertError(t *testing.T, ast Ast) {
 }
 
 func TestLookahead(t *testing.T) {
-	gm := GrammarFromLines([]Line{
-		o(named("Input", "foo_followed_by_b 'bar'")),
-		i(named("foo_followed_by_b", "foo ?('b')")), // the 'b' is not consumed (not "captured")
-		i(named("foo", "'foo'")),
-	}, "lookahead")
+	gm := GrammarFromLines(
+		"lookahead",
+		[]Line{
+			o(named("Input", "foo_followed_by_b 'bar'")),
+			i(named("foo_followed_by_b", "foo ?('b')")), // the 'b' is not consumed (not "captured")
+			i(named("foo", "'foo'")),
+		})
 	assertError(t, gm.ParseString("fool"))
 	assertOk(t, gm.ParseString("foobar"))
 	assertError(t, gm.ParseString("foo  bar"))

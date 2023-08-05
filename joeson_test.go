@@ -10,7 +10,10 @@ import (
 
 // just compile the intention grammar
 func TestParseIntention(t *testing.T) {
-	gmIntention := GrammarFromLines(IntentionRules(), "gmIntention")
+	gmIntention := GrammarFromLines(
+		"gmIntention",
+		IntentionRules(),
+	)
 	if !gmIntention.IsReady() || gmIntention.numrules != JoesonNbRules {
 		t.Fail()
 	}
@@ -20,19 +23,19 @@ func TestParseIntention(t *testing.T) {
 // __joeson__ -> __intention__ -> an arbitrary grammar -> parse a string
 func TestBootstrap(t *testing.T) {
 	gmJoeson := NewJoeson()
-	gmIntention := GrammarFromLines(
-		IntentionRules(),
+	gmIntention := GrammarWithOptionsFromLines(
 		"gmIntention",
 		GrammarOptions{LazyGrammar: helpers.LazyFromValue[*Grammar](gmJoeson)},
+		IntentionRules(),
 	)
 	gmJoeson.Bomb() // destroy the grammar to make sure it plays no part below
-	gmDebuglabel := GrammarFromLines(
+	gmDebuglabel := GrammarWithOptionsFromLines(
+		"gmFoo",
+		GrammarOptions{LazyGrammar: helpers.LazyFromValue[*Grammar](gmIntention)},
 		[]Line{
 			o(Named("In", "l:Br")),
 			i(Named("Br", "'Toy' | 'BZ'")),
 		},
-		"gmFoo",
-		GrammarOptions{LazyGrammar: helpers.LazyFromValue[*Grammar](gmIntention)},
 	)
 	gmDebuglabel.PrintRules()
 	ast := gmDebuglabel.ParseString("Toy")
@@ -55,7 +58,10 @@ func TestBootstrap(t *testing.T) {
 func TestManyTimes(t *testing.T) {
 	start := time.Now()
 	nbIter := 100
-	parsedGrammar := GrammarFromLines(IntentionRules(), "gmIntention")
+	parsedGrammar := GrammarFromLines(
+		"gmIntention",
+		IntentionRules(),
+	)
 	var frecurse func(rule Line, indent int, name string)
 	frecurse = func(rule Line, indent int, name string) {
 		switch v := rule.(type) {
@@ -104,13 +110,12 @@ func TestManyTimes(t *testing.T) {
 
 func TestSquareroot(t *testing.T) {
 	gm := GrammarFromLines(
+		"gmSqr",
 		[]Line{
 			o(Named("sqr", "w:word '(' n:int ')'")),
 			i(Named("word", "[a-z]{1,}")),
 			i(Named("int", "/-?[0-9]{1,}/"), func(it Ast) Ast { return NewNativeIntFrom(it) }),
-		},
-		"gmSqr",
-	)
+		})
 	ast := gm.ParseString("squareroot(-1)")
 	if IsParseError(ast) {
 		t.Error(ast.String())
@@ -129,13 +134,17 @@ func TestSquareroot(t *testing.T) {
 }
 
 func Test_LeftRecursion(t *testing.T) {
-	gm := GrammarFromLines([]Line{
-		o(named("Input", "expr:Expression")),
-		i(named("Expression", "Expression _ binary_op _ Expression | UnaryExpr")),
-		i(named("binary_op", "'+'")),
-		i(named("UnaryExpr", "[0-9]+")),
-		i(named("_", "[ \t]*")),
-	}, "leftRecursion", GrammarOptions{TraceOptions: Mute()})
+	gm := GrammarWithOptionsFromLines(
+		"leftRecursion",
+		GrammarOptions{TraceOptions: Mute()},
+		[]Line{
+			o(named("Input", "expr:Expression")),
+			i(named("Expression", "Expression _ binary_op _ Expression | UnaryExpr")),
+			i(named("binary_op", "'+'")),
+			i(named("UnaryExpr", "[0-9]+")),
+			i(named("_", "[ \t]*")),
+		},
+	)
 	res := gm.ParseString("123 + 456")
 	fmt.Println(res.String())
 }
@@ -146,14 +155,15 @@ func TestCapturingStr(t *testing.T) {
 	// This time it should capture all of it.
 	{
 		// to demonstrate str is not captured
-		ast := GrammarFromLines([]Line{o(named("Input", "'0x' [0-9a-f]{2,2}"))}, "gm").ParseString("0x7d")
+		ast := GrammarFromLines("gm",
+			[]Line{o(named("Input", "'0x' [0-9a-f]{2,2}"))}).ParseString("0x7d")
 		if s := ast.(*NativeArray).Concat(); s != "7d" {
 			t.Errorf("for test 1 unexpected result %s", s)
 		}
 	}
 	{
 		// capture str with labels
-		ast := GrammarFromLines([]Line{o(named("Input", "captureMe:'0x' captureMeToo:[0-9a-f]{2,2}"))}, "gm").ParseString("0x7d")
+		ast := GrammarFromLines("gm", []Line{o(named("Input", "captureMe:'0x' captureMeToo:[0-9a-f]{2,2}"))}).ParseString("0x7d")
 		if s := ast.(*NativeMap).Concat(); s != "0x7d" {
 			t.Errorf("for test 2 unexpected result %s", s)
 		}

@@ -19,7 +19,7 @@ import (
 // - Rune literals
 // - String literals
 func TestLexicalElements(t *testing.T) {
-	testParse(t, j.GrammarFromLines(rules_tokens, "go-tokens"), map[string]string{
+	testParse(t, j.GrammarFromLines("go-tokens", rules_tokens), map[string]string{
 		"break":                "keyword",
 		"default":              "keyword",
 		"func":                 "keyword",

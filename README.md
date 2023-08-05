@@ -47,7 +47,7 @@ type TraceOptions struct {
 The first way to enable some verbosity is to build a specific TraceOptions as shown before:
 
 ```go
-gm := joeson.GrammarFromLines(rules, "myGrammarTitle", joeson.GrammarOptions{TraceOptions: joeson.Verbose()})
+gm := joeson.GrammarWithOptionsFromLines( "myGrammarTitle", joeson.GrammarOptions{TraceOptions: joeson.Verbose()}, rules )
 ```
 
 The second way is to set the environment, using `$TRACE` which is read from the tests and controls the tracing. So from the CLI, here is one way to enable traces: `TRACE=all,skipsetup go test . --run=TestSquareroot -v`

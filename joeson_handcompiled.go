@@ -9,13 +9,13 @@ func NewJoeson() *Grammar {
 }
 
 func NewJoesonWithOptions(opts *TraceOptions) *Grammar {
-	gm := GrammarFromLines(
-		JoesonRules(),
+	gm := GrammarWithOptionsFromLines(
 		JoesonGrammarName,
 		GrammarOptions{
 			TraceOptions: opts,
 			LazyGrammar:  nil,
 		},
+		JoesonRules(),
 	)
 	return gm
 }

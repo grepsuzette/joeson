@@ -36,30 +36,36 @@ type GrammarOptions struct {
 // Here is an example:
 // ```
 //
-//	gm := joeson.GrammarFromLines([]joeson.Line{
+//	gm := joeson.GrammarWithOptionsFromLines(
+//		"leftRecursion",
+//		joeson.GrammarOptions{TraceOptions: joeson.Verbose()},
+//		[]joeson.Line{
 //			o(named("Input", "expr:Expression")),
 //			i(named("Expression", "Expression _ binary_op _ Expression | UnaryExpr")),
 //			i(named("binary_op", "'+'")),
 //			i(named("UnaryExpr", "[0-9]+")),
 //			i(named("_", "[ \t]*")),
-//		}, "leftRecursion", joeson.GrammarOptions{TraceOptions: joeson.Verbose()})
+//		},
+//	)
 //
 // ```
-func GrammarFromLines(lines []Line, name string, options ...GrammarOptions) *Grammar {
-	var opts GrammarOptions
-	if len(options) > 0 {
-		opts = options[0]
-		if opts.TraceOptions == nil {
-			opts.TraceOptions = Mute()
-		}
-	} else {
-		opts = GrammarOptions{
+func GrammarFromLines(name string, lines []Line) *Grammar {
+	return GrammarWithOptionsFromLines(
+		name,
+		GrammarOptions{
 			TraceOptions: DefaultTraceOptions(),
 			LazyGrammar:  nil,
-		}
+		},
+		lines,
+	)
+}
+
+func GrammarWithOptionsFromLines(name string, options GrammarOptions, lines []Line) *Grammar {
+	if options.TraceOptions == nil {
+		options.TraceOptions = Mute()
 	}
-	rank := rankFromLines(lines, name, opts)
-	newgm := newEmptyGrammarWithOptions(opts.TraceOptions)
+	rank := rankFromLines(lines, name, options)
+	newgm := newEmptyGrammarWithOptions(options.TraceOptions)
 	newgm.rank = rank
 	newgm.SetRuleName(name)
 	newgm.postinit()

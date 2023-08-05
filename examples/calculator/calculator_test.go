@@ -89,7 +89,7 @@ func eval(first joeson.Ast, rest joeson.Ast) joeson.Ast {
 }
 
 func Test_failing(t *testing.T) {
-	gm := joeson.GrammarFromLines(linesCalc, "calc")
+	gm := joeson.GrammarFromLines("calc", linesCalc)
 	h := map[string]string{
 		"90 (6090)": "Error parsing at char:3",
 		"-(7)":      "Error parsing at char:0",
@@ -110,7 +110,7 @@ func Test_failing(t *testing.T) {
 }
 
 func Test_calc(t *testing.T) {
-	gm := joeson.GrammarFromLines(linesCalc, "calc")
+	gm := joeson.GrammarFromLines("calc", linesCalc)
 	h := map[string]int{
 		"0 + 1":                            1,
 		"0 - 1":                            -1,
@@ -156,8 +156,7 @@ func boldYellow(s string) string { return esc + "[1;33m" + s + reset }
 
 func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
 	t.Helper()
-	// if res, error := joeson.GrammarFromLines(linesCalc, "calc").ParseString(sExpression); error == nil {
-	res := joeson.GrammarFromLines(linesCalc, "calc").ParseString(sExpression)
+	res := joeson.GrammarFromLines("calc", linesCalc).ParseString(sExpression)
 	if joeson.IsParseError(res) {
 		t.Error(res.String())
 	} else {

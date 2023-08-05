@@ -17,7 +17,7 @@ import (
 
 const E = "should not happen" // panic(E)
 
-func grammar() *j.Grammar { return j.GrammarFromLines(grammarRules, "uLisp") }
+func grammar() *j.Grammar { return j.GrammarFromLines("uLisp", grammarRules) }
 
 // REPL using joeson grammar to parse inputs,
 //

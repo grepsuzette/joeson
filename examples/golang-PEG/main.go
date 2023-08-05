@@ -18,14 +18,14 @@ func rules(a ...j.Line) []j.Line                         { return a }
 func named(name string, lineStringOrAst any) j.NamedRule { return j.Named(name, lineStringOrAst) }
 
 func main() {
-	gm_chars := j.GrammarFromLines(rules_chars, "go-characters")
+	gm_chars := j.GrammarFromLines("go-characters", rules_chars)
 	for _, s := range []string{"345678", "aaegeagr", "_"} {
 		ast := gm_chars.ParseString(s)
 		if j.IsParseError(ast) {
 			panic(ast.String())
 		}
 	}
-	gm_tokens := j.GrammarFromLines(rules_tokens, "go-tokens")
+	gm_tokens := j.GrammarFromLines("go-tokens", rules_tokens)
 	gm_tokens.ParseString("aawfe8f2")
 }
 

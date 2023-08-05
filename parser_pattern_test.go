@@ -9,11 +9,13 @@ import (
 func TestPattern(t *testing.T) {
 	{
 		rule := "a*b"
-		gm := GrammarFromLines([]Line{
-			o(named("Input", rule)),
-			i(named("a", "'a'")),
-			i(named("b", "'b'")),
-		}, rule)
+		gm := GrammarFromLines(
+			rule,
+			[]Line{
+				o(named("Input", rule)),
+				i(named("a", "'a'")),
+				i(named("b", "'b'")),
+			})
 		mustParse(t, gm, "", "[]")
 		mustParse(t, gm, "a", "[a]")
 		mustParse(t, gm, "abababababa", "[a,a,a,a,a,a]")
@@ -23,11 +25,13 @@ func TestPattern(t *testing.T) {
 	{
 		rule := "a*b{1,2}"
 		// the {} repetition applies to the whole sequence
-		gm := GrammarFromLines([]Line{
-			o(named("Input", rule)),
-			i(named("a", "'a'")),
-			i(named("b", "'b'")),
-		}, rule)
+		gm := GrammarFromLines(
+			rule,
+			[]Line{
+				o(named("Input", rule)),
+				i(named("a", "'a'")),
+				i(named("b", "'b'")),
+			})
 		mustParse(t, gm, "a", "[a]")
 		mustFail(t, gm, "ab")
 		mustParse(t, gm, "aba", "[a,a]")
@@ -39,11 +43,13 @@ func TestPattern(t *testing.T) {
 		rule := "a*(b{,2})"
 		// the join value is b{,2} here,
 		// this is why we use brackets
-		gm := GrammarFromLines([]Line{
-			o(named("Input", rule)),
-			i(named("a", "'a'")),
-			i(named("b", "'b'")),
-		}, rule)
+		gm := GrammarFromLines(
+			rule,
+			[]Line{
+				o(named("Input", rule)),
+				i(named("a", "'a'")),
+				i(named("b", "'b'")),
+			})
 		mustParse(t, gm, "abbabababbabba")
 	}
 }

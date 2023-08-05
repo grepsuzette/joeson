@@ -7,7 +7,7 @@ import (
 )
 
 func TestCharacters(t *testing.T) {
-	testParse(t, j.GrammarFromLines(rules_chars, "go-chars"), map[string]string{
+	testParse(t, j.GrammarFromLines("go-chars", rules_chars), map[string]string{
 		//<string to parse>: <string beginning by "ERROR" if it must fail>
 		// note:            we leave these type empty "" here,
 		//                  as the rules for 010_chars are still a bit naive.

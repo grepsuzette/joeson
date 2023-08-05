@@ -29,13 +29,16 @@ rulesLR = [
 In go, after some aliases for O, I and Named, avoiding the namespace, we would have:
 
 ```go
-gm := joeson.GrammarFromLines([]joeson.Line{
+gm := joeson.GrammarFromLines(
+    "<some grammar name>", 
+    []joeson.Line{
 		o(named("Input", "expr:Expression")),
 		i(named("Expression", "Expression _ binary_op _ Expression | UnaryExpr")),
 		i(named("binary_op", "'+'")),
 		i(named("UnaryExpr", "[0-9]+")),
 		i(named("_", "[ \t]*")),
-	}
+	},
+)
 ```
 
 The coffeescript implementation only had `Iline` and `Oline`. A few new line types were introduced in go, here they are:

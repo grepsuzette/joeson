@@ -7,10 +7,10 @@ import (
 )
 
 func TestTypes(t *testing.T) {
-	gm := j.GrammarFromLines(rules(
+	gm := j.GrammarFromLines("go-types-and-exprs", rules(
 		o(named("Type", partial_rules_types)),
 		o(named("Expression", partial_rules_expressions)),
-	), "go-types-and-exprs")
+	))
 
 	test(t, gm, "[32]byte", "ArrayType")
 	test(t, gm, "[]32byte", "ERROR ")

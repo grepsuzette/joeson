@@ -236,14 +236,15 @@ func TestExpectedTokenization(t *testing.T) {
 
 // have a small grammar, parse many small tokenized go expressions parsed
 func TestMiniatures(t *testing.T) {
-	gm := GrammarFromLines([]Line{
-		o(named("Input", rules(
-			o(named("Number", "[0-9]+ term")),
-			o(named("LnChar", "/'[^']+'/ term")),
-		))),
-		i(named("term", "';' '\n'*")),
-	}, "miniatures")
-
+	gm := GrammarFromLines(
+		"miniatures",
+		[]Line{
+			o(named("Input", rules(
+				o(named("Number", "[0-9]+ term")),
+				o(named("LnChar", "/'[^']+'/ term")),
+			))),
+			i(named("term", "';' '\n'*")),
+		})
 	ter := ";\n"
 	for _, a := range [][]string{
 		{"1234", "1234" + ter, "1234"},
