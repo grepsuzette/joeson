@@ -19,6 +19,9 @@ func NewNativeIntFromString(s string) NativeInt {
 	}
 }
 
+// creates a NativeInt from, possibly: 1. a NativeString.
+// 2. a NativeArray of NativeString.
+// It panics if necessary.
 func NewNativeIntFrom(x Ast) NativeInt {
 	switch v := x.(type) {
 	case NativeString:

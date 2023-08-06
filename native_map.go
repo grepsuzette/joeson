@@ -2,6 +2,7 @@ package joeson
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/grepsuzette/joeson/helpers"
@@ -104,12 +105,23 @@ func (nm *NativeMap) GetStringExists(k string) (string, bool) {
 	}
 }
 
-// specialized getter when value is known to be a NativeInt.
-// It panics when it is NOT a NativeInt. The returned bool is
-// false whenever the given string is not a key.
+// specialized getter when value is known to an int.
+// It panics when the key exists but when it can not retrieve an int.
+// The returned bool is false whenever the given string is not a key.
 func (nm *NativeMap) GetIntExists(k string) (int, bool) {
-	if v, exists := nm.vals[k]; exists {
-		return v.(NativeInt).Int(), true
+	if ast, exists := nm.vals[k]; exists {
+		switch v := ast.(type) {
+		case NativeInt:
+			return v.Int(), true
+		case NativeString:
+			if n, e := strconv.Atoi(v.Str); e == nil {
+				return n, true
+			} else {
+				panic("Could not Atoi(" + v.Str + "): " + e.Error())
+			}
+		default:
+			panic("Could not get Int from " + ast.String())
+		}
 	} else {
 		return 0, false
 	}
