@@ -88,8 +88,6 @@ func (gm *Grammar) ParseString(s string) Ast {
 	))
 }
 
-// When you have a lexer available, you may parse
-// the tokenized input against the grammar.
 func (gm *Grammar) ParseTokens(tokens *TokenStream) Ast {
 	return gm.Parse(newParseContext(
 		tokens,

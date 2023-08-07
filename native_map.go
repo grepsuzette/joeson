@@ -119,6 +119,12 @@ func (nm *NativeMap) GetIntExists(k string) (int, bool) {
 			} else {
 				panic("Could not Atoi(" + v.Str + "): " + e.Error())
 			}
+		case *NativeArray:
+			if n, e := strconv.Atoi(v.Concat()); e == nil {
+				return n, true
+			} else {
+				panic("Could not Atoi(" + v.Concat() + "): " + e.Error())
+			}
 		default:
 			panic("Could not get Int from " + ast.String())
 		}
