@@ -12,7 +12,7 @@ type (
 	frame struct {
 		result    Ast
 		endpos    helpers.NilableInt
-		loopstage helpers.NilableInt
+		loopstage int    // -1 means not set
 		wipemask  []bool // len = ctx.grammar.numRules
 		pos       int
 		id        int
@@ -36,11 +36,12 @@ func (fr *frame) cacheSet(result Ast, endpos int) {
 
 func newFrame(pos int, id int) *frame {
 	return &frame{
-		result:   nil,
-		pos:      pos,
-		id:       id,
-		wipemask: nil,
-		param:    nil,
+		result:    nil,
+		pos:       pos,
+		id:        id,
+		loopstage: -1,
+		wipemask:  nil,
+		param:     nil,
 	}
 }
 
@@ -93,10 +94,10 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 		}
 		frame := ctx.getFrame(x)
 		startPos := ctx.Code.Pos()
-		if !frame.loopstage.IsSet {
-			frame.loopstage.Set(0)
+		if frame.loopstage < 0 {
+			frame.loopstage = 0
 		}
-		switch frame.loopstage.Int {
+		switch frame.loopstage { // TODO create enum
 		case 0: // non-recursive (so far)
 			// The only time a cache hit will simply return is when loopStage is 0
 			if frame.endpos.IsSet {
@@ -114,12 +115,12 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 				ctx.Code.SetPos(frame.endpos.Int)
 				return frame.result
 			}
-			frame.loopstage.Set(1)
+			frame.loopstage = 1
 			frame.cacheSet(nil, -1)
 			result := fparse(ctx)
-			switch frame.loopstage.Int {
+			switch frame.loopstage {
 			case 1: // non-recursive (i.e. done)
-				frame.loopstage.Set(0)
+				frame.loopstage = 0
 				frame.cacheSet(result, ctx.Code.Pos())
 				if opts.Stack {
 					s := Cyan("`-set:") + " "
@@ -138,11 +139,11 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 					if opts.Stack {
 						ctx.log(Yellow("`--- loop nil --- "), opts)
 					}
-					frame.loopstage.Set(0)
+					frame.loopstage = 0
 					// cacheSet(frame, nil) // unneeded (already nil)
 					return result
 				} else {
-					frame.loopstage.Set(3)
+					frame.loopstage = 3
 					if opts.Loop && ((opts.FilterLine < 0) || ctx.Code.Line() == opts.FilterLine) {
 						ctx.loopStackPush(x.GetRuleName())
 						// if false {
@@ -204,15 +205,15 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 						ctx.log(Yellow("`--- loop done! --- ")+"best result: "+helpers.Escape(bestResult.String()), opts)
 					}
 					// Step 4: return best result, which will get cached
-					frame.loopstage.Set(0)
+					frame.loopstage = 0
 					return bestResult
 				}
 			default:
-				panic("Unexpected stage " + strconv.Itoa(frame.loopstage.Int))
+				panic("Unexpected stage " + strconv.Itoa(frame.loopstage))
 			}
 		case 1, 2, 3:
-			if frame.loopstage.Int == 1 {
-				frame.loopstage.Set(2) // recursion detected
+			if frame.loopstage == 1 {
+				frame.loopstage = 2 // recursion detected
 				// ctx.log("left Recursion detected", opts)
 			}
 			// Step 1: Collect wipemask so we can wipe the frames later.
@@ -243,7 +244,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 			}
 			return frame.result
 		default:
-			panic("Unexpected stage " + strconv.Itoa(frame.loopstage.Int) + " (B)")
+			panic("Unexpected stage " + strconv.Itoa(frame.loopstage) + " (B)")
 		}
 		return nil
 	}
