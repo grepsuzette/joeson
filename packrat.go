@@ -11,8 +11,8 @@ import (
 type (
 	frame struct {
 		result    Ast
-		endpos    helpers.NilableInt
-		loopstage int    // -1 means not set
+		endpos    int    // -1 means not set
+		loopstage int    // -1 means not set TODO enum
 		wipemask  []bool // len = ctx.grammar.numRules
 		pos       int
 		id        int
@@ -28,9 +28,9 @@ func (f frame) toString() string {
 func (fr *frame) cacheSet(result Ast, endpos int) {
 	fr.result = result
 	if endpos < 0 {
-		fr.endpos.Unset()
+		fr.endpos = -1
 	} else {
-		fr.endpos.Set(endpos)
+		fr.endpos = endpos
 	}
 }
 
@@ -40,6 +40,7 @@ func newFrame(pos int, id int) *frame {
 		pos:       pos,
 		id:        id,
 		loopstage: -1,
+		endpos:    -1,
 		wipemask:  nil,
 		param:     nil,
 	}
@@ -100,7 +101,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 		switch frame.loopstage { // TODO create enum
 		case 0: // non-recursive (so far)
 			// The only time a cache hit will simply return is when loopStage is 0
-			if frame.endpos.IsSet {
+			if frame.endpos >= 0 {
 				if opts.Stack {
 					if frame.result != nil {
 						s := ""
@@ -112,7 +113,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 						ctx.log(Cyan("`-hit:")+" nil", opts)
 					}
 				}
-				ctx.Code.SetPos(frame.endpos.Int)
+				ctx.Code.SetPos(frame.endpos)
 				return frame.result
 			}
 			frame.loopstage = 1
@@ -239,8 +240,8 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 				frame.wipemask[i_frame.id] = true
 			}
 			// Step 2: Return whatever was cacheSet.
-			if frame.endpos.IsSet {
-				ctx.Code.SetPos(frame.endpos.Int)
+			if frame.endpos >= 0 {
+				ctx.Code.SetPos(frame.endpos)
 			}
 			return frame.result
 		default:
