@@ -1,6 +1,7 @@
 package joeson
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -26,8 +27,15 @@ func NewRuneStream(text string) CodeStream {
 	return &RuneStream{text, 0, lineStarts}
 }
 
-func (code *RuneStream) Pos() int     { return code.pos }
-func (code *RuneStream) SetPos(n int) { code.pos = n }
+func (code *RuneStream) Pos() int { return code.pos }
+func (code *RuneStream) SetPos(n int) {
+	// TODO for now there is a tolerance (we allow n == len(code.text))
+	// because current algo in packrat uses it. Remove it ASAP
+	if n < 0 || n > len(code.text) {
+		panic(fmt.Sprintf("%d is out of bound", n))
+	}
+	code.pos = n
+}
 
 func (code *RuneStream) PosToLine(pos int) int { return helpers.BisectRight(code.lineStarts, pos) - 1 }
 func (code *RuneStream) PosToCol(pos int) int  { return pos - code.lineStarts[code.PosToLine(pos)] }
@@ -76,11 +84,13 @@ func (code *RuneStream) PeekRunes(n int) string {
 // Take a look n lines before or after, don't update position
 // Negative means to look n lines before, positive means after.
 // It is possible to provide 2 or more arguments.
-// In that case, it will peek from the minimum to the maximum of the
-// series.
+// In that case, it will peek from the minimum to the maximum of the series.
+// When only 1 value is given, a second value of 0 is implied to create a range.
 func (code *RuneStream) PeekLines(n ...int) string {
 	if len(n) <= 0 {
 		return ""
+	} else if len(n) == 1 {
+		n = []int{n[0], 0} // implied 0
 	}
 	min := n[0]
 	max := n[0]

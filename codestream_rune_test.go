@@ -90,6 +90,10 @@ func TestPeekLines(t *testing.T) {
 	index := strings.Index(code.Code(), "blue are violet")
 	code.SetPos(index)
 	{
+		assertPanics(t, func() { code.SetPos(-1) })
+		assertPanics(t, func() { code.SetPos(9999999) })
+	}
+	{
 		peeked := code.PeekLines(-1, 1)
 		if peeked != s {
 			t.Errorf("expected %q, got %q\n", s, peeked)

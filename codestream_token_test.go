@@ -33,6 +33,23 @@ const source = `
 	}
 	`
 
+func assertPanics(t *testing.T /*, contains string*/, f func()) {
+	t.Helper()
+	panicked := false
+	defer func() {
+		if e := recover(); e != nil {
+			panicked = true
+			// if !strings.Contains(e.String(), contains) {
+			// 	t.Errorf("Got a panic as expected, but it didn't contain %q, instead we got %q", contains, e.Error())
+			// }
+		}
+	}()
+	f()
+	if !panicked {
+		t.Error("Should have panicked")
+	}
+}
+
 func testHas(t *testing.T, code *TokenStream, f found) {
 	t.Helper()
 	s := "Searching '" + f.search + "' "
@@ -301,6 +318,10 @@ func TestTokenPeekLines(t *testing.T) {
 	index := strings.Index(code.work, "blue are violet")
 	code.SetPos(index)
 	{
+		assertPanics(t, func() { code.SetPos(-1) })
+		assertPanics(t, func() { code.SetPos(99999999) })
+	}
+	{
 		peeked := code.PeekLines(-1, 1)
 		if peeked != s {
 			t.Errorf("expected %q, got %q\n", s, peeked)
@@ -328,7 +349,34 @@ func TestTokenPeekLines(t *testing.T) {
 		}
 	}
 	{
-		peeked := code.PeekLines(99, 9, 1, 0)
+		peeked := code.PeekLines(9, 1, 0)
+		expected := "blue are violet\nviolet are pi/2"
+		if peeked != expected {
+			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+	{
+		code.SetPos(0)
+		peeked := code.PeekLines(-99, 0)
+		expected := "rose are blue"
+		if peeked != expected {
+			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+	{
+		assertPanics(t, func() { code.SetPos(99999999) })
+	}
+	{
+		code.SetPos(code.workLength() - 1) // at last position
+		peeked := code.PeekLines(0)        // i.e. current line
+		expected := "violet are pi/2"
+		if peeked != expected {
+			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+	{
+		code.SetPos(code.workLength() - 1) // at last position
+		peeked := code.PeekLines(0, -1)    // i.e. current and previous lines
 		expected := "blue are violet\nviolet are pi/2"
 		if peeked != expected {
 			t.Errorf("expected %q, got %q\n", expected, peeked)

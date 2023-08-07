@@ -100,8 +100,8 @@ func (ts *TokenStream) Pos() int {
 
 // `Pos` here means the offset in the tokenized string (AKA workOffset)
 func (ts *TokenStream) SetPos(n int) {
-	if n > len(ts.work) {
-		panic("assert")
+	if n < 0 || n >= len(ts.work) {
+		panic(fmt.Sprintf("%d is out of bound", n))
 	}
 	ts.workOffset = n
 }
@@ -172,16 +172,15 @@ func (code *TokenStream) PeekRunes(n int) string {
 	return helpers.SliceString(code.work, start, end)
 }
 
-// Take a look `n` lines backwards or forwards, depending on the sign of n,
-// return the string contained in the interval made with the current position.
-// For TokeStream, PeekLines() is mostly meant for printing purposes.
-// It responds with the original text, not the tokenized one.
-// It is possible to provide 2 or more arguments.
-// In that case, it will peek from the minimum to the maximum of the
-// series.
+// Extract the string contained at lines [least(n...)+currentLine; greatest(n...)+currentLine], backwards or forwards,
+// When only 1 value is given, a second value of 0 is implied to create a range.
+// For TokenStream, PeekLines() is mostly meant for printing purposes;
+// it responds with the original text, not the tokenized one.
 func (code *TokenStream) PeekLines(n ...int) string {
-	if len(n) <= 0 {
-		return ""
+	if len(n) == 0 {
+		n = []int{0}
+	} else if len(n) == 1 {
+		n = []int{n[0], 0} // implied 0
 	}
 	min := n[0]
 	max := n[0]
