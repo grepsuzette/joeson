@@ -100,7 +100,9 @@ func (ts *TokenStream) Pos() int {
 
 // `Pos` here means the offset in the tokenized string (AKA workOffset)
 func (ts *TokenStream) SetPos(n int) {
-	if n < 0 || n >= len(ts.work) {
+	// TODO for now there is a tolerance (we allow n == len(code.text))
+	// because current algo in packrat uses it. Remove it ASAP
+	if n < 0 || n > len(ts.work) {
 		panic(fmt.Sprintf("%d is out of bound", n))
 	}
 	ts.workOffset = n
