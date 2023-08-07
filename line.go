@@ -153,7 +153,7 @@ func getRule(
 		panic("assert") // ILine is impossible here
 	case OLine:
 		v.ParseOptions = attrs
-		answer = v.toRule(rank_, parentRule, oLineByIndexOrName{name: name}, opts, lazyGrammar)
+		answer = v.toRule(rank_, parentRule, oLineNaming{name: name}, opts, lazyGrammar)
 		answer.SetRuleNameWhenEmpty(name)
 		// answer.(gnode).gnode().ParseOptions = attrs
 	case sLine:

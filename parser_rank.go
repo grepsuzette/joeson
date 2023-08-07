@@ -32,9 +32,7 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 	rank := newEmptyRank(rankname)
 	for _, line := range lines {
 		if ol, ok := line.(OLine); ok {
-			choice := ol.toRule(rank, rank, oLineByIndexOrName{
-				index: helpers.NewNilableInt(rank.Length()),
-			}, options.TraceOptions, lazyGm)
+			choice := ol.toRule(rank, rank, oLineNaming{index: rank.Length()}, options.TraceOptions, lazyGm)
 			rank.Append(choice)
 		} else if il, ok := line.(ILine); ok {
 			name, rule := il.toRule(rank, rank, options.TraceOptions, lazyGm)

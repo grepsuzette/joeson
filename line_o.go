@@ -13,9 +13,12 @@ type OLine struct {
 	*ParseOptions
 }
 
-type oLineByIndexOrName struct {
+// In a rank, with a parent "foo", unnamed rules get automatically called
+// "foo[0]", "foo[1]"...
+// This is the struct transmitting the naming decision to OLine.toRule
+type oLineNaming struct {
 	name  string
-	index helpers.NilableInt
+	index int // -1 if unset
 }
 
 /*
@@ -52,7 +55,7 @@ func (ol OLine) stringIndent(nIndent int) string {
 func (ol OLine) toRule(
 	rank_ *rank,
 	parentRule Parser,
-	by oLineByIndexOrName,
+	by oLineNaming,
 	opts *TraceOptions,
 	lazyGrammar *helpers.Lazy[*Grammar],
 ) Parser {
@@ -63,8 +66,8 @@ func (ol OLine) toRule(
 		name = ol.name // named rule
 	} else if by.name != "" {
 		name = by.name
-	} else if by.index.IsSet && parentRule != nil { // unamed OLine by index, will produce names like foo[0], foo[1], foo[2]
-		name = parentRule.GetRuleName() + "[" + strconv.Itoa(by.index.Int) + "]"
+	} else if by.index > -1 && parentRule != nil { // unamed OLine by index, will produce names like foo[0], foo[1], foo[2]
+		name = parentRule.GetRuleName() + "[" + strconv.Itoa(by.index) + "]"
 	} else {
 		panic("assert")
 	}
