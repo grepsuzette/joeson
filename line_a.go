@@ -13,11 +13,15 @@ type ALine struct {
 
 func NewALine(a []Line) ALine     { return ALine{a} }
 func (al ALine) lineType() string { return "a" }
+
 func (al ALine) stringIndent(nIndent int) string {
-	return BoldBlue("[\n") + strings.Join(
-		helpers.AMap(al.Array, func(line Line) string {
-			return line.stringIndent(nIndent + 1)
-		}),
-		"\n",
-	) + "\n" + helpers.Indent(nIndent) + BoldBlue("]")
+	var b strings.Builder
+	b.WriteString(BoldBlue("[\n"))
+	for _, line := range al.Array {
+		b.WriteString(line.stringIndent(nIndent + 1))
+		b.WriteString("\n")
+	}
+	b.WriteString(helpers.Indent(nIndent))
+	b.WriteString(BoldBlue("]"))
+	return b.String()
 }

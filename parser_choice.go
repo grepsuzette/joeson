@@ -2,8 +2,6 @@ package joeson
 
 import (
 	"strings"
-
-	"github.com/grepsuzette/joeson/helpers"
 )
 
 type choice struct {
@@ -20,7 +18,15 @@ func newEmptyChoice() *choice {
 
 func newChoice(it Ast) *choice {
 	if a, ok := it.(*NativeArray); ok {
-		ch := &choice{newAttr(), newGNode(), helpers.AMap(a.Array, func(ast Ast) Parser { return ast.(Parser) })}
+		var parsers []Parser
+		for _, ast := range a.Array {
+			parsers = append(parsers, ast.(Parser))
+		}
+		ch := &choice{
+			newAttr(),
+			newGNode(),
+			parsers,
+		}
 		ch.gnodeimpl.node = ch
 		return ch
 	} else {
@@ -61,8 +67,14 @@ func (ch *choice) Parse(ctx *ParseContext) Ast {
 func (ch *choice) String() string {
 	var b strings.Builder
 	b.WriteString(Blue("("))
-	a := helpers.AMap(ch.choices, func(x Parser) string { return String(x) })
-	b.WriteString(strings.Join(a, Blue(" | ")))
+	first := true
+	for _, x := range ch.choices {
+		if !first {
+			b.WriteString(Blue(" | "))
+		}
+		b.WriteString(String(x))
+		first = false
+	}
 	b.WriteString(Blue(")"))
 	return b.String()
 }

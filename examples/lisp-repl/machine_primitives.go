@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"math"
-
-	"github.com/grepsuzette/joeson/helpers"
 )
 
 // (car (1 2 3)) is 1
@@ -213,7 +211,10 @@ func define(m Machine, a List) Expr {
 		panic(syntax + ": missing funName")
 	}
 	funName := def.List[0].MustStringOrOperator()
-	argNames := helpers.AMap(def.List[1:], func(x Expr) string { return x.MustStringOrOperator() })
+	var argNames []string
+	for _, x := range def.List[1:] {
+		argNames = append(argNames, x.MustStringOrOperator())
+	}
 	expr := a.List[1]
 	delete((*m.aliases), funName) // Contract: If an alias exists with this name, it will be deleted before.
 	// when funName is called, we are to return evaluation of expr,
@@ -244,9 +245,10 @@ func substArgsInExpr(args map[string]Expr, expr Expr) Expr {
 			return expr
 		}
 	case kindList:
-		us := helpers.AMap(expr.List.List, func(subexpr Expr) Expr {
-			return substArgsInExpr(args, subexpr)
-		})
+		var us []Expr
+		for _, subexpr := range expr.List.List {
+			us = append(us, substArgsInExpr(args, subexpr))
+		}
 		return Expr{attr{}, kindList, "", 0, list(us...), ""}
 	default:
 		panic("unhandled kind")

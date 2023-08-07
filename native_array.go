@@ -14,10 +14,7 @@ a much more dynamic language.
 */
 
 import (
-	// "reflect"
 	"strings"
-
-	"github.com/grepsuzette/joeson/helpers"
 )
 
 // Native* types implement Ast.
@@ -41,7 +38,18 @@ func NewNativeArray(a []Ast) *NativeArray {
 func (na *NativeArray) Get(i int) Ast { return na.Array[i] }
 func (na *NativeArray) Length() int   { return len(na.Array) }
 func (na *NativeArray) String() string {
-	return "[" + strings.Join(helpers.AMap(na.Array, func(x Ast) string { return x.String() }), ",") + "]"
+	var b strings.Builder
+	b.WriteString("[")
+	first := true
+	for _, it := range na.Array {
+		if !first {
+			b.WriteString(",")
+		}
+		b.WriteString(it.String())
+		first = false
+	}
+	b.WriteString("]")
+	return b.String()
 }
 
 // `["a","","bc"]` -> `"abc"`
