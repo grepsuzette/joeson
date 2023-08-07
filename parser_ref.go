@@ -68,7 +68,7 @@ func (x *ref) Parse(ctx *ParseContext) Ast {
 	return wrap(func(ctx *ParseContext, _ Parser) Ast {
 		node := x.grammar.getRule(x.ref)
 		if node == nil {
-			return NewParseError(ctx, "Grammar has a reference to a type '"+x.ref+"' which is NOT defined")
+			panic("Grammar has a reference to a type '" + x.ref + "' which is NOT defined")
 		} else {
 			ctx.stackPeek(0).param = x.param
 			return node.Parse(ctx)
