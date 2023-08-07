@@ -63,10 +63,14 @@ func (rank *rank) HandlesChildLabel() bool { return false }
 func (rank *rank) String() string {
 	var b strings.Builder
 	b.WriteString(Blue("Rank("))
-	a := helpers.AMap(rank.choice.choices, func(x Parser) string {
-		return Red(x.GetRuleName())
-	})
-	b.WriteString(strings.Join(a, Blue(",")))
+	first := true
+	for _, it := range rank.choice.choices {
+		if !first {
+			b.WriteString(Blue(","))
+		}
+		b.WriteString(Red(it.GetRuleName()))
+		first = false
+	}
 	b.WriteString(Blue(")"))
 	return b.String()
 }
