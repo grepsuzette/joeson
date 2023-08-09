@@ -268,11 +268,14 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 			}
 			if gn.CbBuilder != nil {
 				result = gn.CbBuilder(result, ctx, caller)
+				if result == nil {
+					return nil
+				}
 			}
 			// set origin
 			// TODO check original coffee implementation,
-			//      there was a subtletly here that didn't
-			//      translate yet here:
+			//      not sure if entirely correct.
+			//      This only is for debugging anyway
 			result.SetOrigin(Origin{
 				Code:     ctx.Code.Code(),
 				Start:    ctx.stackPeek(0).pos,
