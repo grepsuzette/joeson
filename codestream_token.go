@@ -12,6 +12,9 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
+// In retrospect the code is too identical to RuneStream to justify another
+// implementation. Can improve that
+
 // TokenStream allows matching against tokenkized texts.
 // User can provide tokens produced from an original text.
 // Two systems of source coordinates exist then (token-space, original-space).
@@ -239,7 +242,7 @@ func (code *TokenStream) MatchRune(f func(rune) bool) (didMatch bool, m rune) {
 // didMatch indicates whether is succeeded
 // in which case the match is in `m`
 func (code *TokenStream) MatchString(s string) (didMatch bool, m string) {
-	if s != helpers.SliceString(code.work, code.workOffset, code.workOffset+len(s)) {
+	if s != code.work[code.workOffset:helpers.Min(code.workOffset+len(s), len(code.work))] {
 		return false, ""
 	} else {
 	}
@@ -257,7 +260,9 @@ func (code *TokenStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string)
 		if firstMatchLoc[0] != 0 {
 			return false, ""
 		} else {
-			s := helpers.SliceString(code.work, code.workOffset+firstMatchLoc[0], code.workOffset+firstMatchLoc[1])
+			from := code.workOffset + firstMatchLoc[0]
+			to := helpers.Min(code.workOffset+firstMatchLoc[1], len(code.work))
+			s := code.work[from:to]
 			code.workOffset += firstMatchLoc[1]
 			return true, s
 		}

@@ -114,7 +114,7 @@ func (code *RuneStream) PeekLines(n ...int) string {
 // didMatch indicates whether is succeeded
 // in which case the match is in `m`
 func (code *RuneStream) MatchString(s string) (didMatch bool, m string) {
-	if s != helpers.SliceString(code.text, code.pos, code.pos+len(s)) {
+	if s != code.text[code.pos:helpers.Min(code.pos+len(s), len(code.text))] {
 		return false, ""
 	}
 	code.pos += len(s)
@@ -131,7 +131,9 @@ func (code *RuneStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string) 
 		if firstMatchLoc[0] != 0 {
 			return false, ""
 		} else {
-			s := helpers.SliceString(code.text, code.pos+firstMatchLoc[0], code.pos+firstMatchLoc[1])
+			from := code.pos + firstMatchLoc[0]
+			to := helpers.Min(code.pos+firstMatchLoc[1], len(code.text))
+			s := code.text[from:to]
 			code.pos += firstMatchLoc[1]
 			return true, s
 		}
