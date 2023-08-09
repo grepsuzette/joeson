@@ -85,6 +85,32 @@ func TestRuneStreamPosToLine(t *testing.T) {
 	}
 }
 
+func TestRuneStreamPeekRunes(t *testing.T) {
+	abc := NewRuneStream("abc一二三αβγ")
+	abc.MatchString("abc一")
+	if abc.Pos() != 6 { // should be positionned at '二'
+		t.Errorf(fmt.Sprintf("invalid pos: %d", abc.Pos()))
+	}
+	eq_str(t, abc.PeekRunes(-1), "一")
+	eq_str(t, abc.PeekRunes(-2), "c一")
+	eq_str(t, abc.PeekRunes(-3), "bc一")
+	eq_str(t, abc.PeekRunes(-4), "abc一")
+	eq_str(t, abc.PeekRunes(-10), "abc一")
+	eq_str(t, abc.PeekRunes(0), "")
+	if abc.Pos() != 6 { // should not have moved
+		t.Errorf(fmt.Sprintf("invalid pos: %d", abc.Pos()))
+	}
+	eq_str(t, abc.PeekRunes(1), "二")
+	eq_str(t, abc.PeekRunes(2), "二三")
+	eq_str(t, abc.PeekRunes(3), "二三α")
+	eq_str(t, abc.PeekRunes(4), "二三αβ")
+	eq_str(t, abc.PeekRunes(5), "二三αβγ")
+	eq_str(t, abc.PeekRunes(10), "二三αβγ")
+	if abc.Pos() != 6 { // should not have moved
+		t.Errorf(fmt.Sprintf("invalid pos: %d", abc.Pos()))
+	}
+}
+
 func TestRuneStreamPeekLines(t *testing.T) {
 	s := "rose are blue\nblue are violet\nviolet are pi/2"
 	code := NewRuneStream(s)

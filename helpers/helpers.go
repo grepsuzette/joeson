@@ -3,6 +3,7 @@ package helpers
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"golang.org/x/exp/constraints"
 )
@@ -130,4 +131,44 @@ func BoolToString(b bool) string {
 	} else {
 		return "n"
 	}
+}
+
+// take last `nTake` runes from `abc`, in natural order. ("abc", 2) -> "bc"
+// When nTake is more than the number of available runes, return all of them.
+// If RuneError at some point, panic.
+func LastNRunes(abc string, nTake int) string {
+	totalSize := 0 // size in bytes
+	slice := abc
+	for nTake > 0 {
+		if len(slice) == 0 {
+			break
+		}
+		c, csize := utf8.DecodeLastRuneInString(slice)
+		if c == utf8.RuneError {
+			panic(fmt.Sprintf("RuneError: %q\n", c))
+		}
+		totalSize += csize // csize is char len in bytes for rune c
+		slice = slice[:len(slice)-csize]
+		nTake--
+	}
+	return abc[len(abc)-totalSize:]
+}
+
+// take last `nTake` runes from `abc` in reverse order. ("abc", 2) -> "cb"
+func LastNRunesReversed(abc string, nTake int) string {
+	if nTake < 0 {
+		return ""
+	}
+	_, sizeinit := utf8.DecodeLastRuneInString(abc)
+	slice := abc
+	var b strings.Builder
+	for i := len(abc) - sizeinit; i >= len(abc)-sizeinit-nTake+1; i-- {
+		r, size := utf8.DecodeLastRuneInString(slice)
+		if r == utf8.RuneError {
+			break
+		}
+		b.WriteRune(r)
+		slice = slice[:len(slice)-size]
+	}
+	return b.String()
 }

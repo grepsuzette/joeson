@@ -152,15 +152,22 @@ func (code *TokenStream) GetUntil(end string) string {
 
 // Take a look `n` runes backwards or forwards, depending on the sign of n,
 // return the string contained in the interval made with the current position.
+// don't update position
 func (code *TokenStream) PeekRunes(n int) string {
-	start := code.workOffset
-	end := code.workOffset
-	if n < 0 {
-		start += n
+	if n <= 0 {
+		return helpers.LastNRunes(code.work[:code.workOffset], -n)
 	} else {
-		end += n
+		var b strings.Builder
+		i := 0
+		for _, rune := range code.work[code.workOffset:] {
+			b.WriteRune(rune)
+			i++
+			if i >= n {
+				break
+			}
+		}
+		return b.String()
 	}
-	return helpers.SliceString(code.work, start, end)
 }
 
 // Extract the string contained at lines [least(n...)+currentLine; greatest(n...)+currentLine], backwards or forwards,

@@ -104,3 +104,18 @@ func TestIndent(t *testing.T) {
 	eq_str(t, Indent(2), "    ")
 	eq_str(t, Indent(3), "      ")
 }
+
+func TestLastNRunesReversed(t *testing.T) {
+	abc := "a零γ"
+	eq_str(t, LastNRunesReversed(abc, -1), "")
+	eq_str(t, LastNRunesReversed(abc, 0), "")
+	eq_str(t, LastNRunesReversed(abc, 1), "γ")
+	eq_str(t, LastNRunesReversed(abc, 2), "γ零")
+	eq_str(t, LastNRunesReversed(abc, 3), "γ零a")
+	eq_str(t, LastNRunesReversed(abc, 4), "γ零a")
+	eq_str(t, LastNRunesReversed(abc, 5), "γ零a")
+	eq_str(t, LastNRunesReversed(abc, 6), "γ零a")
+	eq_str(t, LastNRunesReversed(abc, 7), "γ零a")
+	eq_str(t, LastNRunesReversed(abc, 8), "γ零a")
+	eq_str(t, LastNRunesReversed(abc, 9), "γ零a")
+}

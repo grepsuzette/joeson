@@ -62,14 +62,20 @@ func (code *RuneStream) GetUntil(end string) string {
 
 // take a look n runes before or after, don't update position
 func (code *RuneStream) PeekRunes(n int) string {
-	start := code.pos
-	end := code.pos
-	if n < 0 {
-		start += n
+	if n <= 0 {
+		return helpers.LastNRunes(code.text[:code.pos], -n)
 	} else {
-		end += n
+		var b strings.Builder
+		i := 0
+		for _, rune := range code.text[code.pos:] {
+			b.WriteRune(rune)
+			i++
+			if i >= n {
+				break
+			}
+		}
+		return b.String()
 	}
-	return helpers.SliceString(code.text, start, end)
 }
 
 // Take a look n lines before or after, don't update position
