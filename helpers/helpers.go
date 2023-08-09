@@ -93,7 +93,7 @@ func Max[T constraints.Ordered](a, b T) T {
 	return b
 }
 
-// SliceString must act similar to javascript "string".slice(start, end)
+// [Deprecated] SliceString must act similar to javascript "string".slice(start, end)
 // indexStart: The index of the first character to include in the returned substring.
 // indexEnd: The index of the first character to exclude from the returned substring.
 // slice() extracts up to but not including indexEnd. For example, str.slice(1, 4)
