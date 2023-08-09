@@ -124,10 +124,6 @@ func SliceString(s string, indexStart int, indexEnd int) string {
 	return s[indexStart:indexEnd]
 }
 
-func SliceStringFrom(s string, start int) string {
-	return SliceString(s, start, len(s))
-}
-
 func BoolToString(b bool) string {
 	if b {
 		return "y"
