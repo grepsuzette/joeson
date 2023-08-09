@@ -16,9 +16,8 @@ type CodeStream interface {
 	Length() int  // len(Code())
 
 	GetUntil(end string) string // Get until the string `end` is encountered.  Change current position accordingly, including the string
-	GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string
-	PeekRunes(n int) string    // TODO multiargs like PeekLines  // e.g. -3 to peek 3 runes back. 2 to peek 2 runes forward. Does not change position.
-	PeekLines(n ...int) string // Peeks a range of lines relative to current one. A range is built from ...int. Empty peeks current line. When 1 parameter is given a second 0 is implied. E.g. PeekLines(-1, 2), 2 to peek 2 lines forward. -1 to peek 1 line backwards. You may pass more args, the min and max of the series will be used.
+	PeekRunes(n int) string     // TODO multiargs like PeekLines  // e.g. -3 to peek 3 runes back. 2 to peek 2 runes forward. Does not change position.
+	PeekLines(n ...int) string  // Peeks a range of lines relative to current one. A range is built from ...int. Empty peeks current line. When 1 parameter is given a second 0 is implied. E.g. PeekLines(-1, 2), 2 to peek 2 lines forward. -1 to peek 1 line backwards. You may pass more args, the min and max of the series will be used.
 	MatchString(string) (didMatch bool, m string)
 	MatchRegexp(regexp.Regexp) (didMatch bool, m string)
 	MatchRune(func(rune) bool) (didMatch bool, m rune)

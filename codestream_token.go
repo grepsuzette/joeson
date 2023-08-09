@@ -138,19 +138,9 @@ func (code *TokenStream) workLength() int { return len(code.work) }
 // Get until the string `end` is encountered.
 // Change workingpos accordingly, including the string
 func (code *TokenStream) GetUntil(end string) string {
-	return code.GetUntilWithIgnoreEOF(end, true)
-}
-
-// Get until the string `end` is encountered.
-// Change workingpos accordingly, including the string
-func (code *TokenStream) GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string {
 	index := strings.Index(code.work[code.workOffset:], end)
 	if index == -1 {
-		if ignoreEOF {
-			index = len(code.work)
-		} else {
-			panic("EOFError")
-		}
+		index = len(code.work)
 	} else {
 		index += code.workOffset // because we searched from this pos
 		index += len(end)        // what we're after is length in bytes

@@ -47,16 +47,10 @@ func (code *RuneStream) workLength() int { return len(code.text) }
 
 // Get until the string `end` is encountered.
 // Change code.pos accordingly, including the `end`.
-func (code *RuneStream) GetUntil(end string) string { return code.GetUntilWithIgnoreEOF(end, true) }
-
-func (code *RuneStream) GetUntilWithIgnoreEOF(end string, ignoreEOF bool) string {
+func (code *RuneStream) GetUntil(end string) string {
 	index := strings.Index(code.text[code.pos:], end)
 	if index == -1 {
-		if ignoreEOF {
-			index = len(code.text)
-		} else {
-			panic("EOFError")
-		}
+		index = len(code.text)
 	} else {
 		index += code.pos // because we searched from this pos
 		index += len(end) // what we're after is length in bytes
