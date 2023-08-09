@@ -48,18 +48,16 @@ func (code *RuneStream) workLength() int { return len(code.text) }
 // Get until the string `end` is encountered.
 // Change code.pos accordingly, including the `end`.
 func (code *RuneStream) GetUntil(end string) string {
-	index := strings.Index(code.text[code.pos:], end)
-	if index == -1 {
-		index = len(code.text)
+	offset := strings.Index(code.text[code.pos:], end)
+	if offset == -1 {
+		offset = len(code.text)
 	} else {
-		index += code.pos // because we searched from this pos
-		index += len(end) // what we're after is length in bytes
+		offset += code.pos // because we searched from this pos
+		offset += len(end) // what we're after is length in bytes
 	}
 	oldpos := code.pos
-	code.pos = index
-	s := helpers.SliceString(code.text, oldpos, code.pos)
-	// fmt.Printf("index=%d return=%s∎\n", index, s)
-	return s
+	code.pos = offset
+	return code.text[oldpos:offset]
 }
 
 // take a look n runes before or after, don't update position

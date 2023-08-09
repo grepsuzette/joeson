@@ -138,17 +138,16 @@ func (code *TokenStream) workLength() int { return len(code.work) }
 // Get until the string `end` is encountered.
 // Change workingpos accordingly, including the string
 func (code *TokenStream) GetUntil(end string) string {
-	index := strings.Index(code.work[code.workOffset:], end)
-	if index == -1 {
-		index = len(code.work)
+	offset := strings.Index(code.work[code.workOffset:], end)
+	if offset == -1 {
+		offset = len(code.work)
 	} else {
-		index += code.workOffset // because we searched from this pos
-		index += len(end)        // what we're after is length in bytes
+		offset += code.workOffset // because we searched from this pos
+		offset += len(end)        // what we're after is the length in bytes
 	}
 	oldWorkOffset := code.workOffset
-	code.workOffset = index
-	s := helpers.SliceString(code.work, oldWorkOffset, code.workOffset)
-	return s
+	code.workOffset = offset
+	return code.work[oldWorkOffset:offset]
 }
 
 // Take a look `n` runes backwards or forwards, depending on the sign of n,
