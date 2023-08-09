@@ -21,6 +21,7 @@ type CodeStream interface {
 	PeekLines(n ...int) string // Peeks a range of lines relative to current one. A range is built from ...int. Empty peeks current line. When 1 parameter is given a second 0 is implied. E.g. PeekLines(-1, 2), 2 to peek 2 lines forward. -1 to peek 1 line backwards. You may pass more args, the min and max of the series will be used.
 	MatchString(string) (didMatch bool, m string)
 	MatchRegexp(regexp.Regexp) (didMatch bool, m string)
+	MatchRune(func(rune) bool) (didMatch bool, m rune)
 
 	Print() string      // short line info, can be integrated to longer parse error messages
 	PrintDebug() string // free-form multiline detailed debug information

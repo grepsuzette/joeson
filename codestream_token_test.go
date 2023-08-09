@@ -137,7 +137,7 @@ func TestTokenStreamInternals(t *testing.T) {
 		t.Error("Should not have matched regexp " + re2.String())
 	}
 
-	fmt.Println(tokens.Print())
+	// fmt.Println(tokens.Print())
 }
 
 func TestLongerSample(t *testing.T) {
@@ -185,7 +185,7 @@ func f() {
 	}
 }
 	`
-	fmt.Println(source)
+	// fmt.Println(source)
 	if tokens, e := TokenStreamFromGoCode(source); e != nil {
 		t.Error(e.Error())
 	} else {
@@ -380,6 +380,121 @@ func TestTokenPeekLines(t *testing.T) {
 		expected := "blue are violet\nviolet are pi/2"
 		if peeked != expected {
 			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+}
+
+func TestTokenStreamUnicode(t *testing.T) {
+	const sourceAbc = `abc`
+	const sourceAlphaBetaGamma = `αβγ`
+	TokenStreamFromGoCode(source)
+	{
+		abc, _ := TokenStreamFromGoCode("abc")
+		s := abc.GetUntil("a")
+		if s != "a" {
+			t.Errorf("should have obtained \"a\", not %q", s)
+		}
+	}
+	{
+		abc, _ := TokenStreamFromGoCode("αβγ")
+		s := abc.GetUntil("α")
+		if s != "α" {
+			t.Errorf("should have obtained \"α\", not %q", s)
+		}
+	}
+	{
+		abc, _ := TokenStreamFromGoCode("αβγ")
+		abc.SetPos(0)
+		ok, m := abc.MatchString("α")
+		if !ok {
+			t.Errorf("should have matched")
+		} else if m != "α" {
+			t.Errorf("should have matched α")
+		}
+	}
+	{
+		abc, _ := TokenStreamFromGoCode("abc")
+		abc.SetPos(1)
+		ok, m := abc.MatchString("b")
+		if !ok {
+			t.Errorf("should have matched")
+		} else if m != "b" {
+			t.Errorf("should have obtained \"b\", not %q", m)
+		}
+	}
+	{
+		abc, _ := TokenStreamFromGoCode("αβγ")
+		abc.SetPos(2) // note: not meant to be used like that!
+		ok, m := abc.MatchString("β")
+		if !ok {
+			t.Errorf("should have matched")
+		} else if m != "β" {
+			t.Errorf("should have matched β")
+		}
+	}
+	{
+		abc, _ := TokenStreamFromGoCode("αβγ")
+		abc.SetPos(4) // note: not meant to be used like that!
+		ok, m := abc.MatchString("γ")
+		if !ok {
+			t.Errorf("should have matched")
+		} else if m != "γ" {
+			t.Errorf("should have matched γ")
+		}
+	}
+	{
+		abc, _ := TokenStreamFromGoCode("αβγ")
+		abc.SetPos(0) // note: not meant to be used like that!
+		ok, c := abc.MatchRune(func(rune rune) bool { return 'γ' == rune })
+		if ok {
+			t.Errorf("should NOT have matched")
+		}
+		ok, c = abc.MatchRune(func(rune rune) bool { return 'α' == rune })
+		if !ok {
+			t.Errorf("should have matched")
+		} else if c != 'α' {
+			t.Errorf("should have matched α, got %q", c)
+		}
+		if abc.Pos() != 2 {
+			t.Errorf("Pos should have been updated")
+		}
+		ok, c = abc.MatchRune(func(rune rune) bool { return 'γ' == rune })
+		if ok {
+			t.Errorf("should NOT have matched")
+		}
+		ok, c = abc.MatchRune(func(rune rune) bool { return 'β' == rune })
+		if !ok {
+			t.Errorf("should have matched")
+		} else if c != 'β' {
+			t.Errorf("should have matched β")
+		}
+		if abc.Pos() != 4 {
+			t.Errorf("Pos should have been updated")
+		}
+		ok, c = abc.MatchRune(func(rune rune) bool { return 'γ' == rune })
+		if !ok {
+			t.Errorf("should have matched")
+		} else if c != 'γ' {
+			t.Errorf("should have matched γ")
+		}
+		if abc.Pos() != 6 {
+			t.Errorf("Pos should have been updated")
+		}
+		// jump at eof. it MUST not match
+		ok, c = abc.MatchRune(func(rune rune) bool { return ';' == rune })
+		if !ok {
+			t.Errorf("should have matched")
+		} else if c != ';' {
+			t.Errorf("should have matched ;")
+		}
+		ok, c = abc.MatchRune(func(rune rune) bool { return '\n' == rune })
+		if !ok {
+			t.Errorf("should have matched")
+		} else if c != '\n' {
+			t.Errorf("should have matched ;")
+		}
+		if ok, _ = abc.MatchRune(func(rune rune) bool { return true }); ok {
+			t.Errorf("MatchRune must never match at EOF")
 		}
 	}
 }

@@ -59,8 +59,7 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs *ParseOption
 				fmt.Printf("Error in grammar: Arrays of rules are expected to arrive as the 1st argument i.e. i=0) but here it came in position i=%d. Here is the faulty rule, you probably forgot to wrap the rule into named():\n%s\n.", i, summarizeRule(origArgs, 2))
 				os.Exit(1)
 			default:
-				fmt.Printf("%s\n", reflect.TypeOf(v).String())
-				panic("assert")
+				panic(fmt.Sprintf("Error in grammar: unexpected type received in lineInit: %s\n", reflect.TypeOf(v).String()))
 			}
 		}
 	}

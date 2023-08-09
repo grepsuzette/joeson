@@ -205,6 +205,40 @@ func (code *TokenStream) PeekLines(n ...int) string {
 	return helpers.SliceString(code.original, start, end)
 }
 
+// Match func(rune) bool against rune at current position.
+// didMatch indicates whether is succeeded. If so the rune is m and position is
+// updated. When at EOF it never match.
+//
+// So... what exactly means to match a rune in the context of a token stream?
+// Well, this is a stringified tokenstream. So it can work the same.
+func (code *TokenStream) MatchRune(f func(rune) bool) (didMatch bool, m rune) {
+	if code.workOffset >= code.workLength() {
+		return false, '\x00' // never match at EOF
+	}
+	var ret rune
+	newPos := code.workOffset
+	iter := 0
+	for offset, rune := range code.work[code.workOffset:] {
+		if iter == 1 {
+			newPos += offset // before leaving add offset of the next character
+			break
+		}
+		if !f(rune) {
+			return false, ' '
+		} else {
+			ret = rune
+			iter++ // another round to take offset of the next rune and immediately break
+		}
+	}
+	if newPos == code.workOffset {
+		// when not updated, it means rune matched was the last in text
+		code.SetPos(len(code.work))
+	} else {
+		code.SetPos(newPos)
+	}
+	return true, ret
+}
+
 // Match string `s` against current position.
 // didMatch indicates whether is succeeded
 // in which case the match is in `m`

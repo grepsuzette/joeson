@@ -21,7 +21,7 @@ func eq_str(t *testing.T, a string, b string) {
 	}
 }
 
-func TestState(t *testing.T) {
+func TestRuneStreamState(t *testing.T) {
 	cs := NewRuneStream(`line 0
 line 1
 line 2 -- rest of line 2
@@ -49,7 +49,7 @@ line 4`)
 	// eq_str(t, cs.PeekLines(1), "rest of line 2\nline 3")
 }
 
-func TestRegexp(t *testing.T) {
+func TestRuneStreamRegexp(t *testing.T) {
 	cs := NewRuneStream("A EXPRESSION|B")
 	cs.SetPos(2)
 	if re, err := regexp.CompilePOSIX("([a-zA-Z\\._][a-zA-Z\\._0-9]*)"); err != nil {
@@ -64,7 +64,7 @@ func TestRegexp(t *testing.T) {
 	}
 }
 
-func TestPosToLine(t *testing.T) {
+func TestRuneStreamPosToLine(t *testing.T) {
 	source := `
 	// RuneStream is a very simple code holder, cursor, matcher.
 	type RuneStream struct {
@@ -85,7 +85,7 @@ func TestPosToLine(t *testing.T) {
 	}
 }
 
-func TestPeekLines(t *testing.T) {
+func TestRuneStreamPeekLines(t *testing.T) {
 	s := "rose are blue\nblue are violet\nviolet are pi/2"
 	code := NewRuneStream(s)
 	index := strings.Index(code.Code(), "blue are violet")
@@ -126,6 +126,109 @@ func TestPeekLines(t *testing.T) {
 		expected := "blue are violet\nviolet are pi/2"
 		if peeked != expected {
 			t.Errorf("expected %q, got %q\n", expected, peeked)
+		}
+	}
+}
+
+func TestRuneStreamUnicode(t *testing.T) {
+	{
+		abc := NewRuneStream("abc")
+		s := abc.GetUntil("a")
+		if s != "a" {
+			t.Errorf("should have obtained \"a\", not %q", s)
+		}
+	}
+	{
+		abc := NewRuneStream("αβγ")
+		s := abc.GetUntil("α")
+		if s != "α" {
+			t.Errorf("should have obtained \"α\", not %q", s)
+		}
+	}
+	{
+		abc := NewRuneStream("αβγ")
+		abc.SetPos(0)
+		ok, m := abc.MatchString("α")
+		if !ok {
+			t.Errorf("should have matched")
+		} else if m != "α" {
+			t.Errorf("should have matched α")
+		}
+	}
+	{
+		abc := NewRuneStream("abc")
+		abc.SetPos(1)
+		ok, m := abc.MatchString("b")
+		if !ok {
+			t.Errorf("should have matched")
+		} else if m != "b" {
+			t.Errorf("should have obtained \"b\", not %q", m)
+		}
+	}
+	{
+		abc := NewRuneStream("αβγ")
+		abc.SetPos(2) // note: not meant to be used like that!
+		ok, m := abc.MatchString("β")
+		if !ok {
+			t.Errorf("should have matched")
+		} else if m != "β" {
+			t.Errorf("should have matched β")
+		}
+	}
+	{
+		abc := NewRuneStream("αβγ")
+		abc.SetPos(4) // note: not meant to be used like that!
+		fmt.Printf("% x\n", abc.Code())
+		ok, m := abc.MatchString("γ")
+		if !ok {
+			t.Errorf("should have matched")
+		} else if m != "γ" {
+			t.Errorf("should have matched γ")
+		}
+	}
+	{
+		abc := NewRuneStream("αβγ")
+		abc.SetPos(0) // note: not meant to be used like that!
+		fmt.Printf("% x\n", abc.Code())
+		ok, c := abc.MatchRune(func(rune rune) bool { return 'γ' == rune })
+		if ok {
+			t.Errorf("should NOT have matched")
+		}
+		ok, c = abc.MatchRune(func(rune rune) bool { return 'α' == rune })
+		if !ok {
+			t.Errorf("should have matched")
+		} else if c != 'α' {
+			t.Errorf("should have matched α, got %q", c)
+		}
+		if abc.Pos() != 2 {
+			t.Errorf("Pos should have been updated")
+		}
+		ok, c = abc.MatchRune(func(rune rune) bool { return 'γ' == rune })
+		if ok {
+			t.Errorf("should NOT have matched")
+		}
+		ok, c = abc.MatchRune(func(rune rune) bool { return 'β' == rune })
+		if !ok {
+			t.Errorf("should have matched")
+		} else if c != 'β' {
+			t.Errorf("should have matched β")
+		}
+		if abc.Pos() != 4 {
+			t.Errorf("Pos should have been updated")
+		}
+		ok, c = abc.MatchRune(func(rune rune) bool { return 'γ' == rune })
+		if !ok {
+			t.Errorf("should have matched")
+		} else if c != 'γ' {
+			t.Errorf("should have matched γ")
+		}
+		if abc.Pos() != 6 {
+			t.Errorf("Pos should have been updated")
+		}
+		// We are now at the end of the text...
+		// it MUST not match
+		if ok, _ = abc.MatchRune(func(rune rune) bool { return true }); ok {
+			t.Errorf("MatchRune must never match at EOF")
 		}
 	}
 }

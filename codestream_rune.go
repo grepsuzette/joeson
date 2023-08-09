@@ -29,8 +29,7 @@ func NewRuneStream(text string) CodeStream {
 
 func (code *RuneStream) Pos() int { return code.pos }
 func (code *RuneStream) SetPos(n int) {
-	// TODO for now there is a tolerance (we allow n == len(code.text))
-	// because current algo in packrat uses it. Remove it ASAP
+	// n == len(code.text) is allowed for now, for EOF
 	if n < 0 || n > len(code.text) {
 		panic(fmt.Sprintf("%d is out of bound", n))
 	}
@@ -139,6 +138,37 @@ func (code *RuneStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string) 
 			return true, s
 		}
 	}
+}
+
+// Match func(rune) bool against rune at current position.
+// didMatch indicates whether is succeeded. If so the rune is m and position is
+// updated. When at EOF it never match.
+func (code *RuneStream) MatchRune(f func(rune rune) bool) (didMatch bool, m rune) {
+	if code.pos >= len(code.text) {
+		return false, '\x00' // never match at EOF
+	}
+	var ret rune
+	newPos := code.pos
+	iter := 0
+	for offset, rune := range code.text[code.pos:] {
+		if iter == 1 {
+			newPos += offset // before leaving add offset of the next character
+			break
+		}
+		if !f(rune) {
+			return false, ' '
+		} else {
+			ret = rune
+			iter++ // another round to take offset of the next rune and immediately break
+		}
+	}
+	if newPos == code.pos {
+		// when not updated, it means rune matched was the last in text
+		code.SetPos(len(code.text))
+	} else {
+		code.SetPos(newPos)
+	}
+	return true, ret
 }
 
 // short, single line information to be integrated in parse errors
