@@ -11,6 +11,14 @@ type NativeInt struct {
 }
 
 func NewNativeInt(n int) NativeInt { return NativeInt{newAttr(), n} }
+func NewNativeIntFromBool(b bool) NativeInt {
+	n := 0
+	if b {
+		n = 1
+	}
+	return NativeInt{newAttr(), n}
+}
+
 func NewNativeIntFromString(s string) NativeInt {
 	if n, e := strconv.Atoi(s); e == nil {
 		return NativeInt{newAttr(), n}
@@ -43,4 +51,5 @@ func NewNativeIntFrom(x Ast) NativeInt {
 
 func (n NativeInt) assertNode()    {}
 func (n NativeInt) Int() int       { return n.int }
+func (n NativeInt) Bool() bool     { return n.int != 0 }
 func (n NativeInt) String() string { return strconv.Itoa(n.int) }

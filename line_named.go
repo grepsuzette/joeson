@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// TODO better doc
 // Named helps simplifying writing trees of rules.
 //
 // Examples:

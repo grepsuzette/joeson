@@ -169,3 +169,18 @@ func TestCapturingStr(t *testing.T) {
 		}
 	}
 }
+
+func TestNativeIntFromBool(t *testing.T) {
+	{
+		n := NewNativeIntFromBool(true)
+		if !n.Bool() {
+			t.Error()
+		}
+	}
+	{
+		n := NewNativeIntFromBool(false)
+		if n.Bool() {
+			t.Error()
+		}
+	}
+}
