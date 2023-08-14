@@ -29,10 +29,15 @@ type NativeArray struct {
 
 func NewNativeArray(a []Ast) *NativeArray {
 	if a == nil {
-		return &NativeArray{newAttr(), []Ast{}}
+		// TODO try to remove this nil test
+		return NewEmptyNativeArray()
 	} else {
 		return &NativeArray{newAttr(), a}
 	}
+}
+
+func NewEmptyNativeArray() *NativeArray {
+	return &NativeArray{newAttr(), []Ast{}}
 }
 
 func (na *NativeArray) Get(i int) Ast { return na.Array[i] }
@@ -50,6 +55,10 @@ func (na *NativeArray) String() string {
 	}
 	b.WriteString("]")
 	return b.String()
+}
+
+func (na *NativeArray) Append(it Ast) {
+	na.Array = append(na.Array, it)
 }
 
 // `["a","","bc"]` -> `"abc"`
