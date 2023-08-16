@@ -54,10 +54,20 @@ func TestBootstrap(t *testing.T) {
 	}
 }
 
-// replicates the original joeson_test.coffee
-func TestManyTimes(t *testing.T) {
-	start := time.Now()
-	nbIter := 100
+// This benchmark replicates the original joeson_test.coffee test.
+// It used to be called TestManyTimes with manual timing, but
+// those are now replaced by using go benchmark.
+//
+// As of August 16, 2023 commit 9894c1 result of `go test -bench=Intention -run=^noother -count=3` is
+// goos: linux
+// goarch: amd64
+// pkg: github.com/grepsuzette/joeson
+// cpu: Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.004663 ns/op
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.004493 ns/op
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.004490 ns/op
+// PASS
+func BenchmarkIntention(b *testing.B) {
 	parsedGrammar := GrammarFromLines(
 		"gmIntention",
 		IntentionRules(),
@@ -67,7 +77,7 @@ func TestManyTimes(t *testing.T) {
 		switch v := rule.(type) {
 		case ALine:
 			if name != "" {
-				// fmt.Printf("%s%s\n", helpers.Indent(indent), Red(name+":"))
+				// b.Logf("%s%s\n", helpers.Indent(indent), Red(name+":"))
 			}
 			for _, subline := range v.Array {
 				frecurse(subline, indent+1, "")
@@ -80,7 +90,7 @@ func TestManyTimes(t *testing.T) {
 		case ILine:
 			frecurse(v.content, indent, v.name)
 		case cLine:
-			// fmt.Printf("%s%s\n", helpers.Indent(indent), String(v.Parser))
+			// b.Logf("%s%s\n", helpers.Indent(indent), String(v.Parser))
 		case sLine:
 			// parse the rules of the intention grammar, one line at a time
 			ast := parsedGrammar.ParseString(v.Str)
@@ -95,19 +105,18 @@ func TestManyTimes(t *testing.T) {
 				if ast != nil {
 					sResult = Yellow(String(ast))
 				}
-				fmt.Printf("%s%s%s %s\n", helpers.Indent(indent), sName, sResult, White(""))
+				b.Logf("%s%s%s %s\n", helpers.Indent(indent), sName, sResult, White(""))
 			}
-
 		default:
-			fmt.Printf("unknown -----%#v %T\n", v, v)
+			b.Logf("unknown -----%#v %T\n", v, v)
 		}
 	}
-	for i := 0; i < nbIter; i++ {
+	b.Run("joeson.Parse(intentionGrammarRules)", func(b *testing.B) {
 		frecurse(NewALine(IntentionRules()), 0, "")
-	}
-	fmt.Printf("Duration for %d iterations: %d ms\n", nbIter, time.Since(start).Milliseconds())
+	})
 }
 
+// Meaningless test that can now be deleted
 func TestSquareroot(t *testing.T) {
 	gm := GrammarFromLines(
 		"gmSqr",
@@ -149,12 +158,13 @@ func Test_LeftRecursion(t *testing.T) {
 	fmt.Println(res.String())
 }
 
+// Showing difference between captured and uncaptured Str
 func TestCapturingStr(t *testing.T) {
 	// "'0x' [0-9a-f]{2,2}" parsing "0x7d" will only capture "7d"
 	// To capture "0x7d" you can have a label: "prefix:'0x' [0-9a-f]{2,2}"
 	// This time it should capture all of it.
 	{
-		// to demonstrate str is not captured
+		// str not captured
 		ast := GrammarFromLines("gm",
 			[]Line{o(named("Input", "'0x' [0-9a-f]{2,2}"))}).ParseString("0x7d")
 		if s := ast.(*NativeArray).Concat(); s != "7d" {
@@ -162,7 +172,7 @@ func TestCapturingStr(t *testing.T) {
 		}
 	}
 	{
-		// capture str with labels
+		// now captured using labels
 		ast := GrammarFromLines("gm", []Line{o(named("Input", "captureMe:'0x' captureMeToo:[0-9a-f]{2,2}"))}).ParseString("0x7d")
 		if s := ast.(*NativeMap).Concat(); s != "0x7d" {
 			t.Errorf("for test 2 unexpected result %s", s)
