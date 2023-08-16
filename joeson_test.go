@@ -77,7 +77,23 @@ func TestBootstrap(t *testing.T) {
 // BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.002707 ns/op
 // PASS
 //
-// More speed gains must be possible
+// # More speed gains must be possible
+//
+// After converting NativeString and NativeArray to aliases, the gains are more
+// modest:
+// go test -bench=Intention -run=^noother -count=6
+// goos: linux
+// goarch: amd64
+// pkg: github.com/grepsuzette/joeson
+// cpu: Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.002691 ns/op
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.004705 ns/op
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.002607 ns/op
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.002555 ns/op
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.002495 ns/op
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.002577 ns/op
+// PASS
+// ok      github.com/grepsuzette/joeson   0.220s
 func BenchmarkIntention(b *testing.B) {
 	parsedGrammar := GrammarFromLines(
 		"gmIntention",

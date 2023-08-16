@@ -63,7 +63,7 @@ func newPattern(it Ast) *pattern {
 			case NativeInt:
 				patt.min = v.Int()
 			case NativeString:
-				patt.min = NewNativeIntFromString(v.Str).Int()
+				patt.min = NewNativeIntFromString(string(v)).Int()
 			default:
 				panic("NewPattern unhandled type for min: " + reflect.TypeOf(min).String())
 			}
@@ -75,7 +75,7 @@ func newPattern(it Ast) *pattern {
 			case NativeInt:
 				patt.max = v.Int()
 			case NativeString:
-				patt.max = NewNativeIntFromString(v.Str).Int()
+				patt.max = NewNativeIntFromString(string(v)).Int()
 			default:
 				panic("NewPattern unhandled type for max: " + reflect.TypeOf(max).String())
 			}

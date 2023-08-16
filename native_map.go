@@ -43,7 +43,7 @@ func (nm *NativeMap) Concat() string {
 				b.WriteString(w.Concat())
 			case NativeUndefined:
 			case NativeString:
-				b.WriteString(w.Str)
+				b.WriteString(string(w))
 			case NativeInt:
 				b.WriteString(w.String())
 			default:
@@ -94,7 +94,7 @@ func (nm *NativeMap) GetStringExists(k string) (string, bool) {
 	if vv, exists := nm.vals[k]; exists {
 		switch v := vv.(type) {
 		case NativeString:
-			return v.Str, true
+			return string(v), true
 		case *NativeArray:
 			return v.Concat(), true
 		default:
@@ -114,10 +114,10 @@ func (nm *NativeMap) GetIntExists(k string) (int, bool) {
 		case NativeInt:
 			return v.Int(), true
 		case NativeString:
-			if n, e := strconv.Atoi(v.Str); e == nil {
+			if n, e := strconv.Atoi(string(v)); e == nil {
 				return n, true
 			} else {
-				panic("Could not Atoi(" + v.Str + "): " + e.Error())
+				panic("Could not Atoi(" + string(v) + "): " + e.Error())
 			}
 		case *NativeArray:
 			if n, e := strconv.Atoi(v.Concat()); e == nil {

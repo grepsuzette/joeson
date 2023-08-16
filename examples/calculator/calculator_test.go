@@ -73,13 +73,13 @@ func extractResult(t *testing.T, x joeson.Ast) int {
 func eval(first joeson.Ast, rest joeson.Ast) joeson.Ast {
 	var lhs joeson.Ast = first.(joeson.NativeInt)
 	if a, isArray := rest.(*joeson.NativeArray); isArray {
-		for _, v := range a.Array {
+		for _, v := range *a {
 			aFirstRest := v.(*joeson.NativeArray)
 			if aFirstRest.Length() != 2 {
 				panic("assert")
 			}
 			rhs := aFirstRest.Get(1).(joeson.NativeInt)
-			op := aFirstRest.Get(0).(joeson.NativeString).Str
+			op := string(aFirstRest.Get(0).(joeson.NativeString))
 			lhs = joeson.NewNativeInt(ops[op](lhs.(joeson.NativeInt).Int(), rhs.Int()))
 		}
 	} else {

@@ -46,7 +46,7 @@ func parseExpr(it j.Ast) j.Ast {
 	} else {
 		if v, ok := h.GetExists("s"); ok {
 			if ns, ok := v.(j.NativeString); ok {
-				return Expr{attr{}, kindString, ns.Str, 0, nilList(), ""}
+				return Expr{attr{}, kindString, string(ns), 0, nilList(), ""}
 			} else {
 				panic("24942")
 			}
@@ -59,7 +59,7 @@ func parseExpr(it j.Ast) j.Ast {
 		} else if v, ok := h.GetExists("l"); ok {
 			return Expr{attr{}, kindList, "", 0, v.(List), ""}
 		} else if v, ok := h.GetExists("operator"); ok {
-			return Expr{attr{}, kindOperator, "", 0, nilList(), v.(j.NativeString).Str}
+			return Expr{attr{}, kindOperator, "", 0, nilList(), string(v.(j.NativeString))}
 		} else {
 			panic(h.String())
 		}
@@ -68,7 +68,7 @@ func parseExpr(it j.Ast) j.Ast {
 
 func parseList(it j.Ast) j.Ast {
 	exprs := []Expr{}
-	for _, v := range it.(*j.NativeArray).Array {
+	for _, v := range *it.(*j.NativeArray) {
 		switch v := v.(type) {
 		case Expr:
 			exprs = append(exprs, v)

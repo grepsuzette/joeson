@@ -5,23 +5,20 @@ import (
 )
 
 // NativeInt is an `int` that implements `Ast`.
-type NativeInt struct {
-	*Attr
-	int
-}
+type NativeInt int
 
-func NewNativeInt(n int) NativeInt { return NativeInt{newAttr(), n} }
+func NewNativeInt(n int) NativeInt { return NativeInt(n) }
 func NewNativeIntFromBool(b bool) NativeInt {
 	n := 0
 	if b {
 		n = 1
 	}
-	return NativeInt{newAttr(), n}
+	return NativeInt(n)
 }
 
 func NewNativeIntFromString(s string) NativeInt {
 	if n, e := strconv.Atoi(s); e == nil {
-		return NativeInt{newAttr(), n}
+		return NativeInt(n)
 	} else {
 		panic("can not convert string " + s + " to NativeInt")
 	}
@@ -33,15 +30,15 @@ func NewNativeIntFromString(s string) NativeInt {
 func NewNativeIntFrom(x Ast) NativeInt {
 	switch v := x.(type) {
 	case NativeString:
-		if n, e := strconv.Atoi(v.Str); e == nil {
+		if n, e := strconv.Atoi(string(v)); e == nil {
 			return NewNativeInt(n)
 		} else {
 			panic(e)
 		}
 	case *NativeArray:
 		s := ""
-		for i := range v.Array {
-			s += v.Array[i].(NativeString).Str
+		for i := range *v {
+			s += string((*v)[i].(NativeString))
 		}
 		return NewNativeIntFromString(s)
 	default:
@@ -50,6 +47,14 @@ func NewNativeIntFrom(x Ast) NativeInt {
 }
 
 func (n NativeInt) assertNode()    {}
-func (n NativeInt) Int() int       { return n.int }
-func (n NativeInt) Bool() bool     { return n.int != 0 }
-func (n NativeInt) String() string { return strconv.Itoa(n.int) }
+func (n NativeInt) Int() int       { return int(n) }
+func (n NativeInt) Bool() bool     { return int(n) != 0 }
+func (n NativeInt) String() string { return strconv.Itoa(int(n)) }
+
+func (n NativeInt) SetLine(m int)                                   {}
+func (n NativeInt) GetLine() int                                    { return 1 }
+func (n NativeInt) SetOrigin(o Origin)                              {}
+func (n NativeInt) GetOrigin() Origin                               { return Origin{} }
+func (n NativeInt) HasAttribute(key interface{}) bool               { return false }
+func (n NativeInt) GetAttribute(key interface{}) interface{}        { return nil }
+func (n NativeInt) SetAttribute(key interface{}, value interface{}) { panic("N/A") }

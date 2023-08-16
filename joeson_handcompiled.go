@@ -116,7 +116,7 @@ func JoesonRules() []Line {
 		i(Named("__", p(c(st(" "), st("\n")), nil, 1))),
 		i(Named(".", re("[\\s\\S]"))),
 		i(Named("ESC1", s(st("\\"), r(".")))),
-		i(Named("ESC2", s(st("\\"), r("."))), func(chr Ast) Ast { return NewNativeString("\\" + chr.(NativeString).Str) }),
+		i(Named("ESC2", s(st("\\"), r("."))), func(chr Ast) Ast { return NewNativeString("\\" + string(chr.(NativeString))) }),
 		// i(Named("EXAMPLE", "/regex/", ParseOptions{SkipLog: false, SkipCache: true}, func(it Ast, ctx *ParseContext) Ast { return it })),
 	}
 }

@@ -22,18 +22,18 @@ type Printer interface {
 
 // Only Native objects implement this
 var (
-	_ Printer = NativeArray{}
-	_ Printer = NativeInt{}
+	_ Printer = &NativeArray{}
+	_ Printer = NewNativeInt(-1)
 	_ Printer = &NativeMap{}
-	_ Printer = NativeString{}
+	_ Printer = NewNativeString("")
 	_ Printer = NativeUndefined{}
 )
 
-func (na NativeArray) Text() string {
+func (na *NativeArray) Text() string {
 	var b strings.Builder
 	b.WriteString("[")
 	first := true
-	for i, v := range na.Array {
+	for i, v := range *na {
 		if !first {
 			b.WriteString(", ")
 		}
@@ -46,11 +46,11 @@ func (na NativeArray) Text() string {
 		first = false
 	}
 	b.WriteString("]")
-	return printRuleName(&na) + b.String()
+	return printRuleName(na) + b.String()
 }
 
 func (ni NativeInt) Text() string {
-	return printRuleName(ni) + strconv.Itoa(ni.int)
+	return printRuleName(ni) + strconv.Itoa(int(ni))
 }
 
 func (nm *NativeMap) Text() string {
@@ -78,7 +78,7 @@ func (nm *NativeMap) Text() string {
 func (ns NativeString) Text() string {
 	var b strings.Builder
 	b.WriteString(`"`)
-	b.WriteString(ns.Str)
+	b.WriteString(string(ns))
 	b.WriteString(`"`)
 	return printRuleName(ns) + b.String()
 }

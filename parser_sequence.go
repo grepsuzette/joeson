@@ -31,7 +31,7 @@ func newSequence(it Ast) *sequence {
 		}
 		gn := newGNode()
 		parsers := make([]Parser, 0)
-		for _, v := range a.Array {
+		for _, v := range *a {
 			parsers = append(parsers, v.(Parser))
 		}
 		seq := &sequence{
@@ -229,7 +229,7 @@ func merge(toExtend Ast, newcomer Ast) Ast {
 				switch k {
 				case "label":
 					value := vnewcomer.GetOrPanic(k)
-					vToExtend.SetRuleLabel(value.(NativeString).Str)
+					vToExtend.SetRuleLabel(string(value.(NativeString)))
 				default:
 					panic("unhandled property " + k + " in func (Ast) Merge(). toExtend=" + toExtend.String() + " \n withPropertiesOf=" + newcomer.String())
 				}

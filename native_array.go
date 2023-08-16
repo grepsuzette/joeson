@@ -22,30 +22,25 @@ import (
 // the undefined value (a parsing function returns nil to indicate failure,
 // undefined is something else).
 
-type NativeArray struct {
-	Array []Ast
-}
+type NativeArray []Ast
 
 func NewNativeArray(a []Ast) *NativeArray {
-	if a == nil {
-		// TODO try to remove this nil test
-		return NewEmptyNativeArray()
-	} else {
-		return &NativeArray{a}
-	}
+	na := NativeArray(a)
+	return &na
 }
 
 func NewEmptyNativeArray() *NativeArray {
-	return &NativeArray{[]Ast{}}
+	na := NativeArray([]Ast{})
+	return &na
 }
 
-func (na *NativeArray) Get(i int) Ast { return na.Array[i] }
-func (na *NativeArray) Length() int   { return len(na.Array) }
+func (na *NativeArray) Get(i int) Ast { return (*na)[i] }
+func (na *NativeArray) Length() int   { return len(*na) }
 func (na *NativeArray) String() string {
 	var b strings.Builder
 	b.WriteString("[")
 	first := true
-	for _, it := range na.Array {
+	for _, it := range *na {
 		if !first {
 			b.WriteString(",")
 		}
@@ -57,7 +52,7 @@ func (na *NativeArray) String() string {
 }
 
 func (na *NativeArray) Append(it Ast) {
-	na.Array = append(na.Array, it)
+	*na = append(*na, it)
 }
 
 // `["a","","bc"]` -> `"abc"`
@@ -65,10 +60,10 @@ func (na *NativeArray) Append(it Ast) {
 // but either NativeString or embedded *NativeArray)
 func (na *NativeArray) Concat() string {
 	var b strings.Builder
-	for _, element := range na.Array {
+	for _, element := range *na {
 		switch v := element.(type) {
 		case NativeString:
-			b.WriteString(v.Str)
+			b.WriteString(string(v))
 		case *NativeArray:
 			b.WriteString(v.Concat())
 		case NativeUndefined:

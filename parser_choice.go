@@ -19,7 +19,7 @@ func newEmptyChoice() *choice {
 func newChoice(it Ast) *choice {
 	if a, ok := it.(*NativeArray); ok {
 		var parsers []Parser
-		for _, ast := range a.Array {
+		for _, ast := range *a {
 			parsers = append(parsers, ast.(Parser))
 		}
 		ch := &choice{

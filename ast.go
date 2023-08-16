@@ -60,9 +60,9 @@ var (
 	_ Ast = &sequence{}
 	_ Ast = &str{}
 	_ Ast = &NativeArray{}
-	_ Ast = &NativeInt{}
+	_ Ast = NewNativeInt(-1)
 	_ Ast = &NativeMap{}
-	_ Ast = &NativeString{}
+	_ Ast = NewNativeString("")
 	_ Ast = &NativeUndefined{}
 	_ Ast = &ParseError{}
 )

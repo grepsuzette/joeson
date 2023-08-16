@@ -25,13 +25,13 @@ func newRef(it Ast) *ref {
 	var param Parser = nil
 	switch v := it.(type) {
 	case NativeString:
-		name = v.Str
+		name = string(v)
 	case *NativeArray:
 		var na *NativeArray = v
 		if na.Length() == 0 {
 			panic("assert")
 		}
-		name = na.Get(0).(NativeString).Str
+		name = string(na.Get(0).(NativeString))
 		if na.Length() > 1 {
 			// fmt.Printf("ref param %s %T\n", na.Get(1).String(), na.Get(1))
 			param = na.Get(1).(Parser)

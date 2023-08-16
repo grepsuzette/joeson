@@ -52,6 +52,6 @@ func IntentionRules() []Line {
 		i(named("__", "(' ' | '\n')+")),
 		i(named(".", "/[\\s\\S]/")),
 		i(named("ESC1", "'\\\\' .")),
-		i(named("ESC2", "'\\\\' ."), func(chr Ast) Ast { return NewNativeString("\\" + chr.(NativeString).Str) }),
+		i(named("ESC2", "'\\\\' ."), func(chr Ast) Ast { return NewNativeString("\\" + string(chr.(NativeString))) }),
 	}
 }
