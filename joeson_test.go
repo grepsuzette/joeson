@@ -3,7 +3,6 @@ package joeson
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/grepsuzette/joeson/helpers"
 )
@@ -67,6 +66,18 @@ func TestBootstrap(t *testing.T) {
 // BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.004493 ns/op
 // BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.004490 ns/op
 // PASS
+//
+// After some minor rewrite (removing 1 callback level) in packrat.go, cost is decreased by about 40%:
+// goos: linux
+// goarch: amd64
+// pkg: github.com/grepsuzette/joeson
+// cpu: Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.002714 ns/op
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.002704 ns/op
+// BenchmarkIntention/joeson.Parse(intentionGrammarRules)-8                1000000000               0.002707 ns/op
+// PASS
+//
+// More speed gains must be possible
 func BenchmarkIntention(b *testing.B) {
 	parsedGrammar := GrammarFromLines(
 		"gmIntention",

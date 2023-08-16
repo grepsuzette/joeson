@@ -289,16 +289,19 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 }
 
 func wrap(fparse2 parseFunc2, node Parser) parseFunc {
-	wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
-	wrapped2 := prepareResult(fparse2, node)
+	// OPTIM a lot of optimization seems possible here
+	// wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
+	// wrapped2 := prepareResult(fparse2, node)
 	gn := node.gnode()
 	return func(ctx *ParseContext) Ast {
 		if IsRule(node) {
-			return wrapped1(ctx)
+			// return wrapped1(ctx)
+			return stack(loopify(prepareResult(fparse2, node), node), node)(ctx) // much faster
 		} else if gn.label != "" &&
 			(gn.parent != nil && !gn.parent.HandlesChildLabel()) ||
 			gn.CbBuilder != nil {
-			return wrapped2(ctx)
+			// return wrapped2(ctx)
+			return prepareResult(fparse2, node)(ctx) // much faster
 		} else {
 			return fparse2(ctx, node)
 		}
