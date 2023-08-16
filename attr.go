@@ -11,10 +11,6 @@ func newAttr() *Attr {
 	return &Attr{}
 }
 
-func isPredefinedAttr(attr string) bool {
-	return false
-}
-
 func (attr *Attr) SetLine(n int) {
 	attr.Line = n
 	attr.Start = 0
