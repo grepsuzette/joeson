@@ -23,7 +23,6 @@ import (
 // undefined is something else).
 
 type NativeArray struct {
-	*Attr
 	Array []Ast
 }
 
@@ -32,12 +31,12 @@ func NewNativeArray(a []Ast) *NativeArray {
 		// TODO try to remove this nil test
 		return NewEmptyNativeArray()
 	} else {
-		return &NativeArray{newAttr(), a}
+		return &NativeArray{a}
 	}
 }
 
 func NewEmptyNativeArray() *NativeArray {
-	return &NativeArray{newAttr(), []Ast{}}
+	return &NativeArray{[]Ast{}}
 }
 
 func (na *NativeArray) Get(i int) Ast { return na.Array[i] }
@@ -79,3 +78,11 @@ func (na *NativeArray) Concat() string {
 	}
 	return b.String()
 }
+
+func (na *NativeArray) SetLine(n int)                                   {}
+func (na *NativeArray) GetLine() int                                    { return 1 }
+func (na *NativeArray) SetOrigin(o Origin)                              {}
+func (na *NativeArray) GetOrigin() Origin                               { return Origin{} }
+func (na *NativeArray) HasAttribute(key interface{}) bool               { return false }
+func (na *NativeArray) GetAttribute(key interface{}) interface{}        { return nil }
+func (na *NativeArray) SetAttribute(key interface{}, value interface{}) { panic("N/A") }
