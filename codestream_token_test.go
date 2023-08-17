@@ -524,3 +524,16 @@ func TestTokenStreamPeekRunes(t *testing.T) {
 		t.Errorf(fmt.Sprintf("invalid pos: %d", abc.Pos()))
 	}
 }
+
+func TestParseEmptyTokenStream(t *testing.T) {
+	abc, _ := TokenStreamFromGoCode("")
+	abc.MatchString("")
+	if abc.Pos() != 0 {
+		t.Errorf(fmt.Sprintf("invalid pos: %d", abc.Pos()))
+	}
+	abc.MatchString("foo")
+	if abc.Pos() != 0 {
+		t.Errorf(fmt.Sprintf("invalid pos: %d", abc.Pos()))
+	}
+	abc.Print()
+}

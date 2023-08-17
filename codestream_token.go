@@ -49,7 +49,7 @@ type (
 	}
 	coord struct {
 		token          Token // token found at requested position
-		nToken         int   // number that token, ∈ [0; len(tokens)[
+		nToken         int   // number of that token, ∈ [0; len(tokens)[
 		offsetInToken  int   // offset of requested position in token.Repr, ∈ [0; len(tokens[nToken].Repr)[
 		workOffset     int   // offset relative to `work` text. ∈ [0; len(work)[ . Use toWorkOffset()
 		originalOffset int   // offset relative to `original` text
@@ -324,15 +324,16 @@ func (code *TokenStream) Tokens() []Token {
 // get all possible coordinates (i.e. originalOffset, line, col).
 // the reverse operation can be obtain with calcWorkOffset().
 func (code *TokenStream) coords(workOffset int) coord {
+	if len(code.tokens) == 0 {
+		return coord{}
+	}
 	// find most advanced token number, such that the following token would begin
 	// after workOffset.
 	nToken := 0
 	var token Token
 	for {
 		if nToken >= len(code.tokens)-1 {
-			break
-			// panic(fmt.Sprintf("workOffset %d would overflow, what you ask makes no sense", workOffset))
-			// ^ No: it can make sense when a token was inserted
+			break // don't panic, it can make sense when a token was inserted
 		}
 		token = code.tokens[nToken]
 		if workOffset < token.WorkOffset+len(token.Repr) {
