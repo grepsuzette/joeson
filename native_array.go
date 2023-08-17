@@ -51,6 +51,7 @@ func (na *NativeArray) String() string {
 	return b.String()
 }
 
+func (na *NativeArray) Array() []Ast { return *na }
 func (na *NativeArray) Append(it Ast) {
 	*na = append(*na, it)
 }
