@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/grepsuzette/joeson"
+	j "github.com/grepsuzette/joeson"
 )
 
 // this example is the typical example with a calculator
@@ -12,19 +12,19 @@ import (
 //
 // To understand more easily, start from the bottom, with Test_calc()
 
-func i(a ...any) joeson.ILine { return joeson.I(a...) }
-func o(a ...any) joeson.OLine { return joeson.O(a...) }
-func named(name string, lineStringOrAst any) joeson.NamedRule {
-	return joeson.Named(name, lineStringOrAst)
+func i(a ...any) j.ILine { return j.I(a...) }
+func o(a ...any) j.OLine { return j.O(a...) }
+func named(name string, lineStringOrAst any) j.NamedRule {
+	return j.Named(name, lineStringOrAst)
 }
 
-var linesCalc = []joeson.Line{
+var linesCalc = []j.Line{
 	o(named("Input", "expr:Expression")),
 	i(named("Expression", "_ first:Term rest:( _ AddOp _ Term )* _"), xx),
 	i(named("Term", "first:Factor rest:( _ MulOp _ Factor )*"), xx),
-	i(named("Factor", "'(' expr:Expression ')' | integer:Integer"), func(it joeson.Ast) joeson.Ast {
+	i(named("Factor", "'(' expr:Expression ')' | integer:Integer"), func(it j.Ast) j.Ast {
 		// --- example of an alternation ------------
-		nm := it.(*joeson.NativeMap)
+		nm := it.(*j.NativeMap)
 		if n, exists := nm.GetExists("integer"); exists {
 			return n
 		} else if expr, exists := nm.GetExists("expr"); exists {
@@ -35,12 +35,12 @@ var linesCalc = []joeson.Line{
 	}),
 	i(named("AddOp", "'+' | '-'")),
 	i(named("MulOp", "'*' | '/'")),
-	i(named("Integer", "/^-?[0-9]+/"), func(it joeson.Ast) joeson.Ast { return joeson.NewNativeIntFrom(it) }),
+	i(named("Integer", "/^-?[0-9]+/"), func(it j.Ast) j.Ast { return j.NewNativeIntFrom(it) }),
 	i(named("_", "[ \t]*")),
 }
 
-func xx(it joeson.Ast) joeson.Ast {
-	return eval(it.(*joeson.NativeMap).Get("first"), it.(*joeson.NativeMap).Get("rest"))
+func xx(it j.Ast) j.Ast {
+	return eval(it.(*j.NativeMap).Get("first"), it.(*j.NativeMap).Get("rest"))
 }
 
 var ops = map[string]func(int, int) int{
@@ -57,9 +57,9 @@ func div(a, b int) int { return a / b }
 
 // extract the "expr" key from a result `x` to an int
 // or, failing to do that, call FailNow()
-func extractResult(t *testing.T, x joeson.Ast) int {
+func extractResult(t *testing.T, x j.Ast) int {
 	t.Helper()
-	if n, exists := x.(*joeson.NativeMap).GetIntExists("expr"); exists {
+	if n, exists := x.(*j.NativeMap).GetIntExists("expr"); exists {
 		return n
 	} else {
 		t.Errorf("Failed to find a result like NativeMap{expr:<INT>} in " + x.String())
@@ -68,17 +68,17 @@ func extractResult(t *testing.T, x joeson.Ast) int {
 	return 0 // so it compiles
 }
 
-func eval(first joeson.Ast, rest joeson.Ast) joeson.Ast {
-	var lhs joeson.Ast = first.(joeson.NativeInt)
-	if a, isArray := rest.(*joeson.NativeArray); isArray {
+func eval(first j.Ast, rest j.Ast) j.Ast {
+	var lhs j.Ast = first.(j.NativeInt)
+	if a, isArray := rest.(*j.NativeArray); isArray {
 		for _, v := range *a {
-			aFirstRest := v.(*joeson.NativeArray)
+			aFirstRest := v.(*j.NativeArray)
 			if aFirstRest.Length() != 2 {
 				panic("assert")
 			}
-			rhs := aFirstRest.Get(1).(joeson.NativeInt)
-			op := string(aFirstRest.Get(0).(joeson.NativeString))
-			lhs = joeson.NewNativeInt(ops[op](lhs.(joeson.NativeInt).Int(), rhs.Int()))
+			rhs := aFirstRest.Get(1).(j.NativeInt)
+			op := string(aFirstRest.Get(0).(j.NativeString))
+			lhs = j.NewNativeInt(ops[op](lhs.(j.NativeInt).Int(), rhs.Int()))
 		}
 	} else {
 		panic("expected NativeArray, got " + rest.String())
@@ -87,17 +87,17 @@ func eval(first joeson.Ast, rest joeson.Ast) joeson.Ast {
 }
 
 func Test_failing(t *testing.T) {
-	gm := joeson.GrammarFromLines("calc", linesCalc)
+	gm := j.GrammarFromLines("calc", linesCalc)
 	h := map[string]string{
 		"90 (6090)": "Error parsing at char:3",
 		"-(7)":      "Error parsing at char:0",
 	}
 	for s, sExpectedError := range h {
 		res := gm.ParseString(s)
-		if !joeson.IsParseError(res) {
+		if !j.IsParseError(res) {
 			t.Error("expected error but got none, for: " + s + ". Res: " + res.String())
 		} else {
-			sError := res.(joeson.ParseError).ErrorString
+			sError := res.(j.ParseError).ErrorString
 			if strings.Index(sError, sExpectedError) == 0 {
 				// np, expected case
 			} else {
@@ -108,7 +108,7 @@ func Test_failing(t *testing.T) {
 }
 
 func Test_calc(t *testing.T) {
-	gm := joeson.GrammarFromLines("calc", linesCalc)
+	gm := j.GrammarFromLines("calc", linesCalc)
 	h := map[string]int{
 		"0 + 1":                            1,
 		"0 - 1":                            -1,
@@ -127,7 +127,7 @@ func Test_calc(t *testing.T) {
 	}
 	for s, nExpectedResult := range h {
 		res := gm.ParseString(s)
-		if joeson.IsParseError(res) {
+		if j.IsParseError(res) {
 			t.Error(res.String())
 		} else {
 			if extractResult(t, res) != nExpectedResult {
