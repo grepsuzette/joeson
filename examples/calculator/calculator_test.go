@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -125,6 +123,7 @@ func Test_calc(t *testing.T) {
 		"241+513* -24 +((1934-192*2)/7)+1": -11849,
 		"60/6/5":                           2,
 		"4*((2+1) * 3 )":                   36,
+		"-1-2-3":                           -6,
 	}
 	for s, nExpectedResult := range h {
 		res := gm.ParseString(s)
@@ -134,41 +133,6 @@ func Test_calc(t *testing.T) {
 			if extractResult(t, res) != nExpectedResult {
 				t.Fail()
 			}
-		}
-	}
-}
-
-// all this part may be deleted
-// this shows how to use assertResultIs. It was used for debugging
-// and is kept around until we are sure we don't need it.
-// Also it shows some coloring with `TRACE=none go test examples/calculator/calculator_test.go -v`
-// which can help to understand the first time
-func Test_12(t *testing.T) { assertResultIs(t, "-4 * ((-2+1) *3)", 12) }
-
-const (
-	esc   string = "\x1b"
-	reset string = esc + "[0m"
-)
-
-func cyan(s string) string       { return esc + "[36m" + s + reset }
-func yellow(s string) string     { return esc + "[33m" + s + reset }
-func boldYellow(s string) string { return esc + "[1;33m" + s + reset }
-
-func assertResultIs(t *testing.T, sExpression string, nExpectedResult int) {
-	t.Helper()
-	res := joeson.GrammarFromLines("calc", linesCalc).ParseString(sExpression)
-	if joeson.IsParseError(res) {
-		t.Error(res.String())
-	} else {
-		fmt.Println(
-			cyan(sExpression),
-			" --> ",
-			yellow(res.String()),
-			" --> ",
-			boldYellow(strconv.Itoa(extractResult(t, res))),
-		)
-		if extractResult(t, res) != nExpectedResult {
-			t.Fail()
 		}
 	}
 }
