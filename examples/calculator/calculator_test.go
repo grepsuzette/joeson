@@ -12,8 +12,19 @@ import (
 //
 // To understand more easily, start from the bottom, with Test_calc()
 
+// "Inline" line of rule AKA ILine. Inline rules are always named().
+// An inline rule can be referenced by its name. When it isn't
+// it is totally inert and inactive.
 func i(a ...any) j.ILine { return j.I(a...) }
+
+// "OR" rule. Inside a rank, "OR" rules (AKA OLine) are parsed one after the
+// other until one returns something other than nil. Some of them are named,
+// but they usually aren't, as it's more the point of an ILine to be
+// referenced.
 func o(a ...any) j.OLine { return j.O(a...) }
+
+// A Key-value pair, where Key is the name.
+// This is exclusively used with joeson ILine and OLine to name things.
 func named(name string, lineStringOrAst any) j.NamedRule {
 	return j.Named(name, lineStringOrAst)
 }
@@ -35,12 +46,10 @@ var linesCalc = []j.Line{
 	}),
 	i(named("AddOp", "'+' | '-'")),
 	i(named("MulOp", "'*' | '/'")),
-	i(named("Integer", "/^-?[0-9]+/"), func(it j.Ast) j.Ast { return j.NewNativeIntFrom(it) }),
+	i(named("Integer", "/^-?[0-9]+/"), func(it j.Ast) j.Ast {
+		return j.NewNativeIntFrom(it)
+	}),
 	i(named("_", "[ \t]*")),
-}
-
-func xx(it j.Ast) j.Ast {
-	return eval(it.(*j.NativeMap).Get("first"), it.(*j.NativeMap).Get("rest"))
 }
 
 var ops = map[string]func(int, int) int{
@@ -54,6 +63,12 @@ func add(a, b int) int { return a + b }
 func sub(a, b int) int { return a - b }
 func mul(a, b int) int { return a * b }
 func div(a, b int) int { return a / b }
+func xx(it j.Ast) j.Ast {
+	return eval(
+		it.(*j.NativeMap).Get("first"),
+		it.(*j.NativeMap).Get("rest"),
+	)
+}
 
 // extract the "expr" key from a result `x` to an int
 // or, failing to do that, call FailNow()
@@ -62,7 +77,9 @@ func extractResult(t *testing.T, x j.Ast) int {
 	if n, exists := x.(*j.NativeMap).GetIntExists("expr"); exists {
 		return n
 	} else {
-		t.Errorf("Failed to find a result like NativeMap{expr:<INT>} in " + x.String())
+		t.Errorf("Failed to find a result like NativeMap{expr:<INT>} in %s",
+			x.String(),
+		)
 	}
 	t.FailNow()
 	return 0 // so it compiles
@@ -95,13 +112,20 @@ func Test_failing(t *testing.T) {
 	for s, sExpectedError := range h {
 		res := gm.ParseString(s)
 		if !j.IsParseError(res) {
-			t.Error("expected error but got none, for: " + s + ". Res: " + res.String())
+			t.Errorf("expected error but got none, for: %q. Res: %s",
+				s,
+				res.String(),
+			)
 		} else {
 			sError := res.(j.ParseError).ErrorString
 			if strings.Index(sError, sExpectedError) == 0 {
 				// np, expected case
 			} else {
-				t.Error("expected error " + sExpectedError + " for " + s + " but got " + sError + " instead")
+				t.Errorf("expected error %q for %s but got %s instead",
+					sExpectedError,
+					s,
+					sError,
+				)
 			}
 		}
 	}
