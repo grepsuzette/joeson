@@ -4,19 +4,8 @@ import (
 	"fmt"
 )
 
-// TODO better doc
-// Named helps simplifying writing trees of rules.
-//
-// Examples:
-// o(Named("LABELED", o(<compiled>), o(Named("DECORATED", o(<compiled>, ..))))
-// o(Named("DECORATED", o(<compiled>), o(<compiled>), i(<compiled>)))
-// i(Named("RANGE", o(<compiled>))
-// i(Named("LABEL", C(St("&"), St("@"), R("WORD")))),
-// i(Named("LABEL", "'&' | '@' | WORD")),
-//
-// For i, it is necessary for len(lines) == 1
-//
-//	this is to be enforcedby the caller.
+// A Key-value pair, where Key is the name.
+// This is exclusively used with joeson ILine and OLine to name things.
 func Named(name string, lineStringOrAst any) NamedRule {
 	switch v := lineStringOrAst.(type) {
 	case Line:
@@ -33,9 +22,8 @@ func Named(name string, lineStringOrAst any) NamedRule {
 	}
 }
 
-// NamedRule is produced by Named().
-// NamedRule technically implements Ast.
-// There is no much reason to keep it public.
+// A Key-value pair, where Key is the name.
+// Please use Named() instead of building directly.
 type NamedRule struct {
 	name string
 	line Line // O, I or A

@@ -7,6 +7,10 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
+// "OR" rule. Inside a rank, "OR" rules (AKA OLine) are parsed one after the
+// other until one returns something other than nil. Some of them are named,
+// but they usually aren't, as it's more the point of an ILine to be
+// referenced.
 type OLine struct {
 	name    string // "" unless provided by Named()
 	content Line
@@ -30,8 +34,10 @@ type oLineNaming struct {
    // A handcompiled rule with which the joeson grammar is initially defined (see ast/handcompiled.go)
 */
 
-// O() is a helper to declare non-terminal lines of rules (aka OLine).
-// It is better to refer to the readme for this function.
+// "OR" rule. Inside a rank, "OR" rules (AKA OLine) are parsed one after the
+// other until one returns something other than nil. Some of them are named,
+// but they usually aren't, as it's more the point of an ILine to be
+// referenced.
 func O(a ...any) OLine {
 	name, content, attrs := lineInit(a)
 	return OLine{name, content, attrs}

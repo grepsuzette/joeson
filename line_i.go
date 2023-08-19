@@ -6,7 +6,9 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// ILine represents an inner rule in a rank
+// "Inline" line of rule AKA ILine. Inline rules are always named().
+// An inline rule can be referenced by its name. When it isn't
+// it is totally inert and inactive.
 type ILine struct {
 	name    string // ILine, as terminal elements, are always named
 	content Line
@@ -26,12 +28,12 @@ They have a name (always), a content, an optional parse callback and an optional
        (that is not going to be useful outside of this lib)
 */
 
-// I() is a helper to declare terminal lines of rules (aka ILine).
+// "Inline" line of rule AKA ILine. Inline rules are always named().
+// An inline rule can be referenced by its name. When it isn't
+// it is totally inert and inactive.
+//
 // Since ILine are always named, you are going to always call it like this:
-//
-//	I(Named("hello", "'hi' | 'hello'"), <optionalCallback>)
-//
-// It is better to refer to the readme, as it is too flexible to explain here.
+// `I(Named("MyRule", `'hi' | 'hello'`), <optionalCallback>)`
 func I(a ...any) ILine {
 	name, content, attrs := lineInit(a)
 	if name == "" {
