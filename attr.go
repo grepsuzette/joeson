@@ -7,6 +7,11 @@ type Attr struct {
 	Line  int
 }
 
+func NewAttr() *Attr {
+	return &Attr{}
+}
+
+// deprecated, replace with NewAttr
 func newAttr() *Attr {
 	return &Attr{}
 }
