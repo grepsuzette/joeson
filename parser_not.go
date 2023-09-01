@@ -1,5 +1,13 @@
 package joeson
 
+// Negative lookahead
+//
+// !foo -> not{foo}
+// !(foo) -> not{foo}
+//
+// it does not capture.
+// use parens when using this with alternation
+// e.g. "a !c | b" is grouped as "a (!c | b)".
 type not struct {
 	*Attr
 	*gnodeimpl
