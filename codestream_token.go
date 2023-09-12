@@ -67,7 +67,6 @@ func (t Token) String() string {
 // `text` is the original, untokenized text.
 // `tokens` must have been generated from `text`.
 // For go code, you could use for instance "go/scanner".
-// Panic if any token in `tokens` starts beyond `text` boundary
 func NewTokenStream(text string, tokens []Token) *TokenStream {
 	lineStarts := []int{0}
 	for pos, rune := range text {
@@ -77,21 +76,6 @@ func NewTokenStream(text string, tokens []Token) *TokenStream {
 	}
 	var b strings.Builder
 	for _, token := range tokens {
-		// Tokens may be inserted, so below test is unwanted.
-		// E.g. ";" tokens can be inserted by go lexer.
-		// if token.OriginalOffset > len(text) {
-		// 	fmt.Println("text:\n" + text)
-		// 	fmt.Println("tokens:")
-		// 	for _, t := range tokens {
-		// 		fmt.Println(t.String())
-		// 	}
-		// 	panic(fmt.Sprintf(
-		// 		"Check your lexing function: tokens reference text outside the "+
-		// 			"original text (token.OriginalOffset=%d > len(text)=%d)",
-		// 		token.OriginalOffset,
-		// 		len(text),
-		// 	))
-		// }
 		b.WriteString(token.Repr)
 	}
 	return &TokenStream{tokens, text, b.String(), 0, lineStarts}
