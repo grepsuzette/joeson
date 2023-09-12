@@ -12,24 +12,23 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// In retrospect the code is too identical to RuneStream to justify another
-// implementation. Can improve that
-
-// TokenStream allows matching against tokenkized texts.
-// User can provide tokens produced from an original text.
-// Two systems of source coordinates exist then (token-space, original-space).
-// An illustration is provided to explain graphically,
-// although it's relatively straightforward:
+// TokenStream helps parsing tokenized texts.
+// Suppose you want to parse a grammar from some pre-tokenized text.
+// Tokenization will simplify your grammar, but Joeson would now need
+// two systems of source coordinates, in particular to report errors
+// to the user.
+//
+// TokenStream helps with that. Suppose a sequence of `=` represents tokens:
 //
 //	 pos=0    pos=12
 //	/        /
-//	=======  ===N===== <--- tokens
+//	=======  ===N=====
 //	====  ======= ===
 //	===========  =====
 //
-// When fail at offset N, we can find which offset
-// of which token, and translate back to original
-// source space position (pos).
+// When parsing fails at offset N, we can find which offset
+// of which token, and translate back to byte offset in original
+// text.
 //
 // Grammars are intended to parse against the tokenized text (`work`)
 // and errors are meant to show the `original` text.
@@ -45,7 +44,7 @@ type (
 		Repr           string
 		OriginalOffset int // relative to original
 		WorkOffset     int // relative to work
-		// meta interface{} // for now is useless
+		// meta interface{} // for now useless
 	}
 	coord struct {
 		token          Token // token found at requested position
@@ -64,9 +63,11 @@ func (t Token) String() string {
 	)
 }
 
-// `tokens` must have been generated from `text` using a scanner/lexer/tokenizer,
-// however you want to call it. An example is "go/scanner".
-// If `tokens` have position starting beyond `text` it will panic
+// Create a new token stream.
+// `text` is the original, untokenized text.
+// `tokens` must have been generated from `text`.
+// For go code, you could use for instance "go/scanner".
+// Panic if any token in `tokens` starts beyond `text` boundary
 func NewTokenStream(text string, tokens []Token) *TokenStream {
 	lineStarts := []int{0}
 	for pos, rune := range text {

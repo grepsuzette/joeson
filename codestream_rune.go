@@ -9,11 +9,18 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// A simple code holder, cursor, matcher implementing CodeStream.
-// The name "stream" is a little bit illusory. It's a string okay.
+// A simple code holder, cursor, matcher
+// CodeStream implementation.
 type RuneStream struct {
-	text       string
-	pos        int // "Hello, 世界, X" <- Pos of o is 4, Pos of 界 is 10
+	text string
+
+	// Current position, expressed in byte offset.
+	// pos ∈ [0; len(text)],
+	//	len(text) represents EOF!
+	// "Hello, 世界, X" <- Pos of o is 4, Pos of 界 is 10
+	pos int
+
+	// Position of each line start in `text`, expressed in byte offset.
 	lineStarts []int
 }
 
@@ -29,7 +36,7 @@ func NewRuneStream(text string) CodeStream {
 
 func (code *RuneStream) Pos() int { return code.pos }
 func (code *RuneStream) SetPos(n int) {
-	// n == len(code.text) is allowed for now, for EOF
+	// n == len(code.text) is allowed (end of stream)
 	if n < 0 || n > len(code.text) {
 		panic(fmt.Sprintf("%d is out of bound", n))
 	}
