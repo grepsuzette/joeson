@@ -1,5 +1,11 @@
 package joeson
 
+// Attr helps to implement Ast.
+//
+// To implement Ast you may simply do those 2 things:
+//
+// - Embed an `*Attr` field,
+// - Have a `String() string` method.
 type Attr struct {
 	Code  string
 	Start int
