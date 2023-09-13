@@ -57,22 +57,24 @@ func (na *NativeArray) Append(it Ast) {
 }
 
 // `["a","","bc"]` -> `"abc"`
-// (with respect to the fact elements of the example are not strings
-// but either NativeString or embedded *NativeArray)
-func (na *NativeArray) Concat() string {
+// (while we use strings in that example,
+// a NativeArray will not contain strings directly
+// but rather NativeString or children NativeArray,
+// it however works the same)
+func (na *NativeArray) Concat() NativeString {
 	var b strings.Builder
 	for _, element := range *na {
 		switch v := element.(type) {
 		case NativeString:
 			b.WriteString(string(v))
 		case *NativeArray:
-			b.WriteString(v.Concat())
+			b.WriteString(string(v.Concat()))
 		case NativeUndefined:
 		default:
 			b.WriteString(v.String())
 		}
 	}
-	return b.String()
+	return NewNativeString(b.String())
 }
 
 func (na *NativeArray) SetLine(n int)                                   {}

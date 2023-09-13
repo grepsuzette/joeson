@@ -32,15 +32,15 @@ func NewNativeMap(h map[string]Ast) *NativeMap {
 
 // NativeMap.Concat works provided all types within its tree are Native*.
 // it will panic otherwise.
-func (nm *NativeMap) Concat() string {
+func (nm *NativeMap) Concat() NativeString {
 	var b strings.Builder
 	for _, k := range nm.Keys() {
 		if v, ok := nm.GetExists(k); ok {
 			switch w := v.(type) {
 			case *NativeMap:
-				b.WriteString(w.Concat())
+				b.WriteString(string(w.Concat()))
 			case *NativeArray:
-				b.WriteString(w.Concat())
+				b.WriteString(string(w.Concat()))
 			case NativeUndefined:
 			case NativeString:
 				b.WriteString(string(w))
@@ -51,7 +51,7 @@ func (nm *NativeMap) Concat() string {
 			}
 		}
 	}
-	return b.String()
+	return NewNativeString(b.String())
 }
 
 func (nm *NativeMap) assertNode() {}
@@ -96,7 +96,7 @@ func (nm *NativeMap) GetStringExists(k string) (string, bool) {
 		case NativeString:
 			return string(v), true
 		case *NativeArray:
-			return v.Concat(), true
+			return string(v.Concat()), true
 		default:
 			panic("unexpected type")
 		}
@@ -120,10 +120,10 @@ func (nm *NativeMap) GetIntExists(k string) (int, bool) {
 				panic("Could not Atoi(" + string(v) + "): " + e.Error())
 			}
 		case *NativeArray:
-			if n, e := strconv.Atoi(v.Concat()); e == nil {
+			if n, e := strconv.Atoi(string(v.Concat())); e == nil {
 				return n, true
 			} else {
-				panic("Could not Atoi(" + v.Concat() + "): " + e.Error())
+				panic("Could not Atoi(" + string(v.Concat()) + "): " + e.Error())
 			}
 		default:
 			panic("Could not get Int from " + ast.String())
