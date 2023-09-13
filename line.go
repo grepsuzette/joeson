@@ -13,17 +13,19 @@ type Line interface {
 	stringIndent(nIndent int) string // indent with `nIdent` levels (for nested rules)
 }
 
-// Functions used jointly by ILine and OLine
+// Functions jointly used by ILine and OLine
 
 // lineInit
-// It is called by `I(...any)` and `O(...any)`.
+// Called by `I(...any)` and `O(...any)`.
 // Helps destructuring their arguments into name, content and options.
 // Unpacks `Named()`.
-// Assigns parse functions gto ParseOption.
-func lineInit(origArgs []any) (name string, lineContent Line, attrs *ParseOptions) {
+// Assigns parse functions onto ParseOptions.
+// Collects ...ParseOption into returned ParseOptions
+func lineInit(origArgs []any) (name string, lineContent Line, attrs *parseOptions) {
 	attrs = newParseOptions()
 	for i, arg := range origArgs {
 		if i == 0 {
+			// Named rule can appear in first position
 			switch v := arg.(type) {
 			case NamedRule:
 				name = v.name
@@ -35,16 +37,20 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs *ParseOption
 		} else {
 			switch v := arg.(type) {
 			case func(it Ast) Ast:
-				attrs.CbBuilder = func(x Ast, _ *ParseContext, _ Ast) Ast {
+				attrs.cb = func(x Ast, _ *ParseContext, _ Ast) Ast {
 					return v(x)
 				}
 			case func(Ast, *ParseContext) Ast:
-				attrs.CbBuilder = func(x Ast, ctx *ParseContext, _ Ast) Ast {
+				attrs.cb = func(x Ast, ctx *ParseContext, _ Ast) Ast {
 					return v(x, ctx)
 				}
 			case func(Ast, *ParseContext, Ast) Ast:
-				attrs.CbBuilder = v
-			case ParseOptions:
+				attrs.cb = v
+			case ParseOption:
+				// A separate option, such as `Debug{true}`
+				attrs = v.apply(attrs)
+			case parseOptions:
+				// A ParseOptions object (deprecated)
 				attrs = &v
 			case string:
 				fmt.Printf(
@@ -140,7 +146,7 @@ func getRule(
 	name string,
 	line Line,
 	parentRule Parser,
-	attrs *ParseOptions,
+	attrs *parseOptions,
 	opts *TraceOptions,
 	lazyGrammar *helpers.Lazy[*Grammar],
 ) Parser {
@@ -155,7 +161,7 @@ func getRule(
 	case ILine:
 		panic("assert") // ILine is impossible here
 	case OLine:
-		v.ParseOptions = attrs
+		v.parseOptions = attrs
 		answer = v.toRule(rank_, parentRule, oLineNaming{name: name}, opts, lazyGrammar)
 		answer.SetRuleNameWhenEmpty(name)
 		// answer.(gnode).gnode().ParseOptions = attrs
@@ -193,7 +199,7 @@ func getRule(
 	// fmt.Printf(" name=%s attrs rule.rule.Debug=%s rule.Debug=%s attrs.Debug=%s\n", name, reflect.TypeOf(line).String(), rule.Debug, rule.Debug, attrs.Debug)
 	// rule.SkipCache = attrs.SkipCache
 	// rule.SkipLog = attrs.SkipLog
-	rule.CbBuilder = attrs.CbBuilder
+	rule.cb = attrs.cb
 	// rule.Debug = attrs.Debug
 	return answer
 }

@@ -1,4 +1,3 @@
-// joeson is a packrat left recursive parser in Go
 package joeson
 
 import (
@@ -13,7 +12,7 @@ type Grammar struct {
 	*Attr
 	*TraceOptions
 	*gnodeimpl
-	rank           Parser         // a *Rank or a Ref to a rank
+	rank           Parser         // The toplevel rank with which the grammar was defined
 	numrules       int            // Each Ast can have rules, recursively. This however is the total count in the grammar
 	id2rule        map[int]Parser // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
 	wasInitialized bool
@@ -32,23 +31,6 @@ type GrammarOptions struct {
 }
 
 // Prepare a new grammar from the rules in `lines`.
-// The way to pass options will need to be reworked at some point.
-// Here is an example:
-// ```
-//
-//	gm := joeson.GrammarWithOptionsFromLines(
-//		"leftRecursion",
-//		joeson.GrammarOptions{TraceOptions: joeson.Verbose()},
-//		[]joeson.Line{
-//			o(named("Input", "expr:Expression")),
-//			i(named("Expression", "Expression _ binary_op _ Expression | UnaryExpr")),
-//			i(named("binary_op", "'+'")),
-//			i(named("UnaryExpr", "[0-9]+")),
-//			i(named("_", "[ \t]*")),
-//		},
-//	)
-//
-// ```
 func GrammarFromLines(name string, lines []Line) *Grammar {
 	return GrammarWithOptionsFromLines(
 		name,
@@ -60,6 +42,22 @@ func GrammarFromLines(name string, lines []Line) *Grammar {
 	)
 }
 
+// The way to pass options will need to be reworked at some point.
+// Here is an example:
+// ```
+//
+//	gm := j.GrammarWithOptionsFromLines(
+//		"leftRecursion",
+//		j.GrammarOptions{TraceOptions: j.Verbose()},
+//		[]j.Line{
+//			o(named("Expression", `Expression _ binary_op _ Expression | UnaryExpr`)),
+//			i(named("binary_op", `'+'`)),
+//			i(named("UnaryExpr", `[0-9]+`)),
+//			i(named("_", `[ \t]*`)),
+//		},
+//	)
+//
+// ```
 func GrammarWithOptionsFromLines(name string, options GrammarOptions, lines []Line) *Grammar {
 	if options.TraceOptions == nil {
 		options.TraceOptions = Mute()
@@ -75,25 +73,36 @@ func GrammarWithOptionsFromLines(name string, options GrammarOptions, lines []Li
 func (gm *Grammar) assertNode()     {}
 func (gm *Grammar) CountRules() int { return gm.numrules }
 
-// TODO FIXME this documentation is not entirely accurate
-// Parse functions don't panic.
-// A parser returns nil when it cannot to parse. When there is an error
-// but the parser takes the responsability (denying any other parser the
-// chance to parse), it returns a ParseError instead.
-func (gm *Grammar) ParseString(s string) Ast {
-	return gm.Parse(newParseContext(
+// Parse a string with given parse options.
+// You don't usually provide any other option than Debug.
+// E.g. `gm.ParseString("blah", j.Debug{true})`.
+// Return nil if failed to parse.
+func (gm *Grammar) ParseString(s string, options ...ParseOption) Ast {
+	ctx := newParseContext(
 		NewRuneStream(s),
 		gm.numrules,
 		gm.TraceOptions,
-	))
+	)
+	for _, option := range options {
+		ctx.applyOption(option)
+	}
+	return gm.Parse(ctx)
 }
 
-func (gm *Grammar) ParseTokens(tokens *TokenStream) Ast {
-	return gm.Parse(newParseContext(
+// Parse provided TokenStream.
+// You don't usually provide any other option than Debug.
+// E.g. `gm.ParseString("blah", j.Debug{true})`.
+// Return nil if failed to parse.
+func (gm *Grammar) ParseTokens(tokens *TokenStream, options ...ParseOption) Ast {
+	ctx := newParseContext(
 		tokens,
 		gm.numrules,
 		gm.TraceOptions,
-	))
+	)
+	for _, option := range options {
+		ctx.applyOption(option)
+	}
+	return gm.Parse(ctx)
 }
 
 // Exported because grammar implements Parser
@@ -101,7 +110,7 @@ func (gm *Grammar) ParseTokens(tokens *TokenStream) Ast {
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	oldTrace := gm.TraceOptions.Stack
 	ctx.GrammarName = gm.GetRuleName()
-	if ctx.ParseOptions.Debug {
+	if ctx.parseOptions.debug {
 		// temporarily enable stack tracing
 		gm.TraceOptions.Stack = true
 	}

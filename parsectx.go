@@ -13,7 +13,7 @@ import (
 type ParseContext struct {
 	Code          CodeStream
 	*TraceOptions        // grammar.TraceOptions at the moment this context is created.
-	*ParseOptions        // Defined within a rule, e.g. I("INT", "/[0-9]+/", ParseOptions{Debug: true})
+	*parseOptions        // Defined within a rule, e.g. I("INT", "/[0-9]+/", ParseOptions{Debug: true})
 	Counter       int    // [debug] iteration counter. Shown with TRACE=stack. Useful with conditional breakpoints
 	GrammarName   string // [debug] set in grammar.Parse to the value of grammar.Name().
 	// Useful for conditional breakpoints (typically in packrat loopify())
@@ -39,7 +39,7 @@ func newParseContext(code CodeStream, numRules int, opts *TraceOptions) *ParseCo
 	}
 	return &ParseContext{
 		Code:         code,
-		ParseOptions: newParseOptions(),
+		parseOptions: newParseOptions(),
 		TraceOptions: opts,
 		numRules:     numRules,
 		frames:       frames,
@@ -49,8 +49,13 @@ func newParseContext(code CodeStream, numRules int, opts *TraceOptions) *ParseCo
 }
 
 // only set from within the callback within a rule.
-func (ctx *ParseContext) setParseOptions(opts *ParseOptions) *ParseContext {
-	ctx.ParseOptions = opts
+func (ctx *ParseContext) setParseOptions(opts *parseOptions) *ParseContext {
+	ctx.parseOptions = opts
+	return ctx
+}
+
+func (ctx *ParseContext) applyOption(option ParseOption) *ParseContext {
+	ctx.parseOptions = option.apply(ctx.parseOptions)
 	return ctx
 }
 
@@ -70,7 +75,7 @@ func (ctx *ParseContext) String() string {
 }
 
 func (ctx *ParseContext) log(message string, opts *TraceOptions) {
-	if !ctx.ParseOptions.SkipLog {
+	if !ctx.parseOptions.skipLog {
 		if opts.FilterLine == -1 || ctx.Code.Line() == opts.FilterLine {
 			fmt.Printf("%s%s\n", ctx.String(), message)
 		}

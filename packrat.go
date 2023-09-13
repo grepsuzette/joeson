@@ -86,7 +86,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 		if opts.Stack {
 			ctx.log(Blue("*")+" "+String(x)+" "+BoldBlack(strconv.Itoa(ctx.Counter)), opts)
 		}
-		if x.gnode().SkipCache {
+		if x.gnode().skipCache {
 			result := fparse(ctx)
 			if opts.Stack {
 				ctx.log(Cyan("`->:")+" "+helpers.Escape(result.String())+" "+BoldBlack(helpers.TypeOfToString(result)), opts)
@@ -266,8 +266,8 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 			if gn.label != "" && gn.parent != nil && !gn.parent.HandlesChildLabel() {
 				result = NewNativeMap(map[string]Ast{gn.label: result})
 			}
-			if gn.CbBuilder != nil {
-				result = gn.CbBuilder(result, ctx, caller)
+			if gn.cb != nil {
+				result = gn.cb(result, ctx, caller)
 				if result == nil {
 					return nil
 				}
@@ -299,7 +299,7 @@ func wrap(fparse2 parseFunc2, node Parser) parseFunc {
 			return stack(loopify(prepareResult(fparse2, node), node), node)(ctx) // much faster
 		} else if gn.label != "" &&
 			(gn.parent != nil && !gn.parent.HandlesChildLabel()) ||
-			gn.CbBuilder != nil {
+			gn.cb != nil {
 			// return wrapped2(ctx)
 			return prepareResult(fparse2, node)(ctx) // much faster
 		} else {

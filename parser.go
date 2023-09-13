@@ -60,7 +60,7 @@ var (
 
 // a partial common implementation for Parser
 type gnodeimpl struct {
-	ParseOptions
+	parseOptions
 	parent  Parser            // A grammar must be a DAG (root.Parent being nil)
 	name    string            // rule name, if IsRule(). E.g. "AddOp" in `i(Named("AddOp", "'+' | '-'"))`
 	label   string            // rule label, e.g. "l" in `l:list` in `i(named("expr", "l:list | s:string"), parseExpr),`
