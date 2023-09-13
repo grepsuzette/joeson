@@ -7,37 +7,12 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// "OR" rule. Inside a rank, "OR" rules (AKA OLine) are parsed one after the
-// other until one returns something other than nil. Some of them are named,
-// but they usually aren't, as it's more the point of an ILine to be
-// referenced.
 type OLine struct {
 	name    string // "" unless provided by Named()
 	content Line
 	*ParseOptions
 }
 
-// In a rank, with a parent "foo", unnamed rules get automatically called
-// "foo[0]", "foo[1]"...
-// This is the struct transmitting the naming decision to OLine.toRule
-type oLineNaming struct {
-	name  string
-	index int // -1 if unset
-}
-
-/*
-- O(Named("EXPR", Rules(....)))  // First argument is string (a rule name) and goes to `name`, second is []Line (subrules)
-- O("CHOICE _")  // The argument here is considered a rule (sLine) because there is no rules() array. `name` will be ""
-- O("_PIPE* SEQUENCE*_PIPE{2,} _PIPE*", func(it Ast) Ast { return new Choice it}) // same as above, with a cb
-- ..... func(it Ast, ctx *ParseContext) Ast { return <...> }, ParseOptions{ SkipLog: true, SkipCache: false } // callbacks long form
-- O(S(St("{"), R("_"), L("min",E(R("INT"))), R("_"), St(","), R("_"), L("max",E(R("INT"))), R("_"), St("}")))
-   // A handcompiled rule with which the joeson grammar is initially defined (see ast/handcompiled.go)
-*/
-
-// "OR" rule. Inside a rank, "OR" rules (AKA OLine) are parsed one after the
-// other until one returns something other than nil. Some of them are named,
-// but they usually aren't, as it's more the point of an ILine to be
-// referenced.
 func O(a ...any) OLine {
 	name, content, attrs := lineInit(a)
 	return OLine{name, content, attrs}
@@ -80,4 +55,11 @@ func (ol OLine) toRule(
 	rule := getRule(rank_, name, content, parentRule, ol.ParseOptions, opts, lazyGrammar)
 	rule.gnode().parent = parentRule
 	return rule
+}
+
+// specifies how to reference a rule
+// (either by name, or by index)
+type oLineNaming struct {
+	name  string
+	index int // -1 if unset
 }

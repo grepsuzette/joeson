@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+// avoid regexes with PEG in general, regexes are greedy and this can
+// create ambiguity and buggy grammars. As a special case, character classes are OK.
+// Regexes can be used to optimize but again avoid them unless
+// you know what you're doing.
 type regex struct {
 	*Attr
 	*gnodeimpl

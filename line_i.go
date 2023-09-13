@@ -6,34 +6,12 @@ import (
 	"github.com/grepsuzette/joeson/helpers"
 )
 
-// "Inline" line of rule AKA ILine. Inline rules are always named().
-// An inline rule can be referenced by its name. When it isn't
-// it is totally inert and inactive.
 type ILine struct {
-	name    string // ILine, as terminal elements, are always named
+	name    string // name must be set for ILine
 	content Line
 	*ParseOptions
 }
 
-/*
-They have a name (always), a content, an optional parse callback and an optional ParseOptions object.
-- I(Named("INT", "/[0-9]+/")
-- I(Named("INT", "/[0-9]+/"), func(it Ast) Ast { return new NativeInt(it) })
-- I(Named("INT", "/[0-9]+/"), func(it Ast, ctx *ParseContext) Ast { return <...> })
-- I(Named("INT", "/[0-9]+/"), func(it Ast) Ast { return <...> }, ParseOptions{SkipLog: false, SkipCache: true})
-   \__ These are typical exemples
-
-- I(Named("LABEL", c(st('&'), st('@'), r("WORD")))),
-   \__ This one is a handcompiled rule that therefore doesn't use a string
-       (that is not going to be useful outside of this lib)
-*/
-
-// "Inline" line of rule AKA ILine. Inline rules are always named().
-// An inline rule can be referenced by its name. When it isn't
-// it is totally inert and inactive.
-//
-// Since ILine are always named, you are going to always call it like this:
-// `I(Named("MyRule", `'hi' | 'hello'`), <optionalCallback>)`
 func I(a ...any) ILine {
 	name, content, attrs := lineInit(a)
 	if name == "" {

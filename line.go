@@ -13,12 +13,13 @@ type Line interface {
 	stringIndent(nIndent int) string // indent with `nIdent` levels (for nested rules)
 }
 
-/* -- follow some common functions used by ILine & OLine -- */
+// Functions used jointly by ILine and OLine
 
-// The functions `I(a ...any)` and `O(a ...any)` both call `lineInit(a)`
-// to help destructuring `a` into a name, content (Line) and options. This
-// is where `Named()` gets decomposed if it was used. This is also
-// where parsing callbacks make their way into ParseOptions.
+// lineInit
+// It is called by `I(...any)` and `O(...any)`.
+// Helps destructuring their arguments into name, content and options.
+// Unpacks `Named()`.
+// Assigns parse functions gto ParseOption.
 func lineInit(origArgs []any) (name string, lineContent Line, attrs *ParseOptions) {
 	attrs = newParseOptions()
 	for i, arg := range origArgs {
@@ -121,16 +122,19 @@ func rule2line(x any) Line {
 	}
 }
 
+// getRule is directly transposed from coffeescript.
+// See docs/internals.md
+//
 // name:       The final and correct name for this rule
 // rule:       A rule-like object
-//                 In coffee it means string, array, object (map) or oline
-//                 In this implementation it means Line, among:
-//                   SLine (for string), ALine, OLine
+//
+//	In coffee it means string, array, object (map) or oline
+//	In this implementation it means Line, among:
+//	  SLine (for string), ALine, OLine
+//
 // parentRule: The actual parent Rule instance
 // attrs:      {cb,...}, extends the result
 // opts:       Parse time options
-
-// see line/README.md # internals
 func getRule(
 	rank_ *rank,
 	name string,

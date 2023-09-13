@@ -23,7 +23,7 @@ func Named(name string, lineStringOrAst any) NamedRule {
 }
 
 // A Key-value pair, where Key is the name.
-// Please use Named() instead of building directly.
+// Use Named() instead of building directly.
 type NamedRule struct {
 	name string
 	line Line // O, I or A
