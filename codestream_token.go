@@ -14,11 +14,11 @@ import (
 
 // TokenStream helps parsing tokenized texts.
 // Suppose you want to parse a grammar from some pre-tokenized text.
-// Tokenization will simplify your grammar, but Joeson would now need
-// two systems of source coordinates, in particular to report errors
+// Tokenization will simplify your grammar, but we would now need
+// two systems of source coordinates, e.g. to report usable errors
 // to the user.
 //
-// TokenStream helps with that. Suppose a sequence of `=` represents tokens:
+// Suppose a sequence of `=` represents tokens:
 //
 //	 pos=0    pos=12
 //	/        /
@@ -26,7 +26,7 @@ import (
 //	====  ======= ===
 //	===========  =====
 //
-// When parsing fails at offset N, we can find which offset
+// When parsing fails at offset N, TokenStream can find which offset
 // of which token, and translate back to byte offset in original
 // text.
 //
@@ -44,7 +44,7 @@ type (
 		Repr           string
 		OriginalOffset int // relative to original
 		WorkOffset     int // relative to work
-		// meta interface{} // for now useless
+		// meta interface{} // useless for now
 	}
 	coord struct {
 		token          Token // token found at requested position
@@ -81,23 +81,29 @@ func NewTokenStream(text string, tokens []Token) *TokenStream {
 	return &TokenStream{tokens, text, b.String(), 0, lineStarts}
 }
 
-// `Pos` here means the offset in the tokenized string (AKA workOffset)
+// `Pos()` returns the byte offset relative to workOffset (the tokenized string)
 func (ts *TokenStream) Pos() int {
 	return ts.workOffset
 }
 
-// `Pos` here means the offset in the tokenized string (AKA workOffset)
+// `SetPos()` sets the the byte offset relative to workOffset (the tokenized string)
+// A value of `n` equals to the length of `work` represents the end of the
+// stream (nothing to parse anymore).
 func (ts *TokenStream) SetPos(n int) {
-	// TODO for now there is a tolerance (we allow n == len(code.text))
-	// because current algo in packrat uses it. Remove it ASAP
 	if n < 0 || n > len(ts.work) {
 		panic(fmt.Sprintf("%d is out of bound", n))
 	}
 	ts.workOffset = n
 }
 
-// `Pos` here means the offset in the tokenized string (AKA workOffset)
-// Line refers to the original text, and start at 1.
+// Get current line (in the original text), first line is 1.
+func (code *TokenStream) Line() int { return code.PosToLine(code.workOffset) }
+
+// Get current column (in the original text), first column is 1.
+func (code *TokenStream) Col() int { return code.PosToCol(code.workOffset) }
+
+// Convert a certain position (byte offset relative to workOffset) to Line.
+// Line refers to the original text, and starts at 1.
 func (code *TokenStream) PosToLine(workOffset int) int {
 	return helpers.BisectRight(
 		code.lineStarts,
@@ -105,33 +111,30 @@ func (code *TokenStream) PosToLine(workOffset int) int {
 	) - 1
 }
 
-// `Pos` here means the offset in the tokenized string (AKA workOffset)
-// Col refers to the original text, and start at 1.
+// Convert a certain position (byte offset relative to workOffset) to Column.
+// Column refers to the original text, and start at 1.
 func (code *TokenStream) PosToCol(workOffset int) int {
 	return code.coords(workOffset).originalOffset -
 		code.lineStarts[code.PosToLine(workOffset)]
 }
 
-// Current line (in the original text), starting counting at 1.
-func (code *TokenStream) Line() int { return code.PosToLine(code.workOffset) }
+func (code *TokenStream) Code() string { return code.original }
 
-// Current column (in the original text), starting counting at 1.
-func (code *TokenStream) Col() int { return code.PosToCol(code.workOffset) }
+// Get the length in bytes of the original text
+func (code *TokenStream) Length() int { return len(code.original) }
 
-// Length of the original text (since exported function are for external usage)
-func (code *TokenStream) Code() string    { return code.original }
-func (code *TokenStream) Length() int     { return len(code.original) }
+// Get the length in bytes of the tokenized text
 func (code *TokenStream) workLength() int { return len(code.work) }
 
-// Get until the string `end` is encountered.
-// Change workingpos accordingly, including the string
-func (code *TokenStream) GetUntil(end string) string {
-	offset := strings.Index(code.work[code.workOffset:], end)
+// Get the string from current position until the start of string `needle` is found.
+// Update current position accordingly (**after** `needle` if found).
+func (code *TokenStream) GetUntil(needle string) string {
+	offset := strings.Index(code.work[code.workOffset:], needle)
 	if offset == -1 {
 		offset = len(code.work)
 	} else {
 		offset += code.workOffset // because we searched from this pos
-		offset += len(end)        // what we're after is the length in bytes
+		offset += len(needle)     // what we're after is the length in bytes
 	}
 	oldWorkOffset := code.workOffset
 	code.workOffset = offset
@@ -192,9 +195,6 @@ func (code *TokenStream) PeekLines(n ...int) string {
 // Match func(rune) bool against rune at current position.
 // didMatch indicates whether is succeeded. If so the rune is m and position is
 // updated. When at EOF it never match.
-//
-// So... what exactly means to match a rune in the context of a token stream?
-// Well, this is a stringified tokenstream. So it can work the same.
 func (code *TokenStream) MatchRune(f func(rune) bool) (didMatch bool, m rune) {
 	if code.workOffset >= code.workLength() {
 		return false, '\x00' // never match at EOF
@@ -254,15 +254,10 @@ func (code *TokenStream) MatchRegexp(re regexp.Regexp) (didMatch bool, m string)
 	}
 }
 
-// short, single line information to be integrated in parse errors
+// Single line information to be included in parse errors
 func (code *TokenStream) Print() string {
-	// o is about original
-	// w is about work
 	var o strings.Builder
-	// var w strings.Builder
 	originalOffset := code.coords(code.Pos()).originalOffset
-	// TODO delete foloowing line
-	o.WriteString(fmt.Sprintf("work: %q. original: %q\n", code.work, code.original))
 	o.WriteString("Code at offset ")
 	o.WriteString(BoldYellow(strconv.Itoa(originalOffset)))
 	o.WriteString("/")
@@ -274,7 +269,7 @@ func (code *TokenStream) Print() string {
 	return o.String()
 }
 
-// multiline
+// multiline print, for debugging purposes
 func (code *TokenStream) PrintDebug() string {
 	pos := code.workOffset
 	s := "Code at offset " + BoldYellow(strconv.Itoa(pos)) + "/" + BoldYellow(strconv.Itoa(len(code.original))) + ": '"
@@ -300,14 +295,9 @@ func (code *TokenStream) PrintWorkText() string {
 	return "Work text (tokenized):\n" + code.work + "\n"
 }
 
-// debug only, don't modify those!
-func (code *TokenStream) Tokens() []Token {
-	return code.tokens
-}
-
-// Given an arbitrary work offset (as given by Pos()),
-// get all possible coordinates (i.e. originalOffset, line, col).
-// the reverse operation can be obtain with calcWorkOffset().
+// Get all possible coordinates (originalOffset, line, col)
+// from provided workOffset (current byte offset relative to the tokenized
+// string).
 func (code *TokenStream) coords(workOffset int) coord {
 	if len(code.tokens) == 0 {
 		return coord{}
@@ -341,11 +331,6 @@ func (code *TokenStream) coords(workOffset int) coord {
 	}
 }
 
-// ------------------------------------------------------------------------
-
-// A function is provided to transform some go code into a TokenStream.
-// You can then call `yourGrammar.ParseTokens(ts TokenStream)` directly.
-
 // use by error handler below
 var scanErrors []error
 
@@ -353,6 +338,9 @@ func handleErrors(pos token.Position, msg string) {
 	scanErrors = append(scanErrors, scannerError{pos, msg})
 }
 
+// TokenStreamFromGoCode is a special function transforming
+// some go code into a TokenStream. You can then call
+// `yourGrammar.ParseTokens(ts TokenStream)` directly.
 func TokenStreamFromGoCode(source string) (*TokenStream, error) {
 	var scan goscanner.Scanner
 	fset := token.NewFileSet()

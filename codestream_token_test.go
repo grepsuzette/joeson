@@ -136,7 +136,6 @@ func TestTokenStreamInternals(t *testing.T) {
 	if ok, _ := tokens.MatchRegexp(*re2); ok {
 		t.Error("Should not have matched regexp " + re2.String())
 	}
-
 	// fmt.Println(tokens.Print())
 }
 
@@ -238,13 +237,10 @@ func TestExpectedTokenization(t *testing.T) {
 			t.Error(e.Error())
 		} else {
 			joined := ""
-			for _, token := range tokens.Tokens() {
+			for _, token := range tokens.tokens {
 				joined += token.Repr
 			}
 			if joined != a[1] {
-				// work := tokens.PrintWorkText()
-				// work := tokens.Print()
-				// fmt.Println(work)
 				t.Errorf("tokenizing %q should have produced %q, not %q",
 					a[0], a[1], joined,
 				)
