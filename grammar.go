@@ -19,7 +19,7 @@ type Grammar struct {
 }
 
 type GrammarOptions struct {
-	// Govern what is traced during initialization or parsing
+	// Govern what is traced during initialization (unless SkipSetup == true) or parsing
 	TraceOptions *TraceOptions
 
 	// Leave this nil unless you know what you're doing.
@@ -167,7 +167,8 @@ func newEmptyGrammarWithOptions(opts *TraceOptions) *Grammar {
 	return gm
 }
 
-// Destroy the grammar. Only tests should use this.
+// Destroy the grammar. Only tests should use this
+// (it is used by bootstrapping test)
 func (gm *Grammar) Bomb() {
 	gm.rank = newEmptyRank("bombd")
 	gm.gnodeimpl = newGNode()

@@ -19,8 +19,8 @@ type Line interface {
 // Called by `I(...any)` and `O(...any)`.
 // Helps destructuring their arguments into name, content and options.
 // Unpacks `Named()`.
-// Assigns parse functions onto ParseOptions.
-// Collects ...ParseOption into returned ParseOptions
+// Assigns parse functions onto return parseOptions.
+// Collects individual ...ParseOption into returned parseOptions
 func lineInit(origArgs []any) (name string, lineContent Line, attrs *parseOptions) {
 	attrs = newParseOptions()
 	for i, arg := range origArgs {
@@ -36,6 +36,7 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs *parseOption
 			}
 		} else {
 			switch v := arg.(type) {
+			// support 3 variants of parse functions
 			case func(it Ast) Ast:
 				attrs.cb = func(x Ast, _ *ParseContext, _ Ast) Ast {
 					return v(x)
@@ -49,9 +50,6 @@ func lineInit(origArgs []any) (name string, lineContent Line, attrs *parseOption
 			case ParseOption:
 				// A separate option, such as `Debug{true}`
 				attrs = v.apply(attrs)
-			case parseOptions:
-				// A ParseOptions object (deprecated)
-				attrs = &v
 			case string:
 				fmt.Printf(
 					"Error in grammar: O (or I) called lineInit with %v\nSo the second parameter was a string: %s\nRight now this syntax is not supported\nPlease fix your grammar",

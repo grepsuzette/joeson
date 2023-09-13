@@ -7,10 +7,12 @@ import (
 )
 
 // Trace options. They produce various traces during parsing.
-// This can be governed by the TRACE environment variable or
-// when creating a grammar.
+//
+// How to use?
+// Usually indirectly, by using TRACE=all environment variable.
+// Or directly when creating a grammar (GrammarWithOptionsFromLines)
 type TraceOptions struct {
-	Stack      bool // print detailed parsing steps
+	Stack      bool // print detailed parse (same as a global Debug{true})
 	Loop       bool // print all rules
 	Grammar    bool // print grammar information and all rules
 	FilterLine int  // to filter only the Nth line to parse when n != -1 and Stack is true
