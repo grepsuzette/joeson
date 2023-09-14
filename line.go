@@ -178,7 +178,10 @@ func getRule(
 		// parse the string. A grammar like joeson_handcompiled is needed for that,
 		gm := lazyGrammar.Get() // uses Lazy to get the grammar in cache or build it
 		ctx := newParseContext(NewRuneStream(v.Str), gm.numrules, traceOptions)
-		ctx = ctx.setParseOptions(attrs)
+		// Do not use parseoptions during compilation of an sLine
+		// NO: ctx = ctx.setParseOptions(attrs)
+		// YES: We instead want to store the option inside the rule;
+		//      that rule being the compiled answer.
 		ast := gm.parse(ctx)
 		if IsParseError(ast) {
 			panic(ast.(ParseError).String())
@@ -186,6 +189,7 @@ func getRule(
 			answer = ast.(Parser)
 		}
 		answer.getRule().name = name
+		answer.getRule().parseOptions = attrs
 	default:
 		panic("unrecog type " + reflect.TypeOf(line).String())
 	}
@@ -198,9 +202,6 @@ func getRule(
 		panic("assert")
 	}
 	// fmt.Printf(" name=%s attrs rule.rule.Debug=%s rule.Debug=%s attrs.Debug=%s\n", name, reflect.TypeOf(line).String(), rule.Debug, rule.Debug, attrs.Debug)
-	// rule.SkipCache = attrs.SkipCache
-	// rule.SkipLog = attrs.SkipLog
-	rule.cb = attrs.cb
-	// rule.Debug = attrs.Debug
+	rule.parseOptions.cb = attrs.cb
 	return answer
 }

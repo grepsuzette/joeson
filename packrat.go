@@ -83,12 +83,13 @@ func stack(fparse parseFunc, x Parser) parseFunc {
 func loopify(fparse parseFunc, x Parser) parseFunc {
 	return func(ctx *ParseContext) Ast {
 		opts := ctx.TraceOptions
-		if opts.Stack {
+		showLog := opts.Stack || x.getRule().parseOptions.debug
+		if showLog {
 			ctx.log(Blue("*")+" "+String(x)+" "+BoldBlack(strconv.Itoa(ctx.Counter)), opts)
 		}
 		if x.getRule().skipCache {
 			result := fparse(ctx)
-			if opts.Stack {
+			if showLog {
 				ctx.log(Cyan("`->:")+" "+helpers.Escape(result.String())+" "+BoldBlack(helpers.TypeOfToString(result)), opts)
 			}
 			return result
@@ -102,7 +103,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 		case 0: // non-recursive (so far)
 			// The only time a cache hit will simply return is when loopStage is 0
 			if frame.endpos >= 0 {
-				if opts.Stack {
+				if showLog {
 					if frame.result != nil {
 						s := ""
 						s += helpers.Escape(frame.result.String())
@@ -123,7 +124,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 			case 1: // non-recursive (i.e. done)
 				frame.loopstage = 0
 				frame.cacheSet(result, ctx.Code.Pos())
-				if opts.Stack {
+				if showLog {
 					s := Cyan("`-set:") + " "
 					if result == nil {
 						s += "nil"
@@ -137,7 +138,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 				return result
 			case 2: // recursion detected by subroutine above
 				if result == nil {
-					if opts.Stack {
+					if showLog {
 						ctx.log(Yellow("`--- loop nil --- "), opts)
 					}
 					frame.loopstage = 0
@@ -187,7 +188,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 						bestResult = result
 						bestEndPos = ctx.Code.Pos()
 						frame.cacheSet(bestResult, bestEndPos)
-						if opts.Stack {
+						if showLog {
 							ctx.log(Yellow("|`--- loop iteration ---")+frame.toString(), opts)
 						}
 						ctx.Code.SetPos(startPos)
@@ -202,7 +203,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 					ctx.wipeWith(frame, false)
 					ctx.restoreWith(bestStash)
 					ctx.Code.SetPos(bestEndPos)
-					if opts.Stack {
+					if showLog {
 						ctx.log(Yellow("`--- loop done! --- ")+"best result: "+helpers.Escape(bestResult.String()), opts)
 					}
 					// Step 4: return best result, which will get cached
@@ -218,7 +219,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 				// ctx.log("left Recursion detected", opts)
 			}
 			// Step 1: Collect wipemask so we can wipe the frames later.
-			if opts.Stack {
+			if showLog {
 				cs := "nil"
 				if frame.result != nil {
 					cs = frame.result.String()
