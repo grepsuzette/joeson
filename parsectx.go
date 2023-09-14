@@ -92,7 +92,7 @@ func (ctx *ParseContext) stackPush(x Parser) {
 func (ctx *ParseContext) stackPop() { ctx.stackLength-- }
 
 func (ctx *ParseContext) getFrame(x Parser) *frame {
-	id := x.gnode().id
+	id := x.getRule().id
 	pos := ctx.Code.Pos()
 	posFrames := ctx.frames[pos]
 	frame := posFrames[id]

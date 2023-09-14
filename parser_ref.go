@@ -42,18 +42,18 @@ func newRef(it Ast) *ref {
 	ref := &ref{Attr: newAttr(), rule: newRule(), ref: name, param: param}
 	ref.rule.node = ref
 	if name[0:1] == "_" {
-		ref.SetCapture(false)
+		ref.getRule().capture = false
 	}
 	ref.rule.labels_ = helpers.LazyFromFunc(func() []string {
-		if ref.GetRuleLabel() == "@" {
-			referenced := ref.grammar.getRule(ref.ref)
+		if ref.getRule().label == "@" {
+			referenced := ref.grammar.getRuleRef(ref.ref)
 			if referenced == nil {
 				panic("ref " + ref.ref + " was not found in grammar.Rules")
 			} else {
-				return referenced.gnode().labels_.Get()
+				return referenced.getRule().labels_.Get()
 			}
-		} else if ref.GetRuleLabel() != "" {
-			return []string{ref.GetRuleLabel()}
+		} else if ref.getRule().label != "" {
+			return []string{ref.getRule().label}
 		} else {
 			return []string{}
 		}
@@ -61,12 +61,12 @@ func newRef(it Ast) *ref {
 	return ref
 }
 
-func (x *ref) gnode() *rule            { return x.rule }
-func (x *ref) HandlesChildLabel() bool { return false }
+func (x *ref) getRule() *rule          { return x.rule }
+func (x *ref) handlesChildLabel() bool { return false }
 func (x *ref) prepare()                {}
 func (x *ref) Parse(ctx *ParseContext) Ast {
 	return wrap(func(ctx *ParseContext, _ Parser) Ast {
-		node := x.grammar.getRule(x.ref)
+		node := x.grammar.getRuleRef(x.ref)
 		if node == nil {
 			panic("Grammar has a reference to a type '" + x.ref + "' which is NOT defined")
 		} else {
@@ -77,8 +77,7 @@ func (x *ref) Parse(ctx *ParseContext) Ast {
 }
 
 func (x *ref) String() string { return Red(x.ref) }
-func (x *ref) ForEachChild(f func(Parser) Parser) Parser {
-	// no children defined for Ref, but GNode has:
+func (x *ref) forEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	x.rules = ForEachChildInRules(x, f)

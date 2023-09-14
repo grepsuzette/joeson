@@ -26,11 +26,11 @@ func newRegexFromString(sRegex string) *regex {
 	}
 }
 
-func (re *regex) gnode() *rule { return re.rule }
+func (re *regex) getRule() *rule { return re.rule }
 func (re *regex) String() string {
 	return Magenta("/" + strings.NewReplacer("\r", "\\r", "\n", "\\n", "\t", "\\t").Replace(re.re.String()) + "/g")
 }
-func (re *regex) HandlesChildLabel() bool { return false }
+func (re *regex) handlesChildLabel() bool { return false }
 func (re *regex) prepare()                {}
 func (re *regex) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
@@ -42,8 +42,7 @@ func (re *regex) Parse(ctx *ParseContext) Ast {
 	}, re)(ctx)
 }
 
-func (re *regex) ForEachChild(f func(Parser) Parser) Parser {
-	// no children defined for Ref, but GNode has:
+func (re *regex) forEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	re.rules = ForEachChildInRules(re, f)

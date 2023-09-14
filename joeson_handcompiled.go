@@ -22,7 +22,7 @@ func NewJoesonWithOptions(opts *TraceOptions) *Grammar {
 
 func c(a ...Ast) *choice                 { return newChoice(NewNativeArray(a)) }
 func e(it Ast) *existential              { return newExistential(it) }
-func l(label string, node Parser) Parser { node.SetRuleLabel(label); return node }
+func l(label string, node Parser) Parser { node.getRule().label = label; return node }
 func n(it Parser) *not                   { return newNot(it) }
 func r(s string) *ref                    { return newRef(NewNativeString(s)) }
 func re(s string) *regex                 { return newRegexFromString(s) }

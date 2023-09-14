@@ -15,16 +15,16 @@ type not struct {
 }
 
 func newNot(it Ast) *not {
-	gn := newRule()
-	x := &not{newAttr(), gn, it.(Parser)}
-	gn.capture = false
-	gn.node = x
+	rule := newRule()
+	x := &not{newAttr(), rule, it.(Parser)}
+	rule.capture = false
+	rule.node = x
 	return x
 }
 
-func (no *not) gnode() *rule            { return no.rule }
+func (no *not) getRule() *rule          { return no.rule }
 func (no *not) prepare()                {}
-func (no *not) HandlesChildLabel() bool { return false }
+func (no *not) handlesChildLabel() bool { return false }
 
 func (no *not) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
@@ -43,7 +43,7 @@ func (no *not) String() string {
 	return Yellow("!") + String(no.it)
 }
 
-func (no *not) ForEachChild(f func(Parser) Parser) Parser {
+func (no *not) forEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}

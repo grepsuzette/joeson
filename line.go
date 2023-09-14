@@ -155,14 +155,16 @@ func getRule(
 		answer = rankFromLines(v.Array, name, GrammarOptions{TraceOptions: opts, LazyGrammar: lazyGrammar})
 	case cLine:
 		answer = v.Parser
-		answer.SetRuleName(name)
+		answer.getRule().name = name
 	case ILine:
 		panic("assert") // ILine is impossible here
 	case OLine:
 		v.parseOptions = attrs
 		answer = v.toRule(rank_, parentRule, oLineNaming{name: name}, opts, lazyGrammar)
-		answer.SetRuleNameWhenEmpty(name)
-		// answer.(gnode).gnode().ParseOptions = attrs
+		if answer.getRule().name == "" {
+			answer.getRule().name = name
+		}
+		// answer.(rule).getRule().ParseOptions = attrs
 	case sLine:
 		// temporarily halt trace when SkipSetup
 		var traceOptions *TraceOptions
@@ -175,18 +177,19 @@ func getRule(
 		}
 		// parse the string. A grammar like joeson_handcompiled is needed for that,
 		gm := lazyGrammar.Get() // uses Lazy to get the grammar in cache or build it
-		ctx := newParseContext(NewRuneStream(v.Str), gm.numrules, traceOptions).setParseOptions(attrs)
+		ctx := newParseContext(NewRuneStream(v.Str), gm.numrules, traceOptions)
+		ctx = ctx.setParseOptions(attrs)
 		ast := gm.Parse(ctx)
 		if IsParseError(ast) {
 			panic(ast.(ParseError).String())
 		} else {
 			answer = ast.(Parser)
 		}
-		answer.SetRuleName(name)
+		answer.getRule().name = name
 	default:
 		panic("unrecog type " + reflect.TypeOf(line).String())
 	}
-	rule := answer.gnode()
+	rule := answer.getRule()
 	if rule.parser != nil && !IsRule(answer) {
 		panic("assert")
 	}

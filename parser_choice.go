@@ -36,17 +36,17 @@ func newChoice(it Ast) *choice {
 
 func (ch *choice) isMonoChoice() bool      { return len(ch.choices) == 1 }
 func (ch *choice) Append(node Parser)      { ch.choices = append(ch.choices, node) }
-func (ch *choice) gnode() *rule            { return ch.rule }
-func (ch *choice) HandlesChildLabel() bool { return false }
+func (ch *choice) getRule() *rule          { return ch.rule }
+func (ch *choice) handlesChildLabel() bool { return false }
 
 func (ch *choice) prepare() {
 	for _, choice := range ch.choices {
-		if !choice.Capture() {
-			ch.SetCapture(false)
+		if !choice.getRule().capture {
+			ch.getRule().capture = false
 			return
 		}
 	}
-	ch.SetCapture(true)
+	ch.getRule().capture = true
 }
 
 func (ch *choice) Parse(ctx *ParseContext) Ast {
@@ -79,7 +79,7 @@ func (ch *choice) String() string {
 	return b.String()
 }
 
-func (ch *choice) ForEachChild(f func(Parser) Parser) Parser {
+func (ch *choice) forEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}

@@ -18,7 +18,7 @@ func Walk(ast Parser, parent Parser, prepost WalkPrepost) Parser {
 			return ast
 		}
 	}
-	ast.ForEachChild(func(child Parser) Parser {
+	ast.forEachChild(func(child Parser) Parser {
 		return Walk(child, ast, prepost)
 	})
 	if prepost.Post != nil {
@@ -42,12 +42,12 @@ func ForEachChild_Array(a []Parser, f func(Parser) Parser) []Parser {
 // working with RulesK will guarantee they are processed in order
 func ForEachChildInRules(x Parser, f func(Parser) Parser) map[string]Parser {
 	hnew := map[string]Parser{}
-	gn := x.gnode()
-	if gn.rules == nil {
+	rule := x.getRule()
+	if rule.rules == nil {
 		return nil
 	}
-	for _, name := range gn.rulesK {
-		if parser, exists := gn.rules[name]; !exists {
+	for _, name := range rule.rulesK {
+		if parser, exists := rule.rules[name]; !exists {
 			panic("assert")
 		} else {
 			if r := f(parser); r != nil {

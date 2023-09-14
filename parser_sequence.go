@@ -29,32 +29,32 @@ func newSequence(it Ast) *sequence {
 		if a == nil {
 			panic("expecting non nil array")
 		}
-		gn := newRule()
+		rule := newRule()
 		parsers := make([]Parser, 0)
 		for _, v := range *a {
 			parsers = append(parsers, v.(Parser))
 		}
 		seq := &sequence{
 			Attr:     newAttr(),
-			rule:     gn,
+			rule:     rule,
 			sequence: parsers,
 		}
-		gn.node = seq
-		gn.labels_ = helpers.LazyFromFunc(func() []string { return seq.calculateLabels() })
-		gn.captures_ = helpers.LazyFromFunc(func() []Ast { return seq.calculateCaptures() })
+		rule.node = seq
+		rule.labels_ = helpers.LazyFromFunc(func() []string { return seq.calculateLabels() })
+		rule.captures_ = helpers.LazyFromFunc(func() []Ast { return seq.calculateCaptures() })
 		seq.lazyType = helpers.LazyFromFunc(func() sequenceRepr { return seq.calculateType() })
 		return seq
 	}
 }
 
-func (seq *sequence) gnode() *rule            { return seq.rule }
-func (seq *sequence) HandlesChildLabel() bool { return true }
+func (seq *sequence) getRule() *rule          { return seq.rule }
+func (seq *sequence) handlesChildLabel() bool { return true }
 func (seq *sequence) prepare()                {}
 
 func (seq *sequence) calculateLabels() []string {
 	a := []string{}
 	for _, child := range seq.sequence {
-		a = append(a, child.gnode().labels_.Get()...)
+		a = append(a, child.getRule().labels_.Get()...)
 	}
 	return a
 }
@@ -62,7 +62,7 @@ func (seq *sequence) calculateLabels() []string {
 func (seq *sequence) calculateCaptures() []Ast {
 	a := []Ast{}
 	for _, child := range seq.sequence {
-		a = append(a, child.gnode().captures_.Get()...)
+		a = append(a, child.getRule().captures_.Get()...)
 	}
 	return a
 }
@@ -123,7 +123,7 @@ func (seq *sequence) parseAsSingle(ctx *ParseContext) Ast {
 		if res == nil {
 			return nil
 		}
-		if child.Capture() {
+		if child.getRule().capture {
 			result = res
 		}
 	}
@@ -141,7 +141,7 @@ func (seq *sequence) parseAsArray(ctx *ParseContext) Ast {
 		if res == nil {
 			return nil
 		}
-		if child.Capture() {
+		if child.getRule().capture {
 			results = append(results, res)
 		}
 	}
@@ -158,7 +158,7 @@ func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 			// fmt.Printf(Red("sequence %x %d parseAsObject childlabel=%s res==nil\n"), rnd, k, childLabel)
 			return nil
 		}
-		label := child.GetRuleLabel()
+		label := child.getRule().label
 		switch label {
 		case "&":
 			if IsUndefined(results) {
@@ -193,7 +193,7 @@ func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 	}
 }
 
-func (seq *sequence) ForEachChild(f func(Parser) Parser) Parser {
+func (seq *sequence) forEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   sequence:   {type:[type:GNode]}
@@ -229,7 +229,7 @@ func merge(toExtend Ast, newcomer Ast) Ast {
 				switch k {
 				case "label":
 					value := vnewcomer.GetOrPanic(k)
-					vToExtend.SetRuleLabel(string(value.(NativeString)))
+					vToExtend.getRule().label = string(value.(NativeString))
 				default:
 					panic("unhandled property " + k + " in func (Ast) Merge(). toExtend=" + toExtend.String() + " \n withPropertiesOf=" + newcomer.String())
 				}

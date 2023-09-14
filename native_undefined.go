@@ -2,6 +2,10 @@ package joeson
 
 // Some parsers (namedly Not, Pattern, Sequence, Existential) need
 // a value different from `nil` (which represents parsing failure).
+//
+// NativeUndefined need both to
+// - implement Parser
+// - TODO OPTIM get instantiated very fast
 type NativeUndefined struct {
 	*Attr
 	*rule
@@ -15,10 +19,10 @@ func (nu NativeUndefined) assertNode()    {}
 func (nu NativeUndefined) String() string { return "<NativeUndefined>" }
 
 func (nu NativeUndefined) Parse(ctx *ParseContext) Ast               { return nu }
-func (nu NativeUndefined) gnode() *rule                              { return nu.rule }
+func (nu NativeUndefined) getRule() *rule                            { return nu.rule }
 func (nu NativeUndefined) prepare()                                  {}
-func (nu NativeUndefined) HandlesChildLabel() bool                   { return false }
-func (nu NativeUndefined) ForEachChild(f func(Parser) Parser) Parser { return nu }
+func (nu NativeUndefined) handlesChildLabel() bool                   { return false }
+func (nu NativeUndefined) forEachChild(f func(Parser) Parser) Parser { return nu }
 
 func IsUndefined(x Ast) bool {
 	if x == nil {

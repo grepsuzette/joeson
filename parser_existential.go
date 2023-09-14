@@ -15,17 +15,15 @@ func newExistential(it Ast) *existential {
 	return ex
 }
 
-// TODO HandlesChildLabel$: get: -> @parent?.HandlesChildLabel
-// examine this case^
-func (ex *existential) HandlesChildLabel() bool {
+func (ex *existential) handlesChildLabel() bool {
 	if ex.rule.parent != nil {
-		return ex.rule.parent.HandlesChildLabel()
+		return ex.rule.parent.handlesChildLabel()
 	} else {
 		return false
 	}
 }
 
-func (ex *existential) gnode() *rule { return ex.rule }
+func (ex *existential) getRule() *rule { return ex.rule }
 
 func (ex *existential) prepare() {
 	lbls := ex.calculateLabels()
@@ -33,7 +31,7 @@ func (ex *existential) prepare() {
 	if len(lbls) > 0 && ex.label == "" {
 		ex.label = "@"
 	}
-	caps := ex.it.gnode().captures_.Get()
+	caps := ex.it.getRule().captures_.Get()
 	ex.captures_.Set(caps)
 	ex.capture = len(caps) > 0
 }
@@ -43,7 +41,7 @@ func (ex *existential) calculateLabels() []string {
 	if lbl != "" && lbl != "@" && lbl != "&" {
 		return []string{lbl}
 	} else {
-		return ex.it.gnode().labels_.Get()
+		return ex.it.getRule().labels_.Get()
 	}
 }
 
@@ -64,7 +62,7 @@ func (ex *existential) Parse(ctx *ParseContext) Ast {
 	}, ex)(ctx)
 }
 
-func (ex *existential) ForEachChild(f func(Parser) Parser) Parser {
+func (ex *existential) forEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   it:         {type:GNode}

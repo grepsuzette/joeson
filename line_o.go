@@ -48,12 +48,12 @@ func (ol OLine) toRule(
 	} else if by.name != "" {
 		name = by.name
 	} else if by.index > -1 && parentRule != nil { // unamed OLine by index, will produce names like foo[0], foo[1], foo[2]
-		name = parentRule.GetRuleName() + "[" + strconv.Itoa(by.index) + "]"
+		name = parentRule.getRule().name + "[" + strconv.Itoa(by.index) + "]"
 	} else {
 		panic("assert")
 	}
 	rule := getRule(rank_, name, content, parentRule, ol.parseOptions, opts, lazyGrammar)
-	rule.gnode().parent = parentRule
+	rule.getRule().parent = parentRule
 	return rule
 }
 

@@ -65,7 +65,7 @@ func GrammarWithOptionsFromLines(name string, options GrammarOptions, lines []Li
 	rank := rankFromLines(lines, name, options)
 	newgm := newEmptyGrammarWithOptions(options.TraceOptions)
 	newgm.rank = rank
-	newgm.SetRuleName(name)
+	newgm.getRule().name = name
 	newgm.postinit()
 	return newgm
 }
@@ -109,7 +109,7 @@ func (gm *Grammar) ParseTokens(tokens *TokenStream, options ...ParseOption) Ast 
 // Use ParseString() or ParseTokens()
 func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	oldTrace := gm.TraceOptions.Stack
-	ctx.GrammarName = gm.GetRuleName()
+	ctx.GrammarName = gm.getRule().name
 	if ctx.parseOptions.debug {
 		// temporarily enable stack tracing
 		gm.TraceOptions.Stack = true
@@ -177,9 +177,9 @@ func (gm *Grammar) Bomb() {
 	gm.wasInitialized = false
 }
 
-func (gm *Grammar) gnode() *rule { return gm.rule }
+func (gm *Grammar) getRule() *rule { return gm.rule }
 
-func (gm *Grammar) getRule(name string) Parser {
+func (gm *Grammar) getRuleRef(name string) Parser {
 	if x, exists := gm.rule.rules[name]; exists {
 		return x
 	} else {
@@ -188,7 +188,7 @@ func (gm *Grammar) getRule(name string) Parser {
 }
 
 func (gm *Grammar) prepare()                {}
-func (gm *Grammar) HandlesChildLabel() bool { return false }
+func (gm *Grammar) handlesChildLabel() bool { return false }
 func (gm *Grammar) String() string {
 	if gm.rank == nil {
 		return Magenta("GRAMMAR{}")
@@ -199,7 +199,7 @@ func (gm *Grammar) String() string {
 
 func (gm *Grammar) IsReady() bool { return gm.rank != nil && gm.wasInitialized }
 
-func (gm *Grammar) ForEachChild(f func(Parser) Parser) Parser {
+func (gm *Grammar) forEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren rank: {type:Rank}
 	gm.rules = ForEachChildInRules(gm, f)
 	if gm.rank != nil {
@@ -233,13 +233,13 @@ func (gm *Grammar) postinit() {
 						  \
 						   node below.unaffected
 		*/
-		node.ForEachChild(func(child Parser) Parser {
+		node.forEachChild(func(child Parser) Parser {
 			if choice, ok := child.(*choice); ok && choice.isMonoChoice() {
 				monochoice := choice.choices[0]
-				mono := monochoice.gnode()
+				mono := monochoice.getRule()
 				// Merge label
 				if mono.label == "" {
-					mono.label = choice.GetRuleLabel()
+					mono.label = choice.getRule().label
 				}
 				// Merge included rules
 				for k, v := range choice.rules {
@@ -259,45 +259,45 @@ func (gm *Grammar) postinit() {
 	// Connect all the nodes and collect dereferences into @rules
 	Walk(gm, nil, WalkPrepost{
 		Pre: func(node Parser, parent Parser) string {
-			gnode := node.gnode()
-			if gnode == nil {
+			rule := node.getRule()
+			if rule == nil {
 				return ""
 			}
 			// sanity check: it must have no parent yet if it's not a rule
-			if !IsRule(node) && gnode != nil && gnode.parent != nil {
+			if !IsRule(node) && rule != nil && rule.parent != nil {
 				panic("Grammar tree should be a DAG, nodes should not be referenced more than once.")
 			}
 
-			gnode.grammar = gm
-			gnode.parent = parent
+			rule.grammar = gm
+			rule.parent = parent
 			if false {
 				// "inline rules are special" in original coffeescript
 				// but the bit of code seem unreachable anyway
 				panic("assert")
 			} else {
 				// set node.rule, the root node for this rule
-				if gnode.parser == nil {
+				if rule.parser == nil {
 					if parent != nil {
-						gnode.parser = parent.gnode().parser
+						rule.parser = parent.getRule().parser
 					} else {
-						// TODO gnode.Rule = NewNativeUndefined()
+						// TODO rule.Rule = NewNativeUndefined()
 						//   we used nil here if there is any pb...
-						gnode.parser = nil
+						rule.parser = nil
 					}
 				}
 			}
 			return ""
 		},
 		Post: func(node Parser, parent Parser) string {
-			gnode := node.gnode()
+			rule := node.getRule()
 			if IsRule(node) {
-				gm.rulesK = append(gm.rulesK, gnode.name)
-				gm.rules[gnode.name] = node
-				gnode.id = gm.numrules
+				gm.rulesK = append(gm.rulesK, rule.name)
+				gm.rules[rule.name] = node
+				rule.id = gm.numrules
 				gm.numrules++
-				gm.id2rule[gnode.id] = node
+				gm.id2rule[rule.id] = node
 				if opts.Loop { // print out id->rulename for convenience
-					fmt.Println("Loop " + Red(strconv.Itoa(gnode.id)) + ":\t" + String(node))
+					fmt.Println("Loop " + Red(strconv.Itoa(rule.id)) + ":\t" + String(node))
 				}
 			}
 			return ""
@@ -306,8 +306,8 @@ func (gm *Grammar) postinit() {
 
 	// Prepare all the nodes, children first.
 	Walk(gm, nil, WalkPrepost{
-		Post: func(node Parser, parent Parser) string {
-			node.prepare()
+		Post: func(parser Parser, parent Parser) string {
+			parser.prepare()
 			return ""
 		},
 	})
@@ -320,7 +320,7 @@ func (gm *Grammar) postinit() {
 
 func (gm *Grammar) PrintRules() {
 	fmt.Println("+--------------- Grammar.Debug() ----------------------------------")
-	fmt.Println("| name         : " + Bold(gm.GetRuleName()))
+	fmt.Println("| name         : " + Bold(gm.getRule().name))
 	fmt.Println("| contentString: " + gm.String())
 	fmt.Println("| rules        : " + strconv.Itoa(gm.numrules))
 	fmt.Println("| ")
@@ -341,8 +341,8 @@ func (gm *Grammar) PrintRules() {
 	for i := 0; i < gm.numrules; i++ {
 		v := gm.id2rule[i]
 		sParentName := "-"
-		if v.gnode().parent != nil {
-			switch father := v.gnode().parent.(type) {
+		if v.getRule().parent != nil {
+			switch father := v.getRule().parent.(type) {
 			// case *Grammar:
 			// 	sParentName = "__grammar__" // instead show name, use same as js for diffing
 			case *rank:
@@ -353,21 +353,19 @@ func (gm *Grammar) PrintRules() {
 				case *Grammar:
 					sParentName = "__grammar__" // instead show name, use same as js for diffing
 				default:
-					sParentName = father.GetRuleName()
+					sParentName = father.getRule().name
 				}
 			default:
-				// sParentName = fmt.Sprintf("%T", v)
-				sParentName = v.GetRuleName()
+				sParentName = v.getRule().name
 			}
-			// sParentName = v.Parent.Name
 		}
 		fmt.Println("|  ",
-			helpers.PadLeft(v.GetRuleName(), 14),
-			helpers.PadLeft(strconv.Itoa(v.gnode().id), 3),
+			helpers.PadLeft(v.getRule().name, 14),
+			helpers.PadLeft(strconv.Itoa(v.getRule().id), 3),
 			helpers.PadLeft(helpers.TypeOfToString(v), 20),
-			helpers.PadLeft(helpers.BoolToString(v.Capture()), 3),
-			helpers.PadLeft(v.GetRuleLabel(), 7),
-			helpers.PadLeft(strings.Join(v.gnode().labels_.Get(), ","), 21),
+			helpers.PadLeft(helpers.BoolToString(v.getRule().capture), 3),
+			helpers.PadLeft(v.getRule().label, 7),
+			helpers.PadLeft(strings.Join(v.getRule().labels_.Get(), ","), 21),
 			helpers.PadLeft(sParentName, 16),
 			helpers.PadLeft(v.String(), 30),
 		)

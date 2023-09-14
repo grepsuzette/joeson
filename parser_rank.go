@@ -24,7 +24,7 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 	} else {
 		lazyGm = helpers.LazyFromFunc[*Grammar](func() *Grammar {
 			// Lazy, so this will only get called if the rules have string rules (SLine)
-			// and optionalLazyGrammar was left empty. getRule()'s `case SLine:` is
+			// and optionalLazyGrammar was left empty. getgetRule()'s `case SLine:` is
 			// the only place that needs a grammar.
 			return NewJoesonWithOptions(options.TraceOptions)
 		})
@@ -46,7 +46,7 @@ func rankFromLines(lines []Line, rankname string, options GrammarOptions) *rank 
 
 func newEmptyRank(name string) *rank {
 	x := &rank{newEmptyChoice()}
-	x.SetRuleName(name)
+	x.getRule().name = name
 	x.node = x
 	return x
 }
@@ -56,9 +56,9 @@ func (rank *rank) Length() int {
 }
 
 func (rank *rank) Append(node Parser)      { rank.choice.Append(node) }
-func (rank *rank) gnode() *rule            { return rank.choice.gnode() }
+func (rank *rank) getRule() *rule          { return rank.choice.getRule() }
 func (rank *rank) prepare()                { rank.choice.prepare() }
-func (rank *rank) HandlesChildLabel() bool { return false }
+func (rank *rank) handlesChildLabel() bool { return false }
 
 func (rank *rank) String() string {
 	var b strings.Builder
@@ -68,18 +68,18 @@ func (rank *rank) String() string {
 		if !first {
 			b.WriteString(Blue(","))
 		}
-		b.WriteString(Red(it.GetRuleName()))
+		b.WriteString(Red(it.getRule().name))
 		first = false
 	}
 	b.WriteString(Blue(")"))
 	return b.String()
 }
 
-func (rank *rank) ForEachChild(f func(Parser) Parser) Parser {
+func (rank *rank) forEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   choices:    {type:[type:GNode]}
-	ch := rank.choice.ForEachChild(f) // see Choice.ForEachChild, which have the same @defineChildren
+	ch := rank.choice.forEachChild(f) // see Choice.ForEachChild, which have the same @defineChildren
 	rank.choice = ch.(*choice)
 	return rank
 }

@@ -24,9 +24,9 @@ func newStr(s string) str {
 	return str
 }
 
-func (s str) gnode() *rule            { return s.rule }
+func (s str) getRule() *rule          { return s.rule }
 func (s str) prepare()                {}
-func (s str) HandlesChildLabel() bool { return false }
+func (s str) handlesChildLabel() bool { return false }
 func (s str) String() string {
 	return Green("'" + helpers.Escape(s.Str) + "'")
 }
@@ -41,8 +41,7 @@ func (s str) Parse(ctx *ParseContext) Ast {
 	}, s)(ctx)
 }
 
-func (s str) ForEachChild(f func(Parser) Parser) Parser {
-	// no children defined for Str, but GNode has:
+func (s str) forEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	s.rules = ForEachChildInRules(s, f)

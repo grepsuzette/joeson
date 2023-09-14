@@ -43,7 +43,7 @@ func newPattern(it Ast) *pattern {
 		if patt.value == nil {
 			panic("Pattern must have a value")
 		} else {
-			patt.SetCapture(patt.value.Capture())
+			patt.getRule().capture = patt.value.getRule().capture
 		}
 		if join, exists := nativemap.GetExists("join"); exists {
 			if join == nil {
@@ -83,7 +83,7 @@ func newPattern(it Ast) *pattern {
 	}
 	return patt
 }
-func (patt *pattern) gnode() *rule { return patt.rule }
+func (patt *pattern) getRule() *rule { return patt.rule }
 func (patt *pattern) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos()
@@ -125,7 +125,7 @@ func (patt *pattern) Parse(ctx *ParseContext) Ast {
 	}, patt)(ctx)
 }
 
-func (patt *pattern) HandlesChildLabel() bool { return false }
+func (patt *pattern) handlesChildLabel() bool { return false }
 func (patt *pattern) prepare()                {}
 func (patt *pattern) String() string {
 	var b strings.Builder
@@ -151,7 +151,7 @@ func (patt *pattern) String() string {
 	}
 }
 
-func (patt *pattern) ForEachChild(f func(Parser) Parser) Parser {
+func (patt *pattern) forEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   value:      {type:GNode}

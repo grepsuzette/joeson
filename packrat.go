@@ -86,7 +86,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 		if opts.Stack {
 			ctx.log(Blue("*")+" "+String(x)+" "+BoldBlack(strconv.Itoa(ctx.Counter)), opts)
 		}
-		if x.gnode().skipCache {
+		if x.getRule().skipCache {
 			result := fparse(ctx)
 			if opts.Stack {
 				ctx.log(Cyan("`->:")+" "+helpers.Escape(result.String())+" "+BoldBlack(helpers.TypeOfToString(result)), opts)
@@ -98,7 +98,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 		if frame.loopstage < 0 {
 			frame.loopstage = 0
 		}
-		switch frame.loopstage { // TODO create enum
+		switch frame.loopstage {
 		case 0: // non-recursive (so far)
 			// The only time a cache hit will simply return is when loopStage is 0
 			if frame.endpos >= 0 {
@@ -146,7 +146,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 				} else {
 					frame.loopstage = 3
 					if opts.Loop && ((opts.FilterLine < 0) || ctx.Code.Line() == opts.FilterLine) {
-						ctx.loopStackPush(x.GetRuleName())
+						ctx.loopStackPush(x.getRule().name)
 						// if false {
 						//  line := ctx.Code.Line()
 						// 	var paintInColor func(string) string = nil
@@ -234,7 +234,7 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 				if i_frame.pos > startPos {
 					panic("assert failed: i_frame.pos > startPos")
 				}
-				if i_frame.pos < startPos || i_frame.id == x.gnode().id {
+				if i_frame.pos < startPos || i_frame.id == x.getRule().id {
 					break
 				}
 				frame.wipemask[i_frame.id] = true
@@ -255,33 +255,33 @@ func loopify(fparse parseFunc, x Parser) parseFunc {
 // - increment ctx.counter (used for debugging and to prevent infinite recursion)
 // - handle labels for standalone nodes
 // - call SetLine
-// - call GNode.CbBuilder(result, ctx, caller), if CbBuilder != nil
+// - call rule.cb(result, ctx, caller), if cb != nil
 func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 	return func(ctx *ParseContext) Ast {
 		ctx.Counter++
 		result := fparse2(ctx, caller)
 		if result != nil {
 			// handle labels for standalone nodes
-			gn := caller.gnode()
-			if gn.label != "" && gn.parent != nil && !gn.parent.HandlesChildLabel() {
-				result = NewNativeMap(map[string]Ast{gn.label: result})
+			rule := caller.getRule()
+			if rule.label != "" && rule.parent != nil && !rule.parent.handlesChildLabel() {
+				result = NewNativeMap(map[string]Ast{rule.label: result})
 			}
-			if gn.cb != nil {
-				result = gn.cb(result, ctx, caller)
+			if rule.cb != nil {
+				result = rule.cb(result, ctx, caller)
 				if result == nil {
 					return nil
 				}
 			}
 			// set origin
-			// TODO check original coffee implementation,
+			// This only is for debugging.
+			// TODO double check original coffee implementation,
 			//      not sure if entirely correct.
-			//      This only is for debugging anyway
 			result.SetOrigin(Origin{
 				Code:     ctx.Code.Code(),
 				Start:    ctx.stackPeek(0).pos,
 				End:      ctx.Code.Pos(),
 				Line:     ctx.Code.Line(),
-				RuleName: caller.gnode().parser.GetRuleName(),
+				RuleName: caller.getRule().parser.getRule().name,
 			})
 		}
 		return result
@@ -289,19 +289,18 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 }
 
 func wrap(fparse2 parseFunc2, node Parser) parseFunc {
-	// OPTIM a lot of optimization seems possible here
 	// wrapped1 := stack(loopify(prepareResult(fparse2, node), node), node)
 	// wrapped2 := prepareResult(fparse2, node)
-	gn := node.gnode()
+	rule := node.getRule()
 	return func(ctx *ParseContext) Ast {
 		if IsRule(node) {
-			// return wrapped1(ctx)
-			return stack(loopify(prepareResult(fparse2, node), node), node)(ctx) // much faster
-		} else if gn.label != "" &&
-			(gn.parent != nil && !gn.parent.HandlesChildLabel()) ||
-			gn.cb != nil {
-			// return wrapped2(ctx)
-			return prepareResult(fparse2, node)(ctx) // much faster
+			// wrapped1
+			return stack(loopify(prepareResult(fparse2, node), node), node)(ctx)
+		} else if rule.label != "" &&
+			(rule.parent != nil && !rule.parent.handlesChildLabel()) ||
+			rule.cb != nil {
+			// wrapped2
+			return prepareResult(fparse2, node)(ctx)
 		} else {
 			return fparse2(ctx, node)
 		}

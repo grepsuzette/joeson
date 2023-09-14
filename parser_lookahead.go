@@ -17,16 +17,16 @@ type lookahead struct {
 }
 
 func newLookahead(it Ast) *lookahead {
-	gn := newRule()
-	la := &lookahead{newAttr(), gn, it.(*NativeMap).GetOrPanic("expr").(Parser)}
-	gn.capture = false
-	gn.node = la
+	rule := newRule()
+	la := &lookahead{newAttr(), rule, it.(*NativeMap).GetOrPanic("expr").(Parser)}
+	rule.capture = false
+	rule.node = la
 	return la
 }
 
 func (look *lookahead) prepare()                {}
-func (look *lookahead) gnode() *rule            { return look.rule }
-func (look *lookahead) HandlesChildLabel() bool { return false }
+func (look *lookahead) getRule() *rule          { return look.rule }
+func (look *lookahead) handlesChildLabel() bool { return false }
 func (look *lookahead) String() string {
 	return Blue("(?") + String(look.expr) + Blue(")")
 }
@@ -40,7 +40,7 @@ func (look *lookahead) Parse(ctx *ParseContext) Ast {
 	}, look)(ctx)
 }
 
-func (look *lookahead) ForEachChild(f func(Parser) Parser) Parser {
+func (look *lookahead) forEachChild(f func(Parser) Parser) Parser {
 	// @defineChildren
 	//   rules:      {type:{key:undefined,value:{type:GNode}}}
 	//   expr:       {type:GNode}
