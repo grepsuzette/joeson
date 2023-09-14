@@ -31,10 +31,10 @@ func (look *lookahead) String() string {
 	return Blue("(?") + String(look.expr) + Blue(")")
 }
 
-func (look *lookahead) Parse(ctx *ParseContext) Ast {
+func (look *lookahead) parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos()
-		result := look.expr.Parse(ctx) // check whether it parses...
+		result := look.expr.parse(ctx) // check whether it parses...
 		ctx.Code.SetPos(pos)           // ...but revert to prev pos if so
 		return result
 	}, look)(ctx)

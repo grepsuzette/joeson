@@ -49,10 +49,10 @@ func (ex *existential) String() string {
 	return String(ex.it) + Blue("?")
 }
 
-func (ex *existential) Parse(ctx *ParseContext) Ast {
+func (ex *existential) parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos()
-		result := ex.it.Parse(ctx)
+		result := ex.it.parse(ctx)
 		if result == nil {
 			ctx.Code.SetPos(pos)
 			return NewNativeUndefined()

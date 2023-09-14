@@ -84,14 +84,14 @@ func (rank *rank) forEachChild(f func(Parser) Parser) Parser {
 	return rank
 }
 
-func (rank *rank) Parse(ctx *ParseContext) Ast {
+func (rank *rank) parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		for _, choice := range rank.choice.choices {
 			pos := ctx.Code.Pos()
 			// Rank inherits from Choice in the original coffee implementation.
 			// In coffee, the Parse function of Rank is bound to Rank,
 			// In go, no inheritance, we inline the call instead.
-			result := choice.Parse(ctx)
+			result := choice.parse(ctx)
 			if result == nil {
 				ctx.Code.SetPos(pos)
 			} else {

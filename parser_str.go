@@ -8,8 +8,8 @@ import (
 // It does not capture by default.
 // ```
 // p := newStr("foo").
-// p.Parse("fool") -> NewNativeString("foo"),
-// p.Parse("fbar") -> nil.
+// p.parse("fool") -> NewNativeString("foo"),
+// p.parse("fbar") -> nil.
 // ```
 type str struct {
 	*Attr
@@ -31,7 +31,7 @@ func (s str) String() string {
 	return Green("'" + helpers.Escape(s.Str) + "'")
 }
 
-func (s str) Parse(ctx *ParseContext) Ast {
+func (s str) parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		if didMatch, sMatch := ctx.Code.MatchString(s.Str); didMatch {
 			return NewNativeString(sMatch)

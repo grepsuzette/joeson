@@ -179,7 +179,7 @@ func getRule(
 		gm := lazyGrammar.Get() // uses Lazy to get the grammar in cache or build it
 		ctx := newParseContext(NewRuneStream(v.Str), gm.numrules, traceOptions)
 		ctx = ctx.setParseOptions(attrs)
-		ast := gm.Parse(ctx)
+		ast := gm.parse(ctx)
 		if IsParseError(ast) {
 			panic(ast.(ParseError).String())
 		} else {

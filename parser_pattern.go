@@ -84,10 +84,10 @@ func newPattern(it Ast) *pattern {
 	return patt
 }
 func (patt *pattern) getRule() *rule { return patt.rule }
-func (patt *pattern) Parse(ctx *ParseContext) Ast {
+func (patt *pattern) parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos()
-		resValue := patt.value.Parse(ctx)
+		resValue := patt.value.parse(ctx)
 		if resValue == nil {
 			ctx.Code.SetPos(pos)
 			if patt.min > 0 {
@@ -99,14 +99,14 @@ func (patt *pattern) Parse(ctx *ParseContext) Ast {
 		for {
 			pos2 := ctx.Code.Pos()
 			if !IsUndefined(patt.join) {
-				resJoin := patt.join.Parse(ctx)
+				resJoin := patt.join.parse(ctx)
 				// return nil to revert pos
 				if resJoin == nil {
 					ctx.Code.SetPos(pos2)
 					break
 				}
 			}
-			resValue = patt.value.Parse(ctx)
+			resValue = patt.value.parse(ctx)
 			// return nil to revert pos
 			if resValue == nil {
 				ctx.Code.SetPos(pos2)

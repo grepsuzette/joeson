@@ -8,7 +8,7 @@ package joeson
 // to really work with it yet outside from this package.
 type Parser interface {
 	Ast
-	Parse(ctx *ParseContext) Ast
+	parse(ctx *ParseContext) Ast
 	getRule() *rule
 	prepare()
 	handlesChildLabel() bool                 // prevents collecting labelled children as part of a NativeMap in packrat.go prepareResult()

@@ -74,7 +74,6 @@ func (gm *Grammar) assertNode()     {}
 func (gm *Grammar) CountRules() int { return gm.numrules }
 
 // Parse a string with given parse options.
-// You don't usually provide any other option than Debug.
 // E.g. `gm.ParseString("blah", j.Debug{true})`.
 // Return nil if failed to parse.
 func (gm *Grammar) ParseString(s string, options ...ParseOption) Ast {
@@ -86,11 +85,10 @@ func (gm *Grammar) ParseString(s string, options ...ParseOption) Ast {
 	for _, option := range options {
 		ctx.applyOption(option)
 	}
-	return gm.Parse(ctx)
+	return gm.parse(ctx)
 }
 
 // Parse provided TokenStream.
-// You don't usually provide any other option than Debug.
 // E.g. `gm.ParseString("blah", j.Debug{true})`.
 // Return nil if failed to parse.
 func (gm *Grammar) ParseTokens(tokens *TokenStream, options ...ParseOption) Ast {
@@ -102,12 +100,12 @@ func (gm *Grammar) ParseTokens(tokens *TokenStream, options ...ParseOption) Ast 
 	for _, option := range options {
 		ctx.applyOption(option)
 	}
-	return gm.Parse(ctx)
+	return gm.parse(ctx)
 }
 
-// Exported because grammar implements Parser
 // Use ParseString() or ParseTokens()
-func (gm *Grammar) Parse(ctx *ParseContext) Ast {
+// This parse(ctx) is for Grammar to implement Parser
+func (gm *Grammar) parse(ctx *ParseContext) Ast {
 	oldTrace := gm.TraceOptions.Stack
 	ctx.GrammarName = gm.getRule().name
 	if ctx.parseOptions.debug {
@@ -117,7 +115,7 @@ func (gm *Grammar) Parse(ctx *ParseContext) Ast {
 	if gm.rank == nil {
 		panic("Grammar.rank is nil")
 	}
-	result := gm.rank.Parse(ctx)
+	result := gm.rank.parse(ctx)
 	// undo temporary stack tracing
 	gm.TraceOptions.Stack = oldTrace
 	// if parse is incomplete, compute error message

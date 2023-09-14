@@ -95,7 +95,7 @@ func (seq *sequence) String() string {
 	return Blue("(") + b.String() + Blue(")")
 }
 
-func (seq *sequence) Parse(ctx *ParseContext) Ast {
+func (seq *sequence) parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		switch seq.lazyType.Get() {
 		case Array:
@@ -119,7 +119,7 @@ func (seq *sequence) Parse(ctx *ParseContext) Ast {
 func (seq *sequence) parseAsSingle(ctx *ParseContext) Ast {
 	var result Ast = nil // OPTIMIZE critical function (about 100k calls to parse the intention grammar), so avoid needless calls to NewNativeUndefined()
 	for _, child := range seq.sequence {
-		res := child.Parse(ctx)
+		res := child.parse(ctx)
 		if res == nil {
 			return nil
 		}
@@ -137,7 +137,7 @@ func (seq *sequence) parseAsSingle(ctx *ParseContext) Ast {
 func (seq *sequence) parseAsArray(ctx *ParseContext) Ast {
 	results := make([]Ast, 0)
 	for _, child := range seq.sequence {
-		res := child.Parse(ctx)
+		res := child.parse(ctx)
 		if res == nil {
 			return nil
 		}
@@ -153,7 +153,7 @@ func (seq *sequence) parseAsObject(ctx *ParseContext) Ast {
 	var results Ast
 	results = nil // OPTIMIZE critical function (about 100k calls to parse the intention grammar), so avoid needless calls to NewNativeUndefined()
 	for _, child := range seq.sequence {
-		res := child.Parse(ctx)
+		res := child.parse(ctx)
 		if res == nil {
 			// fmt.Printf(Red("sequence %x %d parseAsObject childlabel=%s res==nil\n"), rnd, k, childLabel)
 			return nil

@@ -26,10 +26,10 @@ func (no *not) getRule() *rule          { return no.rule }
 func (no *not) prepare()                {}
 func (no *not) handlesChildLabel() bool { return false }
 
-func (no *not) Parse(ctx *ParseContext) Ast {
+func (no *not) parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos()
-		res := no.it.Parse(ctx)
+		res := no.it.parse(ctx)
 		ctx.Code.SetPos(pos)
 		if res != nil {
 			return nil

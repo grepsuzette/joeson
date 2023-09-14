@@ -32,7 +32,7 @@ func (re *regex) String() string {
 }
 func (re *regex) handlesChildLabel() bool { return false }
 func (re *regex) prepare()                {}
-func (re *regex) Parse(ctx *ParseContext) Ast {
+func (re *regex) parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		if didMatch, sMatch := ctx.Code.MatchRegexp(re.re); !didMatch {
 			return nil

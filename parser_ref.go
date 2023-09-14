@@ -64,14 +64,14 @@ func newRef(it Ast) *ref {
 func (x *ref) getRule() *rule          { return x.rule }
 func (x *ref) handlesChildLabel() bool { return false }
 func (x *ref) prepare()                {}
-func (x *ref) Parse(ctx *ParseContext) Ast {
+func (x *ref) parse(ctx *ParseContext) Ast {
 	return wrap(func(ctx *ParseContext, _ Parser) Ast {
 		node := x.grammar.getRuleRef(x.ref)
 		if node == nil {
 			panic("Grammar has a reference to a type '" + x.ref + "' which is NOT defined")
 		} else {
 			ctx.stackPeek(0).param = x.param
-			return node.Parse(ctx)
+			return node.parse(ctx)
 		}
 	}, x)(ctx)
 }

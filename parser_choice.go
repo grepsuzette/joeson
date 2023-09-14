@@ -49,11 +49,11 @@ func (ch *choice) prepare() {
 	ch.getRule().capture = true
 }
 
-func (ch *choice) Parse(ctx *ParseContext) Ast {
+func (ch *choice) parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		for _, choice := range ch.choices {
 			pos := ctx.Code.Pos()
-			result := choice.Parse(ctx)
+			result := choice.parse(ctx)
 			if result == nil {
 				ctx.Code.SetPos(pos)
 			} else {
