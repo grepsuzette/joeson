@@ -13,18 +13,18 @@ import (
 // ```
 type str struct {
 	*Attr
-	*gnodeimpl
+	*rule
 	Str string
 }
 
 func newStr(s string) str {
-	str := str{newAttr(), newGNode(), s}
-	str.gnodeimpl.capture = false
-	str.gnodeimpl.node = str
+	str := str{newAttr(), newRule(), s}
+	str.rule.capture = false
+	str.rule.node = str
 	return str
 }
 
-func (s str) gnode() *gnodeimpl       { return s.gnodeimpl }
+func (s str) gnode() *rule            { return s.rule }
 func (s str) prepare()                {}
 func (s str) HandlesChildLabel() bool { return false }
 func (s str) String() string {

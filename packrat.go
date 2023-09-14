@@ -281,7 +281,7 @@ func prepareResult(fparse2 parseFunc2, caller Parser) parseFunc {
 				Start:    ctx.stackPeek(0).pos,
 				End:      ctx.Code.Pos(),
 				Line:     ctx.Code.Line(),
-				RuleName: caller.gnode().rule.GetRuleName(),
+				RuleName: caller.gnode().parser.GetRuleName(),
 			})
 		}
 		return result

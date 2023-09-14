@@ -11,7 +11,7 @@ import (
 type Grammar struct {
 	*Attr
 	*TraceOptions
-	*gnodeimpl
+	*rule
 	rank           Parser         // The toplevel rank with which the grammar was defined
 	numrules       int            // Each Ast can have rules, recursively. This however is the total count in the grammar
 	id2rule        map[int]Parser // node.id = @numRules++; @id2Rule[node.id] = node in joeson.coffee:605
@@ -161,9 +161,9 @@ func newEmptyGrammar() *Grammar { return newEmptyGrammarWithOptions(DefaultTrace
 
 func newEmptyGrammarWithOptions(opts *TraceOptions) *Grammar {
 	name := "__empty__"
-	gm := &Grammar{newAttr(), opts, newGNode(), nil, 0, map[int]Parser{}, false}
-	gm.gnodeimpl.name = name
-	gm.gnodeimpl.node = gm
+	gm := &Grammar{newAttr(), opts, newRule(), nil, 0, map[int]Parser{}, false}
+	gm.rule.name = name
+	gm.rule.node = gm
 	return gm
 }
 
@@ -171,16 +171,16 @@ func newEmptyGrammarWithOptions(opts *TraceOptions) *Grammar {
 // (it is used by bootstrapping test)
 func (gm *Grammar) Bomb() {
 	gm.rank = newEmptyRank("bombd")
-	gm.gnodeimpl = newGNode()
+	gm.rule = newRule()
 	gm.numrules = 0
 	gm.id2rule = nil
 	gm.wasInitialized = false
 }
 
-func (gm *Grammar) gnode() *gnodeimpl { return gm.gnodeimpl }
+func (gm *Grammar) gnode() *rule { return gm.rule }
 
 func (gm *Grammar) getRule(name string) Parser {
-	if x, exists := gm.gnodeimpl.rules[name]; exists {
+	if x, exists := gm.rule.rules[name]; exists {
 		return x
 	} else {
 		return nil
@@ -276,13 +276,13 @@ func (gm *Grammar) postinit() {
 				panic("assert")
 			} else {
 				// set node.rule, the root node for this rule
-				if gnode.rule == nil {
+				if gnode.parser == nil {
 					if parent != nil {
-						gnode.rule = parent.gnode().rule
+						gnode.parser = parent.gnode().parser
 					} else {
 						// TODO gnode.Rule = NewNativeUndefined()
 						//   we used nil here if there is any pb...
-						gnode.rule = nil
+						gnode.parser = nil
 					}
 				}
 			}

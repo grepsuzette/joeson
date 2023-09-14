@@ -6,13 +6,13 @@ import (
 
 type choice struct {
 	*Attr
-	*gnodeimpl
+	*rule
 	choices []Parser
 }
 
 func newEmptyChoice() *choice {
-	ch := &choice{newAttr(), newGNode(), []Parser{}}
-	ch.gnodeimpl.node = ch
+	ch := &choice{newAttr(), newRule(), []Parser{}}
+	ch.rule.node = ch
 	return ch
 }
 
@@ -24,10 +24,10 @@ func newChoice(it Ast) *choice {
 		}
 		ch := &choice{
 			newAttr(),
-			newGNode(),
+			newRule(),
 			parsers,
 		}
-		ch.gnodeimpl.node = ch
+		ch.rule.node = ch
 		return ch
 	} else {
 		panic("Choice expects a NativeArray")
@@ -36,7 +36,7 @@ func newChoice(it Ast) *choice {
 
 func (ch *choice) isMonoChoice() bool      { return len(ch.choices) == 1 }
 func (ch *choice) Append(node Parser)      { ch.choices = append(ch.choices, node) }
-func (ch *choice) gnode() *gnodeimpl       { return ch.gnodeimpl }
+func (ch *choice) gnode() *rule            { return ch.rule }
 func (ch *choice) HandlesChildLabel() bool { return false }
 
 func (ch *choice) prepare() {

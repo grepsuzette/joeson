@@ -12,12 +12,12 @@ package joeson
 // e.g. "a ?c | b" is grouped as "a (?c | b)".
 type lookahead struct {
 	*Attr
-	*gnodeimpl
+	*rule
 	expr Parser
 }
 
 func newLookahead(it Ast) *lookahead {
-	gn := newGNode()
+	gn := newRule()
 	la := &lookahead{newAttr(), gn, it.(*NativeMap).GetOrPanic("expr").(Parser)}
 	gn.capture = false
 	gn.node = la
@@ -25,7 +25,7 @@ func newLookahead(it Ast) *lookahead {
 }
 
 func (look *lookahead) prepare()                {}
-func (look *lookahead) gnode() *gnodeimpl       { return look.gnodeimpl }
+func (look *lookahead) gnode() *rule            { return look.rule }
 func (look *lookahead) HandlesChildLabel() bool { return false }
 func (look *lookahead) String() string {
 	return Blue("(?") + String(look.expr) + Blue(")")

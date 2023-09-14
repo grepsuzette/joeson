@@ -5,27 +5,27 @@ package joeson
 // ?foo -> lookahead{foo}
 type existential struct {
 	*Attr
-	*gnodeimpl
+	*rule
 	it Parser
 }
 
 func newExistential(it Ast) *existential {
-	ex := &existential{Attr: newAttr(), gnodeimpl: newGNode(), it: it.(Parser)}
-	ex.gnodeimpl.node = ex
+	ex := &existential{Attr: newAttr(), rule: newRule(), it: it.(Parser)}
+	ex.rule.node = ex
 	return ex
 }
 
 // TODO HandlesChildLabel$: get: -> @parent?.HandlesChildLabel
 // examine this case^
 func (ex *existential) HandlesChildLabel() bool {
-	if ex.gnodeimpl.parent != nil {
-		return ex.gnodeimpl.parent.HandlesChildLabel()
+	if ex.rule.parent != nil {
+		return ex.rule.parent.HandlesChildLabel()
 	} else {
 		return false
 	}
 }
 
-func (ex *existential) gnode() *gnodeimpl { return ex.gnodeimpl }
+func (ex *existential) gnode() *rule { return ex.rule }
 
 func (ex *existential) prepare() {
 	lbls := ex.calculateLabels()

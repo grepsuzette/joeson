@@ -11,7 +11,7 @@ import (
 // you know what you're doing.
 type regex struct {
 	*Attr
-	*gnodeimpl
+	*rule
 	reStr string
 	re    regexp.Regexp
 }
@@ -20,13 +20,13 @@ func newRegexFromString(sRegex string) *regex {
 	if compiledRegexp, e := regexp.Compile("(" + sRegex + ")"); e != nil {
 		panic("Invalid regex: " + sRegex)
 	} else {
-		re := &regex{newAttr(), newGNode(), sRegex, *compiledRegexp}
-		re.gnodeimpl.node = re
+		re := &regex{newAttr(), newRule(), sRegex, *compiledRegexp}
+		re.rule.node = re
 		return re
 	}
 }
 
-func (re *regex) gnode() *gnodeimpl { return re.gnodeimpl }
+func (re *regex) gnode() *rule { return re.rule }
 func (re *regex) String() string {
 	return Magenta("/" + strings.NewReplacer("\r", "\\r", "\n", "\\n", "\t", "\\t").Replace(re.re.String()) + "/g")
 }

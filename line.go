@@ -187,10 +187,10 @@ func getRule(
 		panic("unrecog type " + reflect.TypeOf(line).String())
 	}
 	rule := answer.gnode()
-	if rule.rule != nil && !IsRule(answer) {
+	if rule.parser != nil && !IsRule(answer) {
 		panic("assert")
 	}
-	rule.rule = answer
+	rule.parser = answer
 	if rule.name != "" && rule.name != name {
 		panic("assert")
 	}

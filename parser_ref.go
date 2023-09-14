@@ -8,7 +8,7 @@ import (
 
 type ref struct {
 	*Attr
-	*gnodeimpl
+	*rule
 	ref   string
 	param Parser
 }
@@ -39,12 +39,12 @@ func newRef(it Ast) *ref {
 	default:
 		panic(fmt.Sprintf("unexpected type for NewRef: %T %v\n", it, it))
 	}
-	ref := &ref{Attr: newAttr(), gnodeimpl: newGNode(), ref: name, param: param}
-	ref.gnodeimpl.node = ref
+	ref := &ref{Attr: newAttr(), rule: newRule(), ref: name, param: param}
+	ref.rule.node = ref
 	if name[0:1] == "_" {
 		ref.SetCapture(false)
 	}
-	ref.gnodeimpl.labels_ = helpers.LazyFromFunc(func() []string {
+	ref.rule.labels_ = helpers.LazyFromFunc(func() []string {
 		if ref.GetRuleLabel() == "@" {
 			referenced := ref.grammar.getRule(ref.ref)
 			if referenced == nil {
@@ -61,7 +61,7 @@ func newRef(it Ast) *ref {
 	return ref
 }
 
-func (x *ref) gnode() *gnodeimpl       { return x.gnodeimpl }
+func (x *ref) gnode() *rule            { return x.rule }
 func (x *ref) HandlesChildLabel() bool { return false }
 func (x *ref) prepare()                {}
 func (x *ref) Parse(ctx *ParseContext) Ast {

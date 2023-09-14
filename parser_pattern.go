@@ -25,7 +25,7 @@ import (
 // See parser_pattern_test.go
 type pattern struct {
 	*Attr
-	*gnodeimpl
+	*rule
 	value Parser
 	join  Parser
 	min   int // -1 for unspec.
@@ -34,7 +34,7 @@ type pattern struct {
 
 // `it` must be a NativeMap with keys like 'value', 'join', 'min', 'max'
 func newPattern(it Ast) *pattern {
-	patt := &pattern{newAttr(), newGNode(), nil, nil, -1, -1}
+	patt := &pattern{newAttr(), newRule(), nil, nil, -1, -1}
 	patt.node = patt
 	if nativemap, ok := it.(*NativeMap); !ok {
 		panic("Pattern expecting a map with value, join")
@@ -83,7 +83,7 @@ func newPattern(it Ast) *pattern {
 	}
 	return patt
 }
-func (patt *pattern) gnode() *gnodeimpl { return patt.gnodeimpl }
+func (patt *pattern) gnode() *rule { return patt.rule }
 func (patt *pattern) Parse(ctx *ParseContext) Ast {
 	return wrap(func(_ *ParseContext, _ Parser) Ast {
 		pos := ctx.Code.Pos()

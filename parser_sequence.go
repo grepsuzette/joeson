@@ -17,7 +17,7 @@ const (
 
 type sequence struct {
 	*Attr
-	*gnodeimpl
+	*rule
 	sequence []Parser
 	lazyType *helpers.Lazy[sequenceRepr] // internal cache for internalType()
 }
@@ -29,15 +29,15 @@ func newSequence(it Ast) *sequence {
 		if a == nil {
 			panic("expecting non nil array")
 		}
-		gn := newGNode()
+		gn := newRule()
 		parsers := make([]Parser, 0)
 		for _, v := range *a {
 			parsers = append(parsers, v.(Parser))
 		}
 		seq := &sequence{
-			Attr:      newAttr(),
-			gnodeimpl: gn,
-			sequence:  parsers,
+			Attr:     newAttr(),
+			rule:     gn,
+			sequence: parsers,
 		}
 		gn.node = seq
 		gn.labels_ = helpers.LazyFromFunc(func() []string { return seq.calculateLabels() })
@@ -47,7 +47,7 @@ func newSequence(it Ast) *sequence {
 	}
 }
 
-func (seq *sequence) gnode() *gnodeimpl       { return seq.gnodeimpl }
+func (seq *sequence) gnode() *rule            { return seq.rule }
 func (seq *sequence) HandlesChildLabel() bool { return true }
 func (seq *sequence) prepare()                {}
 

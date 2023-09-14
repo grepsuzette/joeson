@@ -10,19 +10,19 @@ package joeson
 // e.g. "a !c | b" is grouped as "a (!c | b)".
 type not struct {
 	*Attr
-	*gnodeimpl
+	*rule
 	it Parser
 }
 
 func newNot(it Ast) *not {
-	gn := newGNode()
+	gn := newRule()
 	x := &not{newAttr(), gn, it.(Parser)}
 	gn.capture = false
 	gn.node = x
 	return x
 }
 
-func (no *not) gnode() *gnodeimpl       { return no.gnodeimpl }
+func (no *not) gnode() *rule            { return no.rule }
 func (no *not) prepare()                {}
 func (no *not) HandlesChildLabel() bool { return false }
 

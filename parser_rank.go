@@ -56,7 +56,7 @@ func (rank *rank) Length() int {
 }
 
 func (rank *rank) Append(node Parser)      { rank.choice.Append(node) }
-func (rank *rank) gnode() *gnodeimpl       { return rank.choice.gnode() }
+func (rank *rank) gnode() *rule            { return rank.choice.gnode() }
 func (rank *rank) prepare()                { rank.choice.prepare() }
 func (rank *rank) HandlesChildLabel() bool { return false }
 
