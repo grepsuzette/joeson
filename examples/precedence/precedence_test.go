@@ -276,6 +276,6 @@ func TestPrecedence(t *testing.T) {
 	})
 
 	// in short, problems shown by Laurie in her paper
-	// are real. Our recomm. is to read it, and work around it
-	// as in this test, rather than to create a perfect parser.
+	// are real if you allow right recursion. But we can
+	// work around the problem as shown by this study.
 }

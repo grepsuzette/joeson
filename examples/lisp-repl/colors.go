@@ -5,6 +5,7 @@ const (
 	reset string = esc + "[0m"
 )
 
+// TODO use the exported ones from joeson
 func black(s string) string        { return esc + "[30m" + s + reset }
 func red(s string) string          { return esc + "[31m" + s + reset }
 func green(s string) string        { return esc + "[32m" + s + reset }

@@ -20,7 +20,7 @@ var grammarRules = rules(
 	i(named("__", "(' ' | '\t' | '\n')+")),
 	i(named("string", "'\"' s:([^\"]*) '\"'"), parseString),
 	i(named("word", "/[a-zA-Z\\._][a-zA-Z\\._0-9?]*/")),
-	i(named("number", "/-?[0-9]+/") /* TODO non-int */, func(it j.Ast) j.Ast { return j.NewNativeIntFrom(it) }),
+	i(named("number", "/-?[0-9]+/") /* TODO non-int */, func(it j.Ast) j.Ast { return j.NativeIntFrom(it) }),
 	i(named(".", "/[\\s\\S]/")),
 	i(named("ESC1", "'\\\\' .")),
 )

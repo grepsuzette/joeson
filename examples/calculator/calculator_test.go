@@ -47,7 +47,7 @@ var linesCalc = []j.Line{
 	i(named("AddOp", "'+' | '-'")),
 	i(named("MulOp", "'*' | '/'")),
 	i(named("Integer", "/^-?[0-9]+/"), func(it j.Ast) j.Ast {
-		return j.NewNativeIntFrom(it)
+		return j.NativeIntFrom(it)
 	}),
 	i(named("_", "[ \t]*")),
 }
