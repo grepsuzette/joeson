@@ -24,11 +24,17 @@ func NewNativeIntFromString(s string) NativeInt {
 	}
 }
 
-// creates a NativeInt from, possibly: 1. a NativeString.
-// 2. a NativeArray of NativeString.
-// It panics if necessary.
 func NewNativeIntFrom(x Ast) NativeInt {
+	return NativeIntFrom(x).(NativeInt)
+}
+
+// Create a NativeInt from an Ast.
+// Return an Ast.
+// It panics if necessary.
+func NativeIntFrom(x Ast) Ast {
 	switch v := x.(type) {
+	case NativeInt:
+		return v
 	case NativeString:
 		if n, e := strconv.Atoi(string(v)); e == nil {
 			return NewNativeInt(n)
@@ -36,11 +42,8 @@ func NewNativeIntFrom(x Ast) NativeInt {
 			panic(e)
 		}
 	case *NativeArray:
-		s := ""
-		for i := range *v {
-			s += string((*v)[i].(NativeString))
-		}
-		return NewNativeIntFromString(s)
+		// OPTIM
+		return NewNativeIntFromString(v.Concat().String())
 	default:
 		panic("Unable to make NativeInt from " + x.String())
 	}

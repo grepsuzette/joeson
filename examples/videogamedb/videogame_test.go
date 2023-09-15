@@ -49,7 +49,7 @@ func (v VideoGame) String() string {
 }
 
 func findVideoGameById(it j.Ast) j.Ast {
-	id := j.NativeIntFrom(it).Int()
+	id := j.NewNativeIntFrom(it).Int()
 	for _, v := range db {
 		if v.id == id {
 			return v
@@ -70,7 +70,7 @@ func findVideoGameByTitle(it j.Ast) j.Ast {
 
 func findBestVideoGameOfYear(it j.Ast) j.Ast {
 	// whichever was listed first in db is probably good enough
-	year := j.NativeIntFrom(it).Int()
+	year := j.NewNativeIntFrom(it).Int()
 	for _, v := range db {
 		if v.year == year {
 			return v

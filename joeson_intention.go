@@ -46,7 +46,7 @@ func IntentionRules() []Line {
 		))),
 		i(named("LABEL", "'&' | '@' | WORD")),
 		i(named("WORD", "/[a-zA-Z\\._][a-zA-Z\\._0-9]*/")),
-		i(named("INT", "/[0-9]+/"), func(it Ast) Ast { return NewNativeIntFrom(it) }),
+		i(named("INT", "/[0-9]+/"), NativeIntFrom),
 		i(named("_PIPE", "_ '|'")),
 		i(named("_", "(' ' | '\n')*")),
 		i(named("__", "(' ' | '\n')+")),

@@ -19,7 +19,8 @@ type rule struct {
 	rulesK        []string          // golang maps are unsorted, this keeps the insertion order
 	node          Parser            // node containing this impl. Hack. Only used by GNode.Captures_ default implementation.
 
-	labels_   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate GNode behavior in the original coffeescript impl. See NewGNode() doc below.
+	// TODO reevaluate if we need it
+	labels_   *helpers.Lazy[[]string] // the lazy labels getter, redefinable to simulate GNode behavior in the original coffeescript impl.
 	captures_ *helpers.Lazy[[]Ast]    // the lazy captures getter, same concept. (not used at the moment)
 }
 

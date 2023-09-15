@@ -150,7 +150,7 @@ func TestSquareroot(t *testing.T) {
 		[]Line{
 			o(Named("sqr", "w:word '(' n:int ')'")),
 			i(Named("word", "[a-z]{1,}")),
-			i(Named("int", "/-?[0-9]{1,}/"), func(it Ast) Ast { return NewNativeIntFrom(it) }),
+			i(Named("int", "/-?[0-9]{1,}/"), func(it Ast) Ast { return NativeIntFrom(it) }),
 		})
 	ast := gm.ParseString("squareroot(-1)")
 	if IsParseError(ast) {

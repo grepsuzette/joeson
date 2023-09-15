@@ -110,7 +110,7 @@ func JoesonRules() []Line {
 		))),
 		i(Named("LABEL", c(st("&"), st("@"), r("WORD")))),
 		i(Named("WORD", re("[a-zA-Z\\._][a-zA-Z\\._0-9]*"))),
-		i(Named("INT", re("[0-9]+")), func(it Ast) Ast { return NewNativeIntFrom(it) }),
+		i(Named("INT", re("[0-9]+")), NativeIntFrom),
 		i(Named("_PIPE", s(r("_"), st("|")))),
 		i(Named("_", p(c(st(" "), st("\n")), nil))),
 		i(Named("__", p(c(st(" "), st("\n")), nil, 1))),
