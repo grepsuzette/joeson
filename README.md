@@ -66,6 +66,27 @@ TRACE=stack go test examples/calculator/calculator_test.go --run test_12 -v
 ```
 ![calculator_test2](https://user-images.githubusercontent.com/350354/216583646-0009d83d-36c2-457b-8cc3-e2aa0012edac.png)
 
+## Header
+
+The **following header declarations** will be used (implicitely) throughout the rest of this document:
+```go
+import j "github.com/grepsuzette/joeson"
+
+// named() creates a rule with a name
+// E.g. o(named("Alpha", `'α'`)) // named rule
+//      o(`'α'`)                 // the same rule, anonymous
+func named(name string, v any) j.NamedRule { return j.Named(name, v) }
+
+// to make i and o rules
+func i(a ...any) j.ILine { return j.I(a...) }
+func o(a ...any) j.OLine { return j.O(a...) }
+```
+That is pretty much all the functions you are going to need with `j.GrammarFromLines()`. Don't worry about the difference between `i` and `o` for now.
+
+If you encounter any difficulty note all examples appearing here (some
+functions are not written to make the samples shorter) you can find them in their entirety in
+the `examples/` folder.
+
 ## Operators 
 
 The following operators are supported:
@@ -144,34 +165,13 @@ Operators will now be reviewed:
 
 ## Writing a grammar
 
-Before proceeding, it is recommended to review the `example/calculator` for a basic understanding of Joeson. 
+Joeson possesses certain specificities that require further explanation.
 
-Despite its strength, Joeson possess certain specificities that require further explanation.
-
-Writing a grammar involves 3 parts:
+Writing a grammar, regardless of the parser, normally involves 3 parts:
 
 1. *Rules*,
 2. *Parse functions*, which are optional callbacks or function name at the end of a rule, mapping a parse result to a different parse result (signature like `func(Ast) Ast`),
 3. *Input data*. Those are strings, code samples or anything which should be parsable by the grammar, and often constituting the test data.
-
-The **following header declarations** will be used (implicitely) throughout the rest of this document:
-```go
-import j "github.com/grepsuzette/joeson"
-
-// named() creates a rule with a name
-// E.g. o(named("Alpha", `'α'`)) // named rule
-//      o(`'α'`)                 // the same rule, anonymous
-func named(name string, v any) j.NamedRule { return j.Named(name, v) }
-
-// to make i and o rules
-func i(a ...any) j.ILine { return j.I(a...) }
-func o(a ...any) j.OLine { return j.O(a...) }
-```
-That is pretty much all the functions you are going to need with `j.GrammarFromLines()`. Don't worry about the difference between `i` and `o` for now.
-
-If you encounter any difficulty note all examples appearing here (some
-functions are not written to make the samples shorter) you can find them in their entirety in
-the `examples/` folder.
 
 ### How joeson works
 
