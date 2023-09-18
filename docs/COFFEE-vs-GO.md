@@ -1,6 +1,8 @@
+# This was ported from https://github.com/jaekwon/JoeScript
 
+Originally written in 2013, the joeson parser was in Coffeescript at the time.
 This was my first Go program, 
-I did my best to learn on the way, but some things may not be idiomatic yet. In particular, the packrat algorithm from JoeScript is implemented as faithfully as possible.
+Did my best to learn on the way, but some things may not be idiomatic yet. In particular, the packrat algorithm from JoeScript is implemented as faithfully as possible. Many variable names are reused as is, same for the comments. Even now is possible to make a line per line comparison with the coffee version.
 
 Two months were spent on deciding on a couple of things: deciding whether it was acceptable to generate a grammar using a tool such as mna/pigeon (my first prototype was using it, I also looked at pointlander/peg that Jae had also identified a couple of years ago), reading/watching as many papers and videos as possible on PEG parsers, and more importantly trying to understand what exactly was asked ("porting joeson"), and what kind of answer to give. This was the summer of 2022. 
 

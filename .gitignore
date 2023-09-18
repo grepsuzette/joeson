@@ -6,3 +6,4 @@ tmp.html
 stash/
 __debug_bin
 examples/golang-peg/DRAFT
+examples/lisp-repl/lisp-repl
