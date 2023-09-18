@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"math"
+
+	j "github.com/grepsuzette/joeson"
 )
 
 // (car (1 2 3)) is 1
@@ -249,7 +251,7 @@ func substArgsInExpr(args map[string]Expr, expr Expr) Expr {
 		for _, subexpr := range expr.List.List {
 			us = append(us, substArgsInExpr(args, subexpr))
 		}
-		return Expr{attr{}, kindList, "", 0, list(us...), ""}
+		return Expr{j.NewAttr(), kindList, "", 0, list(us...), ""}
 	default:
 		panic("unhandled kind")
 	}

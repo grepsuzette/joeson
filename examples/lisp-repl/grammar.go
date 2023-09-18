@@ -12,10 +12,10 @@ func named(name string, lineStringOrAst any) j.NamedRule { return j.Named(name, 
 func rules(a ...j.Line) []j.Line                         { return a }
 
 var grammarRules = rules(
-	o(named("toplevelexpr", "_ expr:expr _"), parseTopLevelExpr),
-	i(named("expr", "l:list | s:string | n:number | operator:operator"), parseExpr),
-	i(named("list", "'(' _ (expr*__) _ ')'"), parseList),
-	i(named("operator", "word | '+' | '-' | '*' | '/' | '%' | '>=' | '<=' | '!=' | '=='| '<' | '>' |  '=' "), parseOperator),
+	o(`_ expr:expr _`, parseTopLevelExpr),
+	i(named("expr", `l:list | s:string | n:number | operator:operator`), parseExpr),
+	i(named("list", `'(' _ (expr*__) _ ')'`), parseList),
+	i(named("operator", `word | '+' | '-' | '*' | '/' | '%' | '>=' | '<=' | '!=' | '=='| '<' | '>' |  '=' `), parseOperator),
 	i(named("_", "(' ' | '\t' | '\n')*")),
 	i(named("__", "(' ' | '\t' | '\n')+")),
 	i(named("string", "'\"' s:([^\"]*) '\"'"), parseString),
@@ -46,20 +46,20 @@ func parseExpr(it j.Ast) j.Ast {
 	} else {
 		if v, ok := h.GetExists("s"); ok {
 			if ns, ok := v.(j.NativeString); ok {
-				return Expr{attr{}, kindString, string(ns), 0, nilList(), ""}
+				return Expr{j.NewAttr(), kindString, string(ns), 0, nilList(), ""}
 			} else {
 				panic("24942")
 			}
 		} else if v, ok := h.GetExists("n"); ok {
 			if n, ok := v.(j.NativeInt); ok {
-				return Expr{attr{}, kindNumber, "", float64(n.Int()), nilList(), ""}
+				return Expr{j.NewAttr(), kindNumber, "", float64(n.Int()), nilList(), ""}
 			} else {
 				panic("24942")
 			}
 		} else if v, ok := h.GetExists("l"); ok {
-			return Expr{attr{}, kindList, "", 0, v.(List), ""}
+			return Expr{j.NewAttr(), kindList, "", 0, v.(List), ""}
 		} else if v, ok := h.GetExists("operator"); ok {
-			return Expr{attr{}, kindOperator, "", 0, nilList(), string(v.(j.NativeString))}
+			return Expr{j.NewAttr(), kindOperator, "", 0, nilList(), string(v.(j.NativeString))}
 		} else {
 			panic(h.String())
 		}

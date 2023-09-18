@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"strings"
+
+	j "github.com/grepsuzette/joeson"
 )
 
 // -- uLisp AST
@@ -18,7 +20,7 @@ const (
 
 type (
 	Expr struct {
-		attr
+		*j.Attr
 		Kind     exprKind
 		Str      string
 		Number   float64
@@ -27,10 +29,10 @@ type (
 	}
 )
 
-func empty() Expr              { return Expr{attr{}, kindList, "", 0, list(), ""} }
-func number(f float64) Expr    { return Expr{attr{}, kindNumber, "", f, nilList(), ""} }
-func str(s string) Expr        { return Expr{attr{}, kindString, s, 0, nilList(), ""} }
-func operator(fun string) Expr { return Expr{attr{}, kindOperator, "", 0, nilList(), fun} }
+func empty() Expr              { return Expr{j.NewAttr(), kindList, "", 0, list(), ""} }
+func number(f float64) Expr    { return Expr{j.NewAttr(), kindNumber, "", f, nilList(), ""} }
+func str(s string) Expr        { return Expr{j.NewAttr(), kindString, s, 0, nilList(), ""} }
+func operator(fun string) Expr { return Expr{j.NewAttr(), kindOperator, "", 0, nilList(), fun} }
 func True() Expr               { return number(1) }
 func False() Expr              { return number(0) }
 func Bool(b bool) Expr {
@@ -82,9 +84,9 @@ func (o Expr) String() string {
 	case kindString:
 		return quoted(o.Str)
 	case kindNumber:
-		return fmt.Sprintf(bold_magenta("%f"), o.Number)
+		return fmt.Sprintf(j.BoldMagenta("%f"), o.Number)
 	case kindOperator:
-		return bold_cyan(o.Operator)
+		return j.BoldCyan(o.Operator)
 	case kindList:
 		a := []string{}
 		for _, expr := range o.List.List {
