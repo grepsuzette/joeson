@@ -501,7 +501,6 @@ Joeson was ported from [https://github.com/jaekwon/JoeScript](https://github.com
 You may find more docs here:
 
 - [docs/testing](docs/testing.md)
-- [docs/faq](docs/faq.md)
 - [docs/diffing](docs/diffing.md)
 - [docs/internals](docs/internals.md)
 
