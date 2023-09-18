@@ -1,2 +1,1 @@
-This demonstrates a ridiculous simple lisp machine
-It's very limited though.
+This demonstrates a very limited lisp machine parsed with joeson

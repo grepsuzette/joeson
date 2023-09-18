@@ -15,7 +15,6 @@ type exprExpectation struct {
 }
 
 func duo(s string, s2 string) exprExpectation {
-	// return exprExpectation{strings.Replace(s, "\n", "", -1), s2}
 	return exprExpectation{s, s2}
 }
 
@@ -40,9 +39,9 @@ var tests = []exprExpectation{
 	// ------------ car, cdr -----------------------------
 	duo("(car (10 9 8 7 6 5))", "10.000000"),
 	duo("(cdr (10 9 8))", "(9.000000 8.000000)"),
-	duo("(car (cdr (10 9 8)))", "9.000000"), // TODO
+	duo("(car (cdr (10 9 8)))", "9.000000"),
 
-	// ------------ cmp, logic ----------------------------- // {{{1
+	// ------------ cmp, logic -----------------------------
 	duo("(eq? 1 2)", FALSE),
 	duo("(== 2 2)", TRUE),
 	duo("(< 1 10)", TRUE),
@@ -56,7 +55,6 @@ var tests = []exprExpectation{
 	duo("(and (> 9 8 7) ( <= 1 1 2 2 3 3 4 ) )", TRUE),
 	duo("(and (eq 7 7) (neq 7 7))", FALSE),
 	duo("(or (eq 7 7) (neq 7 7))", TRUE),
-	// }}}1
 
 	// ------------ type --------------------
 	duo("(list? 3)", FALSE),
@@ -102,7 +100,7 @@ var tests = []exprExpectation{
 func Test(t *testing.T) {
 	gm := grammar()
 	m := NewMachine()
-	// simply compare m.Eval(gm.ParseString(`k`)) with `v`.
+	// compare m.Eval(gm.ParseString(`k`)) to `v`.
 	for _, o := range tests {
 		k := o.expr
 		v := o.expectation
@@ -119,5 +117,3 @@ func Test(t *testing.T) {
 		})
 	}
 }
-
-// vim: fdm=marker fdl=0
